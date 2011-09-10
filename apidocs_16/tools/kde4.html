@@ -1,0 +1,240 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>kde4 &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="up" title="Waf Tools" href="../tools.html" />
+    <link rel="next" title="perl" href="perl.html" />
+    <link rel="prev" title="qt4" href="qt4.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="perl.html" title="perl"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="qt4.html" title="qt4"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Tools.kde4">
+<span id="kde4"></span><h1>kde4<a class="headerlink" href="#module-waflib.Tools.kde4" title="Permalink to this headline">¶</a></h1>
+<p>Support for the KDE4 libraries and msgfmt</p>
+<dl class="function">
+<dt id="waflib.Tools.kde4.apply_msgfmt">
+<tt class="descclassname">waflib.Tools.kde4.</tt><tt class="descname">apply_msgfmt</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/kde4.html#apply_msgfmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.kde4.apply_msgfmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Task generator method</p>
+<p>Process all languages to create .mo files and to install them:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;msgfmt&#39;</span><span class="p">,</span> <span class="n">langs</span><span class="o">=</span><span class="s">&#39;es de fr&#39;</span><span class="p">,</span> <span class="n">appname</span><span class="o">=</span><span class="s">&#39;myapp&#39;</span><span class="p">,</span> <span class="n">install_path</span><span class="o">=</span><span class="s">&#39;${KDE4_LOCALE_INSTALL_DIR}&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Feature :</th><td class="field-body"><a class="reference external" href="../featuremap.html#feature-msgfmt">msgfmt</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.kde4.msgfmt">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.kde4.</tt><tt class="descname">msgfmt</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/kde4.html#msgfmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.kde4.msgfmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
+<p>Transform .po files into .mo files</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.kde4.configure">
+<tt class="descclassname">waflib.Tools.kde4.</tt><tt class="descname">configure</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/kde4.html#configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.kde4.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detect kde4-config and set various variables for the <em>use</em> system:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
+        <span class="n">opt</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;compiler_cxx kde4&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;compiler_cxx kde4&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">program</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;main.c&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s">&#39;KDECORE KIO KHTML&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.kde4.feature">
+<tt class="descclassname">waflib.Tools.kde4.</tt><tt class="descname">feature</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.kde4.feature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method that will be executed when the
+object attribute &#8216;feature&#8217; contains the corresponding key(s):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.Task</span> <span class="kn">import</span> <span class="n">feature</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">myfunction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;that is my feature!&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>k</strong> (<em>list of string</em>) &#8211; feature names</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.kde4.after_method">
+<tt class="descclassname">waflib.Tools.kde4.</tt><tt class="descname">after_method</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.kde4.after_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method which will be executed
+after the functions of given name(s):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;fun2&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fun1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;feature 1!&#39;</span><span class="p">)</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fun2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;feature 2!&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>k</strong> (<em>list of string</em>) &#8211; method names</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p>Features defined in this module:</p>
+<ul class="simple">
+<li><a class="reference external" href="../featuremap.html#feature-msgfmt">msgfmt</a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="qt4.html"
+                        title="previous chapter">qt4</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="perl.html"
+                        title="next chapter">perl</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tools/kde4.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="perl.html" title="perl"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="qt4.html" title="qt4"
+             >previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

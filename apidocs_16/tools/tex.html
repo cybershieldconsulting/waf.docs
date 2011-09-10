@@ -1,0 +1,379 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tex &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="up" title="Waf Tools" href="../tools.html" />
+    <link rel="next" title="javaw" href="javaw.html" />
+    <link rel="prev" title="waf_unit_test" href="waf_unit_test.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="javaw.html" title="javaw"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="waf_unit_test.html" title="waf_unit_test"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Tools.tex">
+<span id="tex"></span><h1>tex<a class="headerlink" href="#module-waflib.Tools.tex" title="Permalink to this headline">¶</a></h1>
+<p>TeX/LaTeX/PDFLaTeX/XeLaTeX support</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;tex&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LATEX</span><span class="p">:</span>
+                <span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;The program LaTex is required&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span>
+                <span class="n">features</span> <span class="o">=</span> <span class="s">&#39;tex&#39;</span><span class="p">,</span>
+                <span class="nb">type</span>     <span class="o">=</span> <span class="s">&#39;latex&#39;</span><span class="p">,</span> <span class="c"># pdflatex or xelatex</span>
+                <span class="n">source</span>   <span class="o">=</span> <span class="s">&#39;document.ltx&#39;</span><span class="p">,</span> <span class="c"># mandatory, the source</span>
+                <span class="n">outs</span>     <span class="o">=</span> <span class="s">&#39;ps&#39;</span><span class="p">,</span> <span class="c"># &#39;pdf&#39; or &#39;ps pdf&#39;</span>
+                <span class="n">deps</span>     <span class="o">=</span> <span class="s">&#39;crossreferencing.lst&#39;</span><span class="p">,</span> <span class="c"># to give dependencies directly</span>
+                <span class="n">prompt</span>   <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="c"># 0 for the batch mode</span>
+                <span class="p">)</span>
+</pre></div>
+</div>
+<dl class="function">
+<dt id="waflib.Tools.tex.bibunitscan">
+<tt class="descclassname">waflib.Tools.tex.</tt><tt class="descname">bibunitscan</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/tex.html#bibunitscan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.tex.bibunitscan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the inputs and try to find the <em>bibunit</em> dependencies</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">list of bibunit files</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">list of <a class="reference internal" href="../Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.tex.exts_deps_tex">
+<tt class="descclassname">waflib.Tools.tex.</tt><tt class="descname">exts_deps_tex</tt><a class="headerlink" href="#waflib.Tools.tex.exts_deps_tex" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of typical file extensions included in latex files</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.tex.re_tex">
+<tt class="descclassname">waflib.Tools.tex.</tt><tt class="descname">re_tex</tt><a class="headerlink" href="#waflib.Tools.tex.re_tex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Regexp for expressions that may include latex files</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.tex.g_bibtex_re">
+<tt class="descclassname">waflib.Tools.tex.</tt><tt class="descname">g_bibtex_re</tt><a class="headerlink" href="#waflib.Tools.tex.g_bibtex_re" title="Permalink to this definition">¶</a></dt>
+<dd><p>Regexp for bibtex files</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.tex.tex">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.tex.</tt><tt class="descname">tex</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/tex.html#tex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.tex.tex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
+<p>Compile a tex/latex file.</p>
+<p class="graphviz">
+<img src="../_images/inheritance-cca00a0f0abeae9f2089648440e3a481a95574ee.png" alt="Inheritance diagram of waflib.Tools.tex.latex, waflib.Tools.tex.xelatex, waflib.Tools.tex.pdflatex" usemap="#inheritance590ebef8dd" class="inheritance"/>
+<map id="inheritance590ebef8dd" name="inheritance590ebef8dd">
+<area shape="rect" id="node2" href="#waflib.Tools.tex.tex" title="waflib.Tools.tex.tex" alt="" coords="462,49,578,74"/>
+<area shape="rect" id="node4" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task" alt="" coords="315,49,417,74"/>
+<area shape="rect" id="node6" href="../Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase" alt="" coords="142,49,272,74"/>
+<area shape="rect" id="node8" href="../Task.html#waflib.Task.evil" title="waflib.Task.evil" alt="" coords="5,49,99,74"/>
+</map>
+</p>
+<dl class="method">
+<dt id="waflib.Tools.tex.tex.scan">
+<tt class="descname">scan</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/tex.html#tex.scan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.tex.tex.scan" title="Permalink to this definition">¶</a></dt>
+<dd><p>A recursive regex-based scanner that finds latex dependencies. It uses <a class="reference internal" href="#waflib.Tools.tex.re_tex" title="waflib.Tools.tex.re_tex"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Tools.tex.re_tex</span></tt></a></p>
+<p>Depending on your needs you might want:</p>
+<ul>
+<li><p class="first">to change re_tex:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">tex</span>
+<span class="n">tex</span><span class="o">.</span><span class="n">re_tex</span> <span class="o">=</span> <span class="n">myregex</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">or to change the method scan from the latex tasks:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.Task</span> <span class="kn">import</span> <span class="n">classes</span>
+<span class="n">classes</span><span class="p">[</span><span class="s">&#39;latex&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">scan</span> <span class="o">=</span> <span class="n">myscanfunction</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.tex.tex.check_status">
+<tt class="descname">check_status</tt><big>(</big><em>msg</em>, <em>retcode</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/tex.html#tex.check_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.tex.tex.check_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check an exit status and raise an error with a particular message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>msg</strong> (<em>string</em>) &#8211; message to display if the code is non-zero</li>
+<li><strong>retcode</strong> (<em>boolean</em>) &#8211; condition</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.tex.tex.bibfile">
+<tt class="descname">bibfile</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/tex.html#tex.bibfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.tex.tex.bibfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the <em>.aux</em> file to find a bibfile to process.
+If yes, execute <a class="reference internal" href="#waflib.Tools.tex.tex.bibtex_fun" title="waflib.Tools.tex.tex.bibtex_fun"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Tools.tex.tex.bibtex_fun()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.tex.tex.bibunits">
+<tt class="descname">bibunits</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/tex.html#tex.bibunits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.tex.tex.bibunits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the <em>.aux</em> file to find bibunit files. If there are bibunit files,
+execute <a class="reference internal" href="#waflib.Tools.tex.tex.bibtex_fun" title="waflib.Tools.tex.tex.bibtex_fun"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Tools.tex.tex.bibtex_fun()</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.tex.tex.makeindex">
+<tt class="descname">makeindex</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/tex.html#tex.makeindex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.tex.tex.makeindex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look on the filesystem if there is a <em>.idx</em> file to process. If yes, execute
+<a class="reference internal" href="#waflib.Tools.tex.tex.makeindex_fun" title="waflib.Tools.tex.tex.makeindex_fun"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Tools.tex.tex.makeindex_fun()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.tex.tex.bibtex_fun">
+<tt class="descname">bibtex_fun</tt><big>(</big><em>tsk</em><big>)</big><a class="headerlink" href="#waflib.Tools.tex.tex.bibtex_fun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the program <strong>bibtex</strong></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.tex.tex.makeindex_fun">
+<tt class="descname">makeindex_fun</tt><big>(</big><em>tsk</em><big>)</big><a class="headerlink" href="#waflib.Tools.tex.tex.makeindex_fun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the program <strong>makeindex</strong></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.tex.feature">
+<tt class="descclassname">waflib.Tools.tex.</tt><tt class="descname">feature</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.tex.feature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method that will be executed when the
+object attribute &#8216;feature&#8217; contains the corresponding key(s):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.Task</span> <span class="kn">import</span> <span class="n">feature</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">myfunction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;that is my feature!&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>k</strong> (<em>list of string</em>) &#8211; feature names</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.tex.before_method">
+<tt class="descclassname">waflib.Tools.tex.</tt><tt class="descname">before_method</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.tex.before_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method which will be executed
+before the functions of given name(s):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;fun2&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fun1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;feature 1!&#39;</span><span class="p">)</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fun2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;feature 2!&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>k</strong> (<em>list of string</em>) &#8211; method names</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.tex.warn">
+<tt class="descclassname">waflib.Tools.tex.</tt><tt class="descname">warn</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.tex.warn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap logging.warn</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.tex.error">
+<tt class="descclassname">waflib.Tools.tex.</tt><tt class="descname">error</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.tex.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap logging.errors, display the origin of the message when &#8216;-vv&#8217; is set</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.tex.debug">
+<tt class="descclassname">waflib.Tools.tex.</tt><tt class="descname">debug</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.tex.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap logging.debug, the output is filtered for performance reasons</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.tex.apply_tex">
+<tt class="descclassname">waflib.Tools.tex.</tt><tt class="descname">apply_tex</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/tex.html#apply_tex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.tex.apply_tex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Task generator method</p>
+<p>Create <a class="reference internal" href="#waflib.Tools.tex.tex" title="waflib.Tools.tex.tex"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.tex.tex</span></tt></a> objects, and dvips/dvipdf/pdf2ps tasks if necessary (outs=&#8217;ps&#8217;, etc).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Feature :</th><td class="field-body"><a class="reference external" href="../featuremap.html#feature-tex">tex</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.tex.configure">
+<tt class="descclassname">waflib.Tools.tex.</tt><tt class="descname">configure</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/tex.html#configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.tex.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to find the programs tex, latex and others. Do not raise any error if they
+are not found.</p>
+</dd></dl>
+
+<p>Features defined in this module:</p>
+<ul class="simple">
+<li><a class="reference external" href="../featuremap.html#feature-tex">tex</a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="waf_unit_test.html"
+                        title="previous chapter">waf_unit_test</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="javaw.html"
+                        title="next chapter">javaw</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tools/tex.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="javaw.html" title="javaw"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="waf_unit_test.html" title="waf_unit_test"
+             >previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

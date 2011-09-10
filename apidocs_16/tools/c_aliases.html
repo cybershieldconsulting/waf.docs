@@ -1,0 +1,268 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>c_aliases &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="up" title="Waf Tools" href="../tools.html" />
+    <link rel="next" title="gas" href="gas.html" />
+    <link rel="prev" title="c_tests" href="c_tests.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gas.html" title="gas"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="c_tests.html" title="c_tests"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Tools.c_aliases">
+<span id="c-aliases"></span><h1>c_aliases<a class="headerlink" href="#module-waflib.Tools.c_aliases" title="Permalink to this headline">¶</a></h1>
+<p>base for all c/c++ programs and libraries</p>
+<dl class="function">
+<dt id="waflib.Tools.c_aliases.get_extensions">
+<tt class="descclassname">waflib.Tools.c_aliases.</tt><tt class="descname">get_extensions</tt><big>(</big><em>lst</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_aliases.html#get_extensions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_aliases.get_extensions" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lst</strong> &#8211; files to process</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">List lst:</th><td class="field-body"><p class="first">list of string or <a class="reference internal" href="../Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a></p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of file extensions</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list of string</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_aliases.sniff_features">
+<tt class="descclassname">waflib.Tools.c_aliases.</tt><tt class="descname">sniff_features</tt><big>(</big><em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_aliases.html#sniff_features"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_aliases.sniff_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look at the source files and return the features for a task generator (mainly cc and cxx):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">snif_features</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;foo.c&#39;</span><span class="p">,</span> <span class="s">&#39;foo.cxx&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="o">=</span><span class="s">&#39;shlib&#39;</span><span class="p">)</span>
+<span class="c"># returns  [&#39;cxx&#39;, &#39;c&#39;, &#39;cxxshlib&#39;, &#39;cshlib&#39;]</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> (list of string or <a class="reference internal" href="../Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a>) &#8211; source files to process</li>
+<li><strong>type</strong> (<em>string</em>) &#8211; object type in <em>program</em>, <em>shlib</em> or <em>stlib</em></li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the list of features for a task generator processing the source files</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list of string</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_aliases.program">
+<tt class="descclassname">waflib.Tools.c_aliases.</tt><tt class="descname">program</tt><big>(</big><em>bld</em>, <em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_aliases.html#program"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_aliases.program" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
+<p>Alias for creating programs by looking at the file extensions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">program</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;foo.c&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">)</span>
+        <span class="c"># equivalent to:</span>
+        <span class="c"># bld(features=&#39;c cprogram&#39;, source=&#39;foo.c&#39;, target=&#39;app&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_aliases.shlib">
+<tt class="descclassname">waflib.Tools.c_aliases.</tt><tt class="descname">shlib</tt><big>(</big><em>bld</em>, <em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_aliases.html#shlib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_aliases.shlib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
+<p>Alias for creating shared libraries by looking at the file extensions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">shlib</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;foo.c&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">)</span>
+        <span class="c"># equivalent to:</span>
+        <span class="c"># bld(features=&#39;c cshlib&#39;, source=&#39;foo.c&#39;, target=&#39;app&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_aliases.stlib">
+<tt class="descclassname">waflib.Tools.c_aliases.</tt><tt class="descname">stlib</tt><big>(</big><em>bld</em>, <em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_aliases.html#stlib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_aliases.stlib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
+<p>Alias for creating static libraries by looking at the file extensions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">stlib</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;foo.cpp&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">)</span>
+        <span class="c"># equivalent to:</span>
+        <span class="c"># bld(features=&#39;cxx cxxstlib&#39;, source=&#39;foo.cpp&#39;, target=&#39;app&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_aliases.objects">
+<tt class="descclassname">waflib.Tools.c_aliases.</tt><tt class="descname">objects</tt><big>(</big><em>bld</em>, <em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_aliases.html#objects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_aliases.objects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
+<p>Alias for creating object files by looking at the file extensions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">objects</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;foo.c&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">)</span>
+        <span class="c"># equivalent to:</span>
+        <span class="c"># bld(features=&#39;c&#39;, source=&#39;foo.c&#39;, target=&#39;app&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_aliases.conf">
+<tt class="descclassname">waflib.Tools.c_aliases.</tt><tt class="descname">conf</tt><big>(</big><em>f</em><big>)</big><a class="headerlink" href="#waflib.Tools.c_aliases.conf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: attach new configuration functions to <a class="reference internal" href="../Build.html#waflib.Build.BuildContext" title="waflib.Build.BuildContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Build.BuildContext</span></tt></a> and
+<a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a>. The methods bound will accept a parameter
+named &#8216;mandatory&#8217; to disable the configuration errors:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;abc&#39;</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>f</strong> (<em>function</em>) &#8211; method to bind</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="c_tests.html"
+                        title="previous chapter">c_tests</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gas.html"
+                        title="next chapter">gas</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tools/c_aliases.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gas.html" title="gas"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="c_tests.html" title="c_tests"
+             >previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

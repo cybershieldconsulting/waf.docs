@@ -1,0 +1,404 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ConfigSet &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="index.html" />
+    <link rel="next" title="Configure" href="Configure.html" />
+    <link rel="prev" title="Build" href="Build.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Configure.html" title="Configure"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Build.html" title="Build"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.ConfigSet">
+<span id="configset"></span><h1>ConfigSet<a class="headerlink" href="#module-waflib.ConfigSet" title="Permalink to this headline">¶</a></h1>
+<p>ConfigSet: a special dict</p>
+<p>The values put in <a class="reference internal" href="#waflib.ConfigSet.ConfigSet" title="waflib.ConfigSet.ConfigSet"><tt class="xref py py-class docutils literal"><span class="pre">ConfigSet</span></tt></a> must be lists</p>
+<dl class="class">
+<dt id="waflib.ConfigSet.ConfigSet">
+<em class="property">class </em><tt class="descclassname">waflib.ConfigSet.</tt><tt class="descname">ConfigSet</tt><big>(</big><em>filename=None</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A dict that honor serialization and parent relationships. The serialization format
+is human-readable (python-like) and performed by using eval() and repr().
+For high performance prefer pickle. Do not store functions as they are not serializable.</p>
+<p>The values can be accessed by attributes or by keys:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.ConfigSet</span> <span class="kn">import</span> <span class="n">ConfigSet</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">ConfigSet</span><span class="p">()</span>
+<span class="n">env</span><span class="o">.</span><span class="n">FOO</span> <span class="o">=</span> <span class="s">&#39;test&#39;</span>
+<span class="n">env</span><span class="p">[</span><span class="s">&#39;FOO&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;test&#39;</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="waflib.ConfigSet.ConfigSet.table">
+<tt class="descname">table</tt><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal dict holding the object values</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.__contains__">
+<tt class="descname">__contains__</tt><big>(</big><em>key</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.__contains__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.__contains__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable the <em>in</em> syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">if</span> <span class="s">&#39;foo&#39;</span> <span class="ow">in</span> <span class="n">env</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.__str__">
+<tt class="descname">__str__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Text representation of the ConfigSet (for debugging purposes)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.__getitem__">
+<tt class="descname">__getitem__</tt><big>(</big><em>key</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.__getitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.__getitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary interface: get value from key:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;foo&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.__setitem__">
+<tt class="descname">__setitem__</tt><big>(</big><em>key</em>, <em>value</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.__setitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.__setitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary interface: get value from key</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.__delitem__">
+<tt class="descname">__delitem__</tt><big>(</big><em>key</em>, <em>value</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.__delitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.__delitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary interface: get value from key</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.__getattr__">
+<tt class="descname">__getattr__</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.__getattr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.__getattr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attribute access provided for convenience. The following forms are equivalent:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.__setattr__">
+<tt class="descname">__setattr__</tt><big>(</big><em>name</em>, <em>value</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.__setattr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.__setattr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attribute access provided for convenience. The following forms are equivalent:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="n">env</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.__delattr__">
+<tt class="descname">__delattr__</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.__delattr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.__delattr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attribute access provided for convenience. The following forms are equivalent:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="k">del</span> <span class="n">env</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">del</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.derive">
+<tt class="descname">derive</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.derive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.derive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new ConfigSet deriving from self. The copy returned
+will be a shallow copy:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.ConfigSet</span> <span class="kn">import</span> <span class="n">ConfigSet</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">ConfigSet</span><span class="p">()</span>
+<span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CFLAGS&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-O2&#39;</span><span class="p">])</span>
+<span class="n">child</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">derive</span><span class="p">()</span>
+<span class="n">child</span><span class="o">.</span><span class="n">CFLAGS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;test&#39;</span><span class="p">)</span> <span class="c"># warning! this will modify &#39;env&#39;</span>
+<span class="n">child</span><span class="o">.</span><span class="n">CFLAGS</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-O3&#39;</span><span class="p">]</span> <span class="c"># new list, ok</span>
+<span class="n">child</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CFLAGS&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-O3&#39;</span><span class="p">])</span> <span class="c"># ok</span>
+</pre></div>
+</div>
+<p>Use <a class="reference internal" href="#waflib.ConfigSet.ConfigSet.detach" title="waflib.ConfigSet.ConfigSet.detach"><tt class="xref py py-func docutils literal"><span class="pre">ConfigSet.detach()</span></tt></a> to detach the child from the parent.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.detach">
+<tt class="descname">detach</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.detach"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.detach" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detach self from its parent (if existing)</p>
+<p>Modifying the parent <a class="reference internal" href="#waflib.ConfigSet.ConfigSet" title="waflib.ConfigSet.ConfigSet"><tt class="xref py py-class docutils literal"><span class="pre">ConfigSet</span></tt></a> will not change the current object
+Modifying this <a class="reference internal" href="#waflib.ConfigSet.ConfigSet" title="waflib.ConfigSet.ConfigSet"><tt class="xref py py-class docutils literal"><span class="pre">ConfigSet</span></tt></a> will not modify the parent one.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.get_flat">
+<tt class="descname">get_flat</tt><big>(</big><em>key</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.get_flat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.get_flat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a value as a string. If the input is a list, the value returned is space-separated.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> (<em>string</em>) &#8211; key to use</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet._get_list_value_for_modification">
+<tt class="descname">_get_list_value_for_modification</tt><big>(</big><em>key</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet._get_list_value_for_modification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet._get_list_value_for_modification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list value for further modification.</p>
+<p>The list may be modified inplace and there is no need to do this afterwards:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.append_value">
+<tt class="descname">append_value</tt><big>(</big><em>var</em>, <em>val</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.append_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.append_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Appends a value to the specified config key:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CFLAGS&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-O2&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The value must be a list or a tuple</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.prepend_value">
+<tt class="descname">prepend_value</tt><big>(</big><em>var</em>, <em>val</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.prepend_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.prepend_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepends a value to the specified item:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">prepend_value</span><span class="p">(</span><span class="s">&#39;CFLAGS&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-O2&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The value must be a list or a tuple</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.append_unique">
+<tt class="descname">append_unique</tt><big>(</big><em>var</em>, <em>val</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.append_unique"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.append_unique" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append a value to the specified item only if it&#8217;s not already present:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;CFLAGS&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-O2&#39;</span><span class="p">,</span> <span class="s">&#39;-g&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The value must be a list or a tuple</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.get_merged_dict">
+<tt class="descname">get_merged_dict</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.get_merged_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.get_merged_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the merged dictionary from the fusion of self and all its parent</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">a ConfigSet object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.store">
+<tt class="descname">store</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.store"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.store" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the <a class="reference internal" href="#waflib.ConfigSet.ConfigSet" title="waflib.ConfigSet.ConfigSet"><tt class="xref py py-class docutils literal"><span class="pre">ConfigSet</span></tt></a> data into a file. See <a class="reference internal" href="#waflib.ConfigSet.ConfigSet.load" title="waflib.ConfigSet.ConfigSet.load"><tt class="xref py py-meth docutils literal"><span class="pre">ConfigSet.load()</span></tt></a> for reading such files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>string</em>) &#8211; file to use</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.load">
+<tt class="descname">load</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the <a class="reference internal" href="#waflib.ConfigSet.ConfigSet" title="waflib.ConfigSet.ConfigSet"><tt class="xref py py-class docutils literal"><span class="pre">ConfigSet</span></tt></a> data from a file. See <a class="reference internal" href="#waflib.ConfigSet.ConfigSet.store" title="waflib.ConfigSet.ConfigSet.store"><tt class="xref py py-meth docutils literal"><span class="pre">ConfigSet.store()</span></tt></a> for writing such files</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>string</em>) &#8211; file to use</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.update">
+<tt class="descname">update</tt><big>(</big><em>d</em><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary interface: replace values from another dict</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>d</strong> (<em>dict-like object</em>) &#8211; object to use the value from</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.stash">
+<tt class="descname">stash</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.stash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.stash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store the object state, to provide a kind of transaction support:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">env</span> <span class="o">=</span> <span class="n">ConfigSet</span><span class="p">()</span>
+<span class="n">env</span><span class="o">.</span><span class="n">stash</span><span class="p">()</span>
+<span class="k">try</span><span class="p">:</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;-O3&#39;</span><span class="p">)</span>
+        <span class="n">call_some_method</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+<span class="k">finally</span><span class="p">:</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">revert</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The history is kept in a stack, and is lost during the serialization by <a class="reference internal" href="#waflib.ConfigSet.ConfigSet.store" title="waflib.ConfigSet.ConfigSet.store"><tt class="xref py py-meth docutils literal"><span class="pre">ConfigSet.store()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.ConfigSet.ConfigSet.revert">
+<tt class="descname">revert</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/ConfigSet.html#ConfigSet.revert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.ConfigSet.ConfigSet.revert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reverts the object to a previous state. See <a class="reference internal" href="#waflib.ConfigSet.ConfigSet.stash" title="waflib.ConfigSet.ConfigSet.stash"><tt class="xref py py-meth docutils literal"><span class="pre">ConfigSet.stash()</span></tt></a></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Build.html"
+                        title="previous chapter">Build</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Configure.html"
+                        title="next chapter">Configure</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/ConfigSet.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Configure.html" title="Configure"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Build.html" title="Build"
+             >previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

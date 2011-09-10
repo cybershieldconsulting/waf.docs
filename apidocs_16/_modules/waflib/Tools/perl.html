@@ -1,0 +1,260 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.perl &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.perl</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># andersg at 0x63.nu 2007</span>
+<span class="c"># Thomas Nagy 2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Support for Perl extensions. A C/C++ compiler is required::</span>
+
+<span class="sd">	def options(opt):</span>
+<span class="sd">		opt.load(&#39;compiler_c perl&#39;)</span>
+<span class="sd">	def configure(conf):</span>
+<span class="sd">		conf.load(&#39;compiler_c perl&#39;)</span>
+<span class="sd">		conf.check_perl_version((5,6,0))</span>
+<span class="sd">		conf.check_perl_ext_devel()</span>
+<span class="sd">		conf.check_perl_module(&#39;Cairo&#39;)</span>
+<span class="sd">		conf.check_perl_module(&#39;Devel::PPPort 4.89&#39;)</span>
+<span class="sd">	def build(bld):</span>
+<span class="sd">		bld(</span>
+<span class="sd">			features     = &#39;c cshlib perlext&#39;,</span>
+<span class="sd">			source       = &#39;Mytest.xs&#39;,</span>
+<span class="sd">			target       = &#39;Mytest&#39;,</span>
+<span class="sd">			install_path = &#39;${ARCHDIR_PERL}/auto&#39;)</span>
+<span class="sd">		bld.install_files(&#39;${ARCHDIR_PERL}&#39;, &#39;Mytest.pm&#39;)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Utils</span>
+<span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">extension</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before</span>
+
+<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;apply_incpaths&#39;</span><span class="p">,</span> <span class="s">&#39;apply_link&#39;</span><span class="p">,</span> <span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">)</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;perlext&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="init_perlext"><a class="viewcode-back" href="../../../tools/perl.html#waflib.Tools.perl.init_perlext">[docs]</a><span class="k">def</span> <span class="nf">init_perlext</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Change the values of *cshlib_PATTERN* and *cxxshlib_PATTERN* to remove the</span>
+<span class="sd">	*lib* prefix from library names.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;uselib&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;PERLEXT&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;PERLEXT&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;cshlib_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;cxxshlib_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;perlext_PATTERN&#39;</span><span class="p">]</span>
+</div>
+<span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.xs&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="xsubpp_file"><a class="viewcode-back" href="../../../tools/perl.html#waflib.Tools.perl.xsubpp_file">[docs]</a><span class="k">def</span> <span class="nf">xsubpp_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create :py:class:`waflib.Tools.perl.xsubpp` tasks to process *.xs* files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">outnode</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.c&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;xsubpp&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">outnode</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outnode</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="xsubpp"><a class="viewcode-back" href="../../../tools/perl.html#waflib.Tools.perl.xsubpp">[docs]</a><span class="k">class</span> <span class="nc">xsubpp</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process *.xs* files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${PERL} ${XSUBPP} -noprototypes -typemap ${EXTUTILS_TYPEMAP} ${SRC} &gt; ${TGT}&#39;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+	<span class="n">ext_out</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.h&#39;</span><span class="p">]</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_perl_version"><a class="viewcode-back" href="../../../tools/perl.html#waflib.Tools.perl.check_perl_version">[docs]</a><span class="k">def</span> <span class="nf">check_perl_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minver</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Check if Perl is installed, and set the variable PERL.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">res</span> <span class="o">=</span> <span class="bp">True</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="s">&#39;perlbinary&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="n">perl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;perl&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;PERL&#39;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">perl</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">False</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PERL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">perl</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">perlbinary</span>
+
+	<span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">perl</span><span class="p">,</span> <span class="s">&quot;-e&quot;</span><span class="p">,</span> <span class="s">&#39;printf </span><span class="se">\&quot;</span><span class="s">%vd</span><span class="se">\&quot;</span><span class="s">, $^V&#39;</span><span class="p">])</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">version</span><span class="p">:</span>
+		<span class="n">res</span> <span class="o">=</span> <span class="bp">False</span>
+		<span class="n">version</span> <span class="o">=</span> <span class="s">&quot;Unknown&quot;</span>
+	<span class="k">elif</span> <span class="ow">not</span> <span class="n">minver</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+		<span class="n">ver</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)))</span>
+		<span class="k">if</span> <span class="n">ver</span> <span class="o">&lt;</span> <span class="n">minver</span><span class="p">:</span>
+			<span class="n">res</span> <span class="o">=</span> <span class="bp">False</span>
+
+	<span class="k">if</span> <span class="n">minver</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+		<span class="n">cver</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">cver</span> <span class="o">=</span> <span class="s">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="n">minver</span><span class="p">))</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;perl&#39;</span><span class="p">,</span> <span class="n">cver</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">res</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_perl_module"><a class="viewcode-back" href="../../../tools/perl.html#waflib.Tools.perl.check_perl_module">[docs]</a><span class="k">def</span> <span class="nf">check_perl_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Check if specified perlmodule is installed.</span>
+
+<span class="sd">	The minimum version can be specified by specifying it after modulename</span>
+<span class="sd">	like this::</span>
+
+<span class="sd">		def configure(conf):</span>
+<span class="sd">			conf.check_perl_module(&quot;Some::Module 2.92&quot;)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PERL&#39;</span><span class="p">],</span> <span class="s">&#39;-e&#39;</span><span class="p">,</span> <span class="s">&#39;use </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">module</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">start_msg</span><span class="p">(</span><span class="s">&#39;perl module </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">module</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+	<span class="k">except</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+		<span class="k">return</span> <span class="bp">None</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">r</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_perl_ext_devel"><a class="viewcode-back" href="../../../tools/perl.html#waflib.Tools.perl.check_perl_ext_devel">[docs]</a><span class="k">def</span> <span class="nf">check_perl_ext_devel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Check for configuration needed to build perl extensions.</span>
+
+<span class="sd">	Sets different xxx_PERLEXT variables in the environment.</span>
+
+<span class="sd">	Also sets the ARCHDIR_PERL variable useful as installation path,</span>
+<span class="sd">	which can be overridden by ``--with-perl-archdir`` option.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+	<span class="n">perl</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">PERL</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">perl</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;find perl first&#39;</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">read_out</span><span class="p">(</span><span class="n">cmd</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">perl</span> <span class="o">+</span> <span class="n">cmd</span><span class="p">))</span>
+
+	<span class="n">env</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_PERLEXT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_out</span><span class="p">(</span><span class="s">&quot; -MConfig -e&#39;print $Config{lddlflags}&#39;&quot;</span><span class="p">)</span>
+	<span class="n">env</span><span class="p">[</span><span class="s">&#39;INCLUDES_PERLEXT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_out</span><span class="p">(</span><span class="s">&quot; -MConfig -e&#39;print </span><span class="se">\&quot;</span><span class="s">$Config{archlib}/CORE</span><span class="se">\&quot;</span><span class="s">&#39;&quot;</span><span class="p">)</span>
+	<span class="n">env</span><span class="p">[</span><span class="s">&#39;CFLAGS_PERLEXT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_out</span><span class="p">(</span><span class="s">&quot; -MConfig -e&#39;print </span><span class="se">\&quot;</span><span class="s">$Config{ccflags} $Config{cccdlflags}</span><span class="se">\&quot;</span><span class="s">&#39;&quot;</span><span class="p">)</span>
+
+	<span class="n">env</span><span class="p">[</span><span class="s">&#39;XSUBPP&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_out</span><span class="p">(</span><span class="s">&quot; -MConfig -e&#39;print </span><span class="se">\&quot;</span><span class="s">$Config{privlib}/ExtUtils/xsubpp$Config{exe_ext}</span><span class="se">\&quot;</span><span class="s">&#39;&quot;</span><span class="p">)</span>
+	<span class="n">env</span><span class="p">[</span><span class="s">&#39;EXTUTILS_TYPEMAP&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_out</span><span class="p">(</span><span class="s">&quot; -MConfig -e&#39;print </span><span class="se">\&quot;</span><span class="s">$Config{privlib}/ExtUtils/typemap</span><span class="se">\&quot;</span><span class="s">&#39;&quot;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="s">&#39;perlarchdir&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="n">env</span><span class="p">[</span><span class="s">&#39;ARCHDIR_PERL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">perl</span> <span class="o">+</span> <span class="s">&quot; -MConfig -e&#39;print $Config{sitearch}&#39;&quot;</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">env</span><span class="p">[</span><span class="s">&#39;ARCHDIR_PERL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="s">&#39;perlarchdir&#39;</span><span class="p">)</span>
+
+	<span class="n">env</span><span class="p">[</span><span class="s">&#39;perlext_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">perl</span> <span class="o">+</span> <span class="s">&quot; -MConfig -e&#39;print $Config{dlext}&#39;&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="options"><a class="viewcode-back" href="../../../tools/perl.html#waflib.Tools.perl.options">[docs]</a><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Add the ``--with-perl-archdir`` and ``--with-perl-binary`` command-line options.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--with-perl-binary&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&#39;string&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;perlbinary&#39;</span><span class="p">,</span> <span class="n">help</span> <span class="o">=</span> <span class="s">&#39;Specify alternate perl binary&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+	<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--with-perl-archdir&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&#39;string&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;perlarchdir&#39;</span><span class="p">,</span> <span class="n">help</span> <span class="o">=</span> <span class="s">&#39;Specify directory where to install arch specific files&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

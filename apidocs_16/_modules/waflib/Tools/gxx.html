@@ -1,0 +1,258 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.gxx &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.gxx</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2006-2010 (ita)</span>
+<span class="c"># Ralf Habacker, 2006 (rh)</span>
+<span class="c"># Yinon Ehrlich, 2009</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">g++/llvm detection.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Configure</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Utils</span>
+<span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">ccroot</span><span class="p">,</span> <span class="n">ar</span>
+<span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
+
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="find_gxx"><a class="viewcode-back" href="../../../tools/gxx.html#waflib.Tools.gxx.find_gxx">[docs]</a><span class="k">def</span> <span class="nf">find_gxx</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Find the program g++, and if present, try to detect its version number</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">cxx</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">([</span><span class="s">&#39;g++&#39;</span><span class="p">,</span> <span class="s">&#39;c++&#39;</span><span class="p">],</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;CXX&#39;</span><span class="p">)</span>
+	<span class="n">cxx</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_to_list</span><span class="p">(</span><span class="n">cxx</span><span class="p">)</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">get_cc_version</span><span class="p">(</span><span class="n">cxx</span><span class="p">,</span> <span class="n">gcc</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CXX_NAME</span> <span class="o">=</span> <span class="s">&#39;gcc&#39;</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CXX</span>      <span class="o">=</span> <span class="n">cxx</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="gxx_common_flags"><a class="viewcode-back" href="../../../tools/gxx.html#waflib.Tools.gxx.gxx_common_flags">[docs]</a><span class="k">def</span> <span class="nf">gxx_common_flags</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Common flags for g++ on nearly all platforms</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXX_SRC_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXX_TGT_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;-o&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]</span> <span class="c"># shell hack for -MD</span>
+
+	<span class="c"># linker</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;LINK_CXX&#39;</span><span class="p">]:</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;LINK_CXX&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;CXX&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXXLNK_SRC_F&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXXLNK_TGT_F&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-o&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]</span> <span class="c"># shell hack for -MD</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CPPPATH_ST&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="s">&#39;-I</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DEFINES_ST&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="s">&#39;-D</span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LIB_ST&#39;</span><span class="p">]</span>              <span class="o">=</span> <span class="s">&#39;-l</span><span class="si">%s</span><span class="s">&#39;</span> <span class="c"># template for adding libs</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LIBPATH_ST&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="s">&#39;-L</span><span class="si">%s</span><span class="s">&#39;</span> <span class="c"># template for adding libpaths</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;STLIB_ST&#39;</span><span class="p">]</span>            <span class="o">=</span> <span class="s">&#39;-l</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;STLIBPATH_ST&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;-L</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;RPATH_ST&#39;</span><span class="p">]</span>            <span class="o">=</span> <span class="s">&#39;-Wl,-rpath,</span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SONAME_ST&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;-Wl,-h,</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SHLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;-Wl,-Bdynamic&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;STLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;-Wl,-Bstatic&#39;</span>
+
+	<span class="c"># program</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cxxprogram_PATTERN&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="c"># shared library</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXXFLAGS_cxxshlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fPIC&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cxxshlib&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-shared&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cxxshlib_PATTERN&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.so&#39;</span>
+
+	<span class="c"># static lib</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cxxstlib&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-Wl,-Bstatic&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cxxstlib_PATTERN&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.a&#39;</span>
+
+	<span class="c"># osx stuff</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_MACBUNDLE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-bundle&#39;</span><span class="p">,</span> <span class="s">&#39;-undefined&#39;</span><span class="p">,</span> <span class="s">&#39;dynamic_lookup&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXXFLAGS_MACBUNDLE&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fPIC&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;macbundle_PATTERN&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.bundle&#39;</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="gxx_modifier_win32"><a class="viewcode-back" href="../../../tools/gxx.html#waflib.Tools.gxx.gxx_modifier_win32">[docs]</a><span class="k">def</span> <span class="nf">gxx_modifier_win32</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Configuration flags for executing gcc on Windows&quot;&quot;&quot;</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cxxprogram_PATTERN&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.exe&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cxxshlib_PATTERN&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.dll&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;implib_PATTERN&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.dll.a&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;IMPLIB_ST&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;-Wl,--out-implib,</span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXXFLAGS_cxxshlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[]</span>
+
+	<span class="n">v</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CXXFLAGS_cxxshlib&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-DDLL_EXPORT&#39;</span><span class="p">])</span> <span class="c"># TODO adding nonstandard defines like this DLL_EXPORT is not a good idea</span>
+
+	<span class="c"># Auto-import is enabled by default even without this option,</span>
+	<span class="c"># but enabling it explicitly has the nice effect of suppressing the rather boring, debug-level messages</span>
+	<span class="c"># that the linker emits otherwise.</span>
+	<span class="n">v</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-Wl,--enable-auto-import&#39;</span><span class="p">])</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="gxx_modifier_cygwin"><a class="viewcode-back" href="../../../tools/gxx.html#waflib.Tools.gxx.gxx_modifier_cygwin">[docs]</a><span class="k">def</span> <span class="nf">gxx_modifier_cygwin</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Configuration flags for executing g++ on Cygwin&quot;&quot;&quot;</span>
+	<span class="n">gxx_modifier_win32</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cxxshlib_PATTERN&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;cyg</span><span class="si">%s</span><span class="s">.dll&#39;</span>
+	<span class="n">v</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;LINKFLAGS_cxxshlib&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-Wl,--enable-auto-image-base&#39;</span><span class="p">])</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXXFLAGS_cxxshlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[]</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="gxx_modifier_darwin"><a class="viewcode-back" href="../../../tools/gxx.html#waflib.Tools.gxx.gxx_modifier_darwin">[docs]</a><span class="k">def</span> <span class="nf">gxx_modifier_darwin</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Configuration flags for executing g++ on MacOS&quot;&quot;&quot;</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXXFLAGS_cxxshlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fPIC&#39;</span><span class="p">,</span> <span class="s">&#39;-compatibility_version&#39;</span><span class="p">,</span> <span class="s">&#39;1&#39;</span><span class="p">,</span> <span class="s">&#39;-current_version&#39;</span><span class="p">,</span> <span class="s">&#39;1&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cxxshlib&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-dynamiclib&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cxxshlib_PATTERN&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.dylib&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FRAMEWORKPATH_ST&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;-F</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FRAMEWORK_ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;-framework </span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cxxstlib&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[]</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SHLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;STLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SONAME_ST&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;&#39;</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="gxx_modifier_aix"><a class="viewcode-back" href="../../../tools/gxx.html#waflib.Tools.gxx.gxx_modifier_aix">[docs]</a><span class="k">def</span> <span class="nf">gxx_modifier_aix</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Configuration flags for executing g++ on AIX&quot;&quot;&quot;</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cxxprogram&#39;</span><span class="p">]</span><span class="o">=</span> <span class="p">[</span><span class="s">&#39;-Wl,-brtl&#39;</span><span class="p">]</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cxxshlib&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-shared&#39;</span><span class="p">,</span> <span class="s">&#39;-Wl,-brtl,-bexpfull&#39;</span><span class="p">]</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SHLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;&#39;</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="gxx_modifier_platform"><a class="viewcode-back" href="../../../tools/gxx.html#waflib.Tools.gxx.gxx_modifier_platform">[docs]</a><span class="k">def</span> <span class="nf">gxx_modifier_platform</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Execute platform-specific functions based on *gxx_modifier_+NAME*&quot;&quot;&quot;</span>
+	<span class="c"># * set configurations specific for a platform.</span>
+	<span class="c"># * the destination platform is detected automatically by looking at the macros the compiler predefines,</span>
+	<span class="c">#   and if it&#39;s not recognised, it fallbacks to sys.platform.</span>
+	<span class="n">gxx_modifier_func</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;gxx_modifier_&#39;</span> <span class="o">+</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">DEST_OS</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">gxx_modifier_func</span><span class="p">:</span>
+			<span class="n">gxx_modifier_func</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+</div>
+<span class="n">configure</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">find_gxx</span>
+<span class="s">find_ar</span>
+<span class="s">gxx_common_flags</span>
+<span class="s">gxx_modifier_platform</span>
+<span class="s">cxx_load_tools</span>
+<span class="s">cxx_add_flags</span>
+<span class="s">link_add_flags</span>
+<span class="s">&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Configuration for g++</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

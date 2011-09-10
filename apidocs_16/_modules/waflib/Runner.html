@@ -1,0 +1,454 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Runner &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Runner</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2005-2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Runner.py: Task scheduling and execution</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">random</span>
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">Queue</span>
+<span class="k">except</span><span class="p">:</span>
+	<span class="kn">from</span> <span class="nn">Queue</span> <span class="kn">import</span> <span class="n">Queue</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Errors</span>
+
+<span class="n">GAP</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Wait for free tasks if there are at least ``GAP * njobs`` in queue</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TaskConsumer"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.TaskConsumer">[docs]</a><span class="k">class</span> <span class="nc">TaskConsumer</span><span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Task consumers belong to a pool of workers</span>
+
+<span class="sd">	They wait for tasks in the queue and then use ``task.process(...)``</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">Utils</span><span class="o">.</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">ready</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Obtain :py:class:`waflib.Task.TaskBase` instances from this queue.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">setDaemon</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TaskConsumer.run"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.TaskConsumer.run">[docs]</a>	<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Loop over the tasks to execute</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="p">()</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="TaskConsumer.loop"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.TaskConsumer.loop">[docs]</a>	<span class="k">def</span> <span class="nf">loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Obtain tasks from :py:attr:`waflib.Runner.TaskConsumer.ready` and call</span>
+<span class="sd">		:py:meth:`waflib.Task.TaskBase.process`. If the object is a function, execute it.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+			<span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ready</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tsk</span><span class="p">,</span> <span class="n">Task</span><span class="o">.</span><span class="n">TaskBase</span><span class="p">):</span>
+				<span class="n">tsk</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">tsk</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+</div></div>
+<span class="n">pool</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Pool of task consumer objects</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="get_pool"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.get_pool">[docs]</a><span class="k">def</span> <span class="nf">get_pool</span><span class="p">():</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Obtain a task consumer from :py:attr:`waflib.Runner.pool`.</span>
+<span class="sd">	Do not forget to put it back by using :py:func:`waflib.Runner.put_pool`</span>
+<span class="sd">	and reset properly (original waiting queue).</span>
+
+<span class="sd">	:rtype: :py:class:`waflib.Runner.TaskConsumer`</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">pool</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+	<span class="k">except</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">TaskConsumer</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="put_pool"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.put_pool">[docs]</a><span class="k">def</span> <span class="nf">put_pool</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Return a task consumer to the thread pool :py:attr:`waflib.Runner.pool`</span>
+
+<span class="sd">	:param x: task consumer object</span>
+<span class="sd">	:type x: :py:class:`waflib.Runner.TaskConsumer`</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">pool</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Parallel"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.Parallel">[docs]</a><span class="k">class</span> <span class="nc">Parallel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Schedule the tasks obtained from the build context for execution.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Parallel.__init__"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.Parallel.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bld</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		The initialization requires a build context reference</span>
+<span class="sd">		for computing the total number of jobs.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">numjobs</span> <span class="o">=</span> <span class="n">j</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Number of consumers in the pool</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">bld</span> <span class="o">=</span> <span class="n">bld</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Instance of :py:class:`waflib.Build.BuildContext`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">outstanding</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="sd">&quot;&quot;&quot;List of :py:class:`waflib.Task.TaskBase` that may be ready to be executed&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">frozen</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="sd">&quot;&quot;&quot;List of :py:class:`waflib.Task.TaskBase` that cannot be executed immediately&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+		<span class="sd">&quot;&quot;&quot;List of :py:class:`waflib.Task.TaskBase` returned by the task consumers&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="sd">&quot;&quot;&quot;Amount of tasks that may be processed by :py:class:`waflib.Runner.TaskConsumer`&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">processed</span> <span class="o">=</span> <span class="mi">1</span>
+		<span class="sd">&quot;&quot;&quot;Amount of tasks processed&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="o">=</span> <span class="bp">False</span>
+		<span class="sd">&quot;&quot;&quot;Error flag to stop the build&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="sd">&quot;&quot;&quot;Tasks that could not be executed&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">biter</span> <span class="o">=</span> <span class="bp">None</span>
+		<span class="sd">&quot;&quot;&quot;Task iterator which must give groups of parallelizable tasks when calling ``next()``&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">dirty</span> <span class="o">=</span> <span class="bp">False</span>
+		<span class="sd">&quot;&quot;&quot;Flag to indicate that tasks have been executed, and that the build cache must be saved (call :py:meth:`waflib.Build.BuildContext.store`)&quot;&quot;&quot;</span>
+</div>
+<div class="viewcode-block" id="Parallel.get_next_task"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.Parallel.get_next_task">[docs]</a>	<span class="k">def</span> <span class="nf">get_next_task</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Obtain the next task to execute.</span>
+
+<span class="sd">		:rtype: :py:class:`waflib.Task.TaskBase`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">outstanding</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">None</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">outstanding</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parallel.postpone"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.Parallel.postpone">[docs]</a>	<span class="k">def</span> <span class="nf">postpone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tsk</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A task cannot be executed at this point, put it in the list :py:attr:`waflib.Runner.Parallel.frozen`.</span>
+
+<span class="sd">		:param tsk: task</span>
+<span class="sd">		:type tsk: :py:class:`waflib.Task.TaskBase`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">frozen</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tsk</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">frozen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tsk</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parallel.refill_task_list"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.Parallel.refill_task_list">[docs]</a>	<span class="k">def</span> <span class="nf">refill_task_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Put the next group of tasks to execute in :py:attr:`waflib.Runner.Parallel.outstanding`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">numjobs</span> <span class="o">*</span> <span class="n">GAP</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">get_out</span><span class="p">()</span>
+
+		<span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">outstanding</span><span class="p">:</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">get_out</span><span class="p">()</span>
+			<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">frozen</span><span class="p">:</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="n">cond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deadlock</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">processed</span>
+				<span class="k">except</span><span class="p">:</span>
+					<span class="k">pass</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">cond</span><span class="p">:</span>
+						<span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;check the build order for the tasks&#39;</span>
+						<span class="k">for</span> <span class="n">tsk</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">frozen</span><span class="p">:</span>
+							<span class="k">if</span> <span class="ow">not</span> <span class="n">tsk</span><span class="o">.</span><span class="n">run_after</span><span class="p">:</span>
+								<span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;check the methods runnable_status&#39;</span>
+								<span class="k">break</span>
+						<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+						<span class="k">for</span> <span class="n">tsk</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">frozen</span><span class="p">:</span>
+							<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="se">\t</span><span class="s">-&gt; </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">tsk</span><span class="p">),</span> <span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tsk</span><span class="o">.</span><span class="n">run_after</span><span class="p">]))</span>
+						<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&quot;Deadlock detected: </span><span class="si">%s%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lst</span><span class="p">)))</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">deadlock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">processed</span>
+
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frozen</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">outstanding</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frozen</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">frozen</span> <span class="o">=</span> <span class="p">[]</span>
+			<span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">outstanding</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">biter</span><span class="p">))</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">total</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">total</span><span class="p">()</span>
+				<span class="k">break</span>
+</div>
+<div class="viewcode-block" id="Parallel.add_more_tasks"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.Parallel.add_more_tasks">[docs]</a>	<span class="k">def</span> <span class="nf">add_more_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tsk</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Tasks may be added dynamically during the build by binding them to the task :py:attr:`waflib.Task.TaskBase.more_tasks`</span>
+
+<span class="sd">		:param tsk: task</span>
+<span class="sd">		:type tsk: :py:attr:`waflib.Task.TaskBase`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tsk</span><span class="p">,</span> <span class="s">&#39;more_tasks&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">outstanding</span> <span class="o">+=</span> <span class="n">tsk</span><span class="o">.</span><span class="n">more_tasks</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">total</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tsk</span><span class="o">.</span><span class="n">more_tasks</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parallel.get_out"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.Parallel.get_out">[docs]</a>	<span class="k">def</span> <span class="nf">get_out</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Obtain one task returned from the task consumers, and update the task count. Add more tasks if necessary through</span>
+<span class="sd">		:py:attr:`waflib.Runner.Parallel.add_more_tasks`.</span>
+
+<span class="sd">		:rtype: :py:attr:`waflib.Task.TaskBase`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">add_more_tasks</span><span class="p">(</span><span class="n">tsk</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">-=</span> <span class="mi">1</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">dirty</span> <span class="o">=</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="Parallel.error_handler"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.Parallel.error_handler">[docs]</a>	<span class="k">def</span> <span class="nf">error_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tsk</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Called when a task cannot be executed. The flag :py:attr:`waflib.Runner.Parallel.stop` is set, unless</span>
+<span class="sd">		the build is executed with::</span>
+
+<span class="sd">			$ waf build -k</span>
+
+<span class="sd">		:param tsk: task</span>
+<span class="sd">		:type tsk: :py:attr:`waflib.Task.TaskBase`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">keep</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="o">=</span> <span class="bp">True</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tsk</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Parallel.add_task"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.Parallel.add_task">[docs]</a>	<span class="k">def</span> <span class="nf">add_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tsk</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Pass a task to a consumer.</span>
+
+<span class="sd">		:param tsk: task</span>
+<span class="sd">		:type tsk: :py:attr:`waflib.Task.TaskBase`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">pool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="n">pool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_task_pool</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">ready</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">tsk</span><span class="p">)</span>
+</div>
+	<span class="k">def</span> <span class="nf">init_task_pool</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="c"># lazy creation, and set a common pool for all task consumers</span>
+		<span class="n">pool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="p">[</span><span class="n">get_pool</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numjobs</span><span class="p">)]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">ready</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+		<span class="k">def</span> <span class="nf">setq</span><span class="p">(</span><span class="n">consumer</span><span class="p">):</span>
+			<span class="n">consumer</span><span class="o">.</span><span class="n">ready</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ready</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pool</span><span class="p">:</span>
+			<span class="n">x</span><span class="o">.</span><span class="n">ready</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">setq</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">pool</span>
+
+	<span class="k">def</span> <span class="nf">free_task_pool</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="c"># return the consumers, setting a different queue for each of them</span>
+		<span class="k">def</span> <span class="nf">setq</span><span class="p">(</span><span class="n">consumer</span><span class="p">):</span>
+			<span class="n">consumer</span><span class="o">.</span><span class="n">ready</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">pool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pool</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">ready</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">setq</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pool</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">get_out</span><span class="p">()</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pool</span><span class="p">:</span>
+				<span class="n">put_pool</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="Parallel.start"><a class="viewcode-back" href="../../Runner.html#waflib.Runner.Parallel.start">[docs]</a>	<span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Give tasks to :py:class:`waflib.Runner.TaskConsumer` instances until the build finishes or the ``stop`` flag is set.</span>
+<span class="sd">		If only one job is used, then execute the tasks one by one, without consumers.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">total</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">total</span><span class="p">()</span>
+
+		<span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">:</span>
+
+			<span class="bp">self</span><span class="o">.</span><span class="n">refill_task_list</span><span class="p">()</span>
+
+			<span class="c"># consider the next task</span>
+			<span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_next_task</span><span class="p">()</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">tsk</span><span class="p">:</span>
+				<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">:</span>
+					<span class="c"># tasks may add new ones after they are run</span>
+					<span class="k">continue</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="c"># no tasks to run, no tasks running, time to exit</span>
+					<span class="k">break</span>
+
+			<span class="k">if</span> <span class="n">tsk</span><span class="o">.</span><span class="n">hasrun</span><span class="p">:</span>
+				<span class="c"># if the task is marked as &quot;run&quot;, just skip it</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">processed</span> <span class="o">+=</span> <span class="mi">1</span>
+				<span class="k">continue</span>
+
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">st</span> <span class="o">=</span> <span class="n">tsk</span><span class="o">.</span><span class="n">runnable_status</span><span class="p">()</span>
+			<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">processed</span> <span class="o">+=</span> <span class="mi">1</span>
+				<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">keep</span><span class="p">:</span>
+					<span class="n">tsk</span><span class="o">.</span><span class="n">hasrun</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">SKIPPED</span>
+					<span class="k">continue</span>
+				<span class="n">tsk</span><span class="o">.</span><span class="n">err_msg</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">ex_stack</span><span class="p">()</span>
+				<span class="n">tsk</span><span class="o">.</span><span class="n">hasrun</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">EXCEPTION</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="p">(</span><span class="n">tsk</span><span class="p">)</span>
+				<span class="k">continue</span>
+
+			<span class="k">if</span> <span class="n">st</span> <span class="o">==</span> <span class="n">Task</span><span class="o">.</span><span class="n">ASK_LATER</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">postpone</span><span class="p">(</span><span class="n">tsk</span><span class="p">)</span>
+				<span class="c"># TODO optimize this</span>
+				<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">outstanding</span><span class="p">:</span>
+					<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tsk</span><span class="o">.</span><span class="n">run_after</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outstanding</span><span class="p">:</span>
+							<span class="bp">self</span><span class="o">.</span><span class="n">outstanding</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+							<span class="bp">self</span><span class="o">.</span><span class="n">outstanding</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+			<span class="k">elif</span> <span class="n">st</span> <span class="o">==</span> <span class="n">Task</span><span class="o">.</span><span class="n">SKIP_ME</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">processed</span> <span class="o">+=</span> <span class="mi">1</span>
+				<span class="n">tsk</span><span class="o">.</span><span class="n">hasrun</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">SKIPPED</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">add_more_tasks</span><span class="p">(</span><span class="n">tsk</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="c"># run me: put the task in ready queue</span>
+				<span class="n">tsk</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">processed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">total</span><span class="p">)</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+				<span class="n">tsk</span><span class="o">.</span><span class="n">master</span> <span class="o">=</span> <span class="bp">self</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">processed</span> <span class="o">+=</span> <span class="mi">1</span>
+
+				<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">numjobs</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+					<span class="n">tsk</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">tsk</span><span class="p">)</span>
+
+		<span class="c"># self.count represents the tasks that have been made available to the consumer threads</span>
+		<span class="c"># collect all the tasks after an error else the message may be incomplete</span>
+		<span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">get_out</span><span class="p">()</span>
+
+		<span class="c">#print loop</span>
+		<span class="k">assert</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span>
+
+		<span class="c"># free the task pool, if any</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">free_task_pool</span><span class="p">()</span>
+</pre></div></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,778 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>c_preproc &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="up" title="Waf Tools" href="../tools.html" />
+    <link rel="next" title="c_tests" href="c_tests.html" />
+    <link rel="prev" title="c_osx" href="c_osx.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="c_tests.html" title="c_tests"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="c_osx.html" title="c_osx"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Tools.c_preproc">
+<span id="c-preproc"></span><h1>c_preproc<a class="headerlink" href="#module-waflib.Tools.c_preproc" title="Permalink to this headline">¶</a></h1>
+<p>C/C++ preprocessor for finding dependencies</p>
+<p>Reasons for using the Waf preprocessor by default</p>
+<ol class="arabic simple">
+<li>Some c/c++ extensions (Qt) require a custom preprocessor for obtaining the dependencies (.moc files)</li>
+<li>Not all compilers provide .d files for obtaining the dependencies (portability)</li>
+<li>A naive file scanner will not catch the constructs such as &#8220;#include foo()&#8221;</li>
+<li>A naive file scanner will catch unnecessary dependencies (change an unused header -&gt; recompile everything)</li>
+</ol>
+<p>Regarding the speed concerns:</p>
+<ul class="simple">
+<li>the preprocessing is performed only when files must be compiled</li>
+<li>the macros are evaluated only for #if/#elif/#include</li>
+<li>system headers are not scanned by default</li>
+</ul>
+<p>Now if you do not want the Waf preprocessor, the tool +gccdeps* uses the .d files produced
+during the compilation to track the dependencies (useful when used with the boost libraries).
+It only works with gcc &gt;= 4.4 though.</p>
+<p>A dumb preprocessor is also available in the tool <em>c_dumbpreproc</em></p>
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.POPFILE">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">POPFILE</tt><a class="headerlink" href="#waflib.Tools.c_preproc.POPFILE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constant representing a special token used in <a class="reference internal" href="#waflib.Tools.c_preproc.c_parser.start" title="waflib.Tools.c_preproc.c_parser.start"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Tools.c_preproc.c_parser.start()</span></tt></a> iteration to switch to a header read previously</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.recursion_limit">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">recursion_limit</tt><a class="headerlink" href="#waflib.Tools.c_preproc.recursion_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Limit on the amount of files to read in the dependency scanner</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.go_absolute">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">go_absolute</tt><a class="headerlink" href="#waflib.Tools.c_preproc.go_absolute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set to 1 to track headers on files in /usr/include - else absolute paths are ignored</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.use_trigraphs">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">use_trigraphs</tt><a class="headerlink" href="#waflib.Tools.c_preproc.use_trigraphs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply trigraph rules (False by default)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.strict_quotes">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">strict_quotes</tt><a class="headerlink" href="#waflib.Tools.c_preproc.strict_quotes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reserve the &#8220;#include &lt;&gt;&#8221; quotes for system includes (do not search for those includes). False by default.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.g_optrans">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">g_optrans</tt><a class="headerlink" href="#waflib.Tools.c_preproc.g_optrans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Operators such as and/or/xor for c++. Set an empty dict to disable.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.re_lines">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">re_lines</tt><a class="headerlink" href="#waflib.Tools.c_preproc.re_lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Match #include lines</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.re_mac">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">re_mac</tt><a class="headerlink" href="#waflib.Tools.c_preproc.re_mac" title="Permalink to this definition">¶</a></dt>
+<dd><p>Match macro definitions</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.re_fun">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">re_fun</tt><a class="headerlink" href="#waflib.Tools.c_preproc.re_fun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Match macro functions</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.re_pragma_once">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">re_pragma_once</tt><a class="headerlink" href="#waflib.Tools.c_preproc.re_pragma_once" title="Permalink to this definition">¶</a></dt>
+<dd><p>Match #pragma once statements</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.re_nl">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">re_nl</tt><a class="headerlink" href="#waflib.Tools.c_preproc.re_nl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Match newlines</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.re_cpp">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">re_cpp</tt><a class="headerlink" href="#waflib.Tools.c_preproc.re_cpp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter C/C++ comments</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.trig_def">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">trig_def</tt><a class="headerlink" href="#waflib.Tools.c_preproc.trig_def" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trigraph definitions</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.chr_esc">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">chr_esc</tt><a class="headerlink" href="#waflib.Tools.c_preproc.chr_esc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Escape characters</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.NUM">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">NUM</tt><a class="headerlink" href="#waflib.Tools.c_preproc.NUM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number token</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.OP">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">OP</tt><a class="headerlink" href="#waflib.Tools.c_preproc.OP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Operator token</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.IDENT">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">IDENT</tt><a class="headerlink" href="#waflib.Tools.c_preproc.IDENT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifier token</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.STR">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">STR</tt><a class="headerlink" href="#waflib.Tools.c_preproc.STR" title="Permalink to this definition">¶</a></dt>
+<dd><p>String token</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.CHAR">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">CHAR</tt><a class="headerlink" href="#waflib.Tools.c_preproc.CHAR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Character token</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.tok_types">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">tok_types</tt><a class="headerlink" href="#waflib.Tools.c_preproc.tok_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Token types</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.exp_types">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">exp_types</tt><a class="headerlink" href="#waflib.Tools.c_preproc.exp_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expression types</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.re_clexer">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">re_clexer</tt><a class="headerlink" href="#waflib.Tools.c_preproc.re_clexer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Match expressions into tokens</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.accepted">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">accepted</tt><a class="headerlink" href="#waflib.Tools.c_preproc.accepted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parser state is <em>accepted</em></p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.ignored">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">ignored</tt><a class="headerlink" href="#waflib.Tools.c_preproc.ignored" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parser state is <em>ignored</em>, for example preprocessor lines in an #if 0 block</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.undefined">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">undefined</tt><a class="headerlink" href="#waflib.Tools.c_preproc.undefined" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parser state is <em>undefined</em> at the moment</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.skipped">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">skipped</tt><a class="headerlink" href="#waflib.Tools.c_preproc.skipped" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parser state is <em>skipped</em>, for example preprocessor lines in a #elif 0 block</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.repl">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">repl</tt><big>(</big><em>m</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#repl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.repl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace function used with <a class="reference internal" href="#waflib.Tools.c_preproc.re_cpp" title="waflib.Tools.c_preproc.re_cpp"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Tools.c_preproc.re_cpp</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.filter_comments">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">filter_comments</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#filter_comments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.filter_comments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter the comments from a c/h file, and return the preprocessor lines.
+The regexps <a class="reference internal" href="#waflib.Tools.c_preproc.re_cpp" title="waflib.Tools.c_preproc.re_cpp"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Tools.c_preproc.re_cpp</span></tt></a>, <a class="reference internal" href="#waflib.Tools.c_preproc.re_nl" title="waflib.Tools.c_preproc.re_nl"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Tools.c_preproc.re_nl</span></tt></a> and <a class="reference internal" href="#waflib.Tools.c_preproc.re_lines" title="waflib.Tools.c_preproc.re_lines"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Tools.c_preproc.re_lines</span></tt></a> are used internally.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">the preprocessor directives as a list of (keyword, line)</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">a list of string pairs</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Tools.c_preproc.prec">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">prec</tt><a class="headerlink" href="#waflib.Tools.c_preproc.prec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Operator precendence rules required for parsing expressions of the form:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#if 1 &amp;&amp; 2 != 0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.trimquotes">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">trimquotes</tt><big>(</big><em>s</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#trimquotes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.trimquotes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the single quotes around an expression:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">trimquotes</span><span class="p">(</span><span class="s">&quot;&#39;test&#39;&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;test&quot;</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>s</strong> (<em>string</em>) &#8211; expression to transform</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.reduce_nums">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">reduce_nums</tt><big>(</big><em>val_1</em>, <em>val_2</em>, <em>val_op</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#reduce_nums"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.reduce_nums" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply arithmetic rules to compute a result</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>val1</strong> (<em>int or string</em>) &#8211; input parameter</li>
+<li><strong>val2</strong> (<em>int or string</em>) &#8211; input parameter</li>
+<li><strong>val_op</strong> (<em>string</em>) &#8211; C operator in <em>+</em>, <em>/</em>, <em>-</em>, etc</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.get_num">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">get_num</tt><big>(</big><em>lst</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#get_num"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.get_num" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to obtain a number from a list of tokens. The token types are defined in <tt class="xref py py-attr docutils literal"><span class="pre">waflib.Tools.ccroot.tok_types</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lst</strong> (<em>list of tuple (tokentype, value)</em>) &#8211; list of preprocessor tokens</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a pair containing the number and the rest of the list</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple(value, list)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.get_term">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">get_term</tt><big>(</big><em>lst</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#get_term"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.get_term" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate an expression recursively, for example:</p>
+<div class="highlight-python"><pre>1+1+1 -&gt; 2+1 -&gt; 3</pre>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lst</strong> (<em>list of tuple(token, value)</em>) &#8211; list of tokens</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the value and the remaining tokens</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">value, list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.reduce_eval">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">reduce_eval</tt><big>(</big><em>lst</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#reduce_eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.reduce_eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a list of tokens and output true or false for #if/#elif conditions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lst</strong> (<em>list of tuple(token, value)</em>) &#8211; a list of tokens</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a token</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple(NUM, int)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.error">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">error</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.c_preproc.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap logging.errors, display the origin of the message when &#8216;-vv&#8217; is set</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.debug">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">debug</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.c_preproc.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap logging.debug, the output is filtered for performance reasons</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.stringize">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">stringize</tt><big>(</big><em>lst</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#stringize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.stringize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge a list of tokens into a string</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lst</strong> (<em>list of tuple(token, value)</em>) &#8211; a list of tokens</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.paste_tokens">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">paste_tokens</tt><big>(</big><em>t1</em>, <em>t2</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#paste_tokens"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.paste_tokens" title="Permalink to this definition">¶</a></dt>
+<dd><p>Token pasting works between identifiers, particular operators, and identifiers and numbers:</p>
+<div class="highlight-python"><pre>a ## b  -&gt;  ab
+&gt; ## =  -&gt;  &gt;=
+a ## 2  -&gt;  a2</pre>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>t1</strong> (<em>tuple(type, value)</em>) &#8211; token</li>
+<li><strong>t2</strong> (<em>tuple(type, value)</em>) &#8211; token</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.reduce_tokens">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">reduce_tokens</tt><big>(</big><em>lst</em>, <em>defs</em>, <em>ban=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#reduce_tokens"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.reduce_tokens" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace the tokens in lst, using the macros provided in defs, and a list of macros that cannot be re-applied</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lst</strong> (<em>list of tuple(token, value)</em>) &#8211; list of tokens</li>
+<li><strong>defs</strong> (<em>dict</em>) &#8211; macro definitions</li>
+<li><strong>ban</strong> (<em>list of string</em>) &#8211; macros that cannot be substituted (recursion is not allowed)</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the new list of tokens</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">value, list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.eval_macro">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">eval_macro</tt><big>(</big><em>lst</em>, <em>defs</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#eval_macro"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.eval_macro" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reduce the tokens by <a class="reference internal" href="#waflib.Tools.c_preproc.reduce_tokens" title="waflib.Tools.c_preproc.reduce_tokens"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Tools.c_preproc.reduce_tokens()</span></tt></a> and try to return a 0/1 result by <a class="reference internal" href="#waflib.Tools.c_preproc.reduce_eval" title="waflib.Tools.c_preproc.reduce_eval"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Tools.c_preproc.reduce_eval()</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lst</strong> (<em>list of tuple(token, value)</em>) &#8211; list of tokens</li>
+<li><strong>defs</strong> (<em>dict</em>) &#8211; macro definitions</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.extract_macro">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">extract_macro</tt><big>(</big><em>txt</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#extract_macro"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.extract_macro" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Process a macro definition of the form::</dt>
+<dd>#define f(x, y) x * y</dd>
+</dl>
+<p>into a function or a simple macro without arguments</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>txt</strong> (<em>string</em>) &#8211; expression to exact a macro definition from</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a tuple containing the name, the list of arguments and the replacement</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple(string, [list, list])</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.extract_include">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">extract_include</tt><big>(</big><em>txt</em>, <em>defs</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#extract_include"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.extract_include" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a line in the form:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#include foo</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>txt</strong> (<em>string</em>) &#8211; include line to process</li>
+<li><strong>defs</strong> (<em>dict</em>) &#8211; macro definitions</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the file name</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.parse_char">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">parse_char</tt><big>(</big><em>txt</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#parse_char"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.parse_char" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a c character</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>txt</strong> (<em>string</em>) &#8211; character to parse</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a character literal</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.c_preproc.c_parser">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">c_parser</tt><big>(</big><em>nodepaths=None</em>, <em>defines=None</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#c_parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.c_parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Used by <a class="reference internal" href="#waflib.Tools.c_preproc.scan" title="waflib.Tools.c_preproc.scan"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Tools.c_preproc.scan()</span></tt></a> to parse c/h files. Note that by default,
+only project headers are parsed.</p>
+<dl class="attribute">
+<dt id="waflib.Tools.c_preproc.c_parser.lines">
+<tt class="descname">lines</tt><a class="headerlink" href="#waflib.Tools.c_preproc.c_parser.lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of lines read</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Tools.c_preproc.c_parser.nodepaths">
+<tt class="descname">nodepaths</tt><a class="headerlink" href="#waflib.Tools.c_preproc.c_parser.nodepaths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Include paths</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Tools.c_preproc.c_parser.nodes">
+<tt class="descname">nodes</tt><a class="headerlink" href="#waflib.Tools.c_preproc.c_parser.nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of <a class="reference internal" href="../Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a> found so far</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Tools.c_preproc.c_parser.names">
+<tt class="descname">names</tt><a class="headerlink" href="#waflib.Tools.c_preproc.c_parser.names" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of file names that could not be matched by any file</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Tools.c_preproc.c_parser.curfile">
+<tt class="descname">curfile</tt><a class="headerlink" href="#waflib.Tools.c_preproc.c_parser.curfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current file</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Tools.c_preproc.c_parser.ban_includes">
+<tt class="descname">ban_includes</tt><a class="headerlink" href="#waflib.Tools.c_preproc.c_parser.ban_includes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Includes that must not be read (#pragma once)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.c_preproc.c_parser.cached_find_resource">
+<tt class="descname">cached_find_resource</tt><big>(</big><em>node</em>, <em>filename</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#c_parser.cached_find_resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.c_parser.cached_find_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a file from the input directory</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>node</strong> (<a class="reference internal" href="../Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a>) &#8211; directory</li>
+<li><strong>filename</strong> (<em>string</em>) &#8211; header to find</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the node if found, or None</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="../Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.c_preproc.c_parser.tryfind">
+<tt class="descname">tryfind</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#c_parser.tryfind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.c_parser.tryfind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to obtain a node from the filename based from the include paths. Will add
+the node found to <a class="reference internal" href="#waflib.Tools.c_preproc.c_parser.nodes" title="waflib.Tools.c_preproc.c_parser.nodes"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Tools.c_preproc.c_parser.nodes</span></tt></a> or the file name to
+<a class="reference internal" href="#waflib.Tools.c_preproc.c_parser.names" title="waflib.Tools.c_preproc.c_parser.names"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Tools.c_preproc.c_parser.names</span></tt></a> if no corresponding file is found. Called by
+<a class="reference internal" href="#waflib.Tools.c_preproc.c_parser.start" title="waflib.Tools.c_preproc.c_parser.start"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Tools.c_preproc.c_parser.start</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> (<em>string</em>) &#8211; header to find</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the node if found</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="../Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.c_preproc.c_parser.addlines">
+<tt class="descname">addlines</tt><big>(</big><em>node</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#c_parser.addlines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.c_parser.addlines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the lines from a header in the list of preprocessor lines to parse</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>node</strong> (<a class="reference internal" href="../Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a>) &#8211; header</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.c_preproc.c_parser.start">
+<tt class="descname">start</tt><big>(</big><em>node</em>, <em>env</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#c_parser.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.c_parser.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Preprocess a source file to obtain the dependencies, which are accumulated to <a class="reference internal" href="#waflib.Tools.c_preproc.c_parser.nodes" title="waflib.Tools.c_preproc.c_parser.nodes"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Tools.c_preproc.c_parser.nodes</span></tt></a>
+and <a class="reference internal" href="#waflib.Tools.c_preproc.c_parser.names" title="waflib.Tools.c_preproc.c_parser.names"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Tools.c_preproc.c_parser.names</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>node</strong> (<a class="reference internal" href="../Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a>) &#8211; source file</li>
+<li><strong>env</strong> (<a class="reference internal" href="../ConfigSet.html#waflib.ConfigSet.ConfigSet" title="waflib.ConfigSet.ConfigSet"><tt class="xref py py-class docutils literal"><span class="pre">waflib.ConfigSet.ConfigSet</span></tt></a>) &#8211; config set containing additional defines to take into account</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.c_preproc.scan">
+<tt class="descclassname">waflib.Tools.c_preproc.</tt><tt class="descname">scan</tt><big>(</big><em>task</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_preproc.html#scan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_preproc.scan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the dependencies using a c/c++ preprocessor, this is required for finding dependencies of the kind:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#include some_macro()</span>
+</pre></div>
+</div>
+<p>This function is bound as a task method on <a class="reference internal" href="c.html#waflib.Tools.c.c" title="waflib.Tools.c.c"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.c.c</span></tt></a> and <a class="reference internal" href="cxx.html#waflib.Tools.cxx.cxx" title="waflib.Tools.cxx.cxx"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.cxx.cxx</span></tt></a> for example</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="c_osx.html"
+                        title="previous chapter">c_osx</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="c_tests.html"
+                        title="next chapter">c_tests</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tools/c_preproc.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="c_tests.html" title="c_tests"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="c_osx.html" title="c_osx"
+             >previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

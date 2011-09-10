@@ -1,0 +1,633 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Context &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="index.html" />
+    <link rel="next" title="Errors" href="Errors.html" />
+    <link rel="prev" title="Configure" href="Configure.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Errors.html" title="Errors"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Configure.html" title="Configure"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Context">
+<span id="context"></span><h1>Context<a class="headerlink" href="#module-waflib.Context" title="Permalink to this headline">¶</a></h1>
+<p>Classes and functions required for waf commands</p>
+<dl class="data">
+<dt id="waflib.Context.HEXVERSION">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">HEXVERSION</tt><a class="headerlink" href="#waflib.Context.HEXVERSION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constant updated on new releases</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.WAFVERSION">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">WAFVERSION</tt><a class="headerlink" href="#waflib.Context.WAFVERSION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constant updated on new releases</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.WAFREVISION">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">WAFREVISION</tt><a class="headerlink" href="#waflib.Context.WAFREVISION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constant updated on new releases</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.ABI">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">ABI</tt><a class="headerlink" href="#waflib.Context.ABI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Version of the build data cache file format (used in <a class="reference internal" href="#waflib.Context.DBFILE" title="waflib.Context.DBFILE"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Context.DBFILE</span></tt></a>)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.DBFILE">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">DBFILE</tt><a class="headerlink" href="#waflib.Context.DBFILE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the pickle file for storing the build data</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.APPNAME">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">APPNAME</tt><a class="headerlink" href="#waflib.Context.APPNAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default application name (used by <tt class="docutils literal"><span class="pre">waf</span> <span class="pre">dist</span></tt>)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.VERSION">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">VERSION</tt><a class="headerlink" href="#waflib.Context.VERSION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default application version (used by <tt class="docutils literal"><span class="pre">waf</span> <span class="pre">dist</span></tt>)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.TOP">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">TOP</tt><a class="headerlink" href="#waflib.Context.TOP" title="Permalink to this definition">¶</a></dt>
+<dd><p>The variable name for the top-level directory in wscript files</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.OUT">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">OUT</tt><a class="headerlink" href="#waflib.Context.OUT" title="Permalink to this definition">¶</a></dt>
+<dd><p>The variable name for the output directory in wscript files</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.WSCRIPT_FILE">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">WSCRIPT_FILE</tt><a class="headerlink" href="#waflib.Context.WSCRIPT_FILE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the waf script files</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.launch_dir">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">launch_dir</tt><a class="headerlink" href="#waflib.Context.launch_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Directory from which waf has been called</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.run_dir">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">run_dir</tt><a class="headerlink" href="#waflib.Context.run_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Location of the wscript file to use as the entry point</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.top_dir">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">top_dir</tt><a class="headerlink" href="#waflib.Context.top_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Location of the project directory (top), if the project was configured</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.out_dir">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">out_dir</tt><a class="headerlink" href="#waflib.Context.out_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Location of the build directory (out), if the project was configured</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.waf_dir">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">waf_dir</tt><a class="headerlink" href="#waflib.Context.waf_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Directory containing the waf modules</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.local_repo">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">local_repo</tt><a class="headerlink" href="#waflib.Context.local_repo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Local repository containing additional Waf tools (plugins)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.remote_repo">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">remote_repo</tt><a class="headerlink" href="#waflib.Context.remote_repo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remote directory containing downloadable waf tools. The missing tools can be downloaded by using:</p>
+<div class="highlight-python"><pre>$ waf configure --download</pre>
+</div>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.remote_locs">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">remote_locs</tt><a class="headerlink" href="#waflib.Context.remote_locs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remote directories for use with <a class="reference internal" href="#waflib.Context.remote_repo" title="waflib.Context.remote_repo"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Context.remote_repo</span></tt></a></p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.g_module">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">g_module</tt><a class="headerlink" href="#waflib.Context.g_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Module representing the main wscript file (see <a class="reference internal" href="#waflib.Context.run_dir" title="waflib.Context.run_dir"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Context.run_dir</span></tt></a>)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.classes">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">classes</tt><a class="headerlink" href="#waflib.Context.classes" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of <a class="reference internal" href="#waflib.Context.Context" title="waflib.Context.Context"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Context.Context</span></tt></a> subclasses that can be used as waf commands. The classes
+are added automatically by a metaclass.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Context.create_context">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">create_context</tt><big>(</big><em>cmd_name</em>, <em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#create_context"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.create_context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new <a class="reference internal" href="#waflib.Context.Context" title="waflib.Context.Context"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Context.Context</span></tt></a> instance corresponding to the given command.
+Used in particular by <a class="reference internal" href="Scripting.html#waflib.Scripting.run_command" title="waflib.Scripting.run_command"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Scripting.run_command()</span></tt></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cmd_name</strong> (<em>string</em>) &#8211; command</li>
+<li><strong>k</strong> (<em>dict</em>) &#8211; arguments to give to the context class initializer</li>
+<li><strong>k</strong> &#8211; keyword arguments to give to the context class initializer</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Context.store_context">
+<em class="property">class </em><tt class="descclassname">waflib.Context.</tt><tt class="descname">store_context</tt><big>(</big><em>name</em>, <em>bases</em>, <em>dict</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#store_context"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.store_context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">type</span></tt></p>
+<p>Metaclass for storing the command classes into the list <a class="reference internal" href="#waflib.Context.classes" title="waflib.Context.classes"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Context.classes</span></tt></a>
+Context classes must provide an attribute &#8216;cmd&#8217; representing the command to execute</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Context.ctx">
+<em class="property">class </em><tt class="descclassname">waflib.Context.</tt><tt class="descname">ctx</tt><a class="headerlink" href="#waflib.Context.ctx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Base class for the <a class="reference internal" href="#waflib.Context.Context" title="waflib.Context.Context"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Context.Context</span></tt></a> classes</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Context.Context">
+<em class="property">class </em><tt class="descclassname">waflib.Context.</tt><tt class="descname">Context</tt><big>(</big><em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#Context"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.Context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#waflib.Context.ctx" title="waflib.Context.ctx"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Context.ctx</span></tt></a></p>
+<p>Default context for waf commands, and base class for new command contexts.</p>
+<p>Context objects are passed to top-level functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span> <span class="c"># waflib.Context.Context</span>
+</pre></div>
+</div>
+<p>Subclasses must define the attribute &#8216;cmd&#8217;:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cmd</strong> (<em>string</em>) &#8211; command to execute as in <tt class="docutils literal"><span class="pre">waf</span> <span class="pre">cmd</span></tt></li>
+<li><strong>fun</strong> (<em>string</em>) &#8211; function name to execute when the command is called</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="graphviz">
+<img src="_images/inheritance-3de8b30aa8d35a2bb97db55a904091bd2ffce171.png" alt="Inheritance diagram of waflib.Context.Context, waflib.Build.BuildContext, waflib.Build.InstallContext, waflib.Build.UninstallContext, waflib.Build.StepContext, waflib.Build.ListContext, waflib.Configure.ConfigurationContext, waflib.Scripting.Dist, waflib.Scripting.DistCheck, waflib.Build.CleanContext" usemap="#inheritance4b7d10a9a3" class="inheritance"/>
+<map id="inheritance4b7d10a9a3" name="inheritance4b7d10a9a3">
+<area shape="rect" id="node1" href="#waflib.Context.Context" title="waflib.Context.Context" alt="" coords="127,112,236,132"/>
+<area shape="rect" id="node5" href="Build.html#waflib.Build.BuildContext" title="waflib.Build.BuildContext" alt="" coords="296,76,413,96"/>
+<area shape="rect" id="node9" href="Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext" alt="" coords="271,112,438,132"/>
+<area shape="rect" id="node12" href="Scripting.html#waflib.Scripting.Dist" title="waflib.Scripting.Dist" alt="" coords="306,148,403,168"/>
+<area shape="rect" id="node2" href="#waflib.Context.ctx" title="waflib.Context.ctx" alt="" coords="4,112,93,132"/>
+<area shape="rect" id="node4" href="Build.html#waflib.Build.StepContext" title="waflib.Build.StepContext" alt="" coords="477,3,593,23"/>
+<area shape="rect" id="node7" href="Build.html#waflib.Build.InstallContext" title="waflib.Build.InstallContext" alt="" coords="474,39,596,59"/>
+<area shape="rect" id="node16" href="Build.html#waflib.Build.ListContext" title="waflib.Build.ListContext" alt="" coords="479,76,591,96"/>
+<area shape="rect" id="node18" href="Build.html#waflib.Build.CleanContext" title="waflib.Build.CleanContext" alt="" coords="475,112,595,132"/>
+<area shape="rect" id="node14" href="Build.html#waflib.Build.UninstallContext" title="waflib.Build.UninstallContext" alt="" coords="631,39,764,59"/>
+<area shape="rect" id="node11" href="Scripting.html#waflib.Scripting.DistCheck" title="waflib.Scripting.DistCheck" alt="" coords="473,148,597,168"/>
+</map>
+</p>
+<dl class="attribute">
+<dt id="waflib.Context.Context.errors">
+<tt class="descname">errors</tt><a class="headerlink" href="#waflib.Context.Context.errors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shortcut to <a class="reference internal" href="Errors.html#module-waflib.Errors" title="waflib.Errors"><tt class="xref py py-mod docutils literal"><span class="pre">waflib.Errors</span></tt></a> provided for convenience</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Context.Context.tools">
+<tt class="descname">tools</tt><a class="headerlink" href="#waflib.Context.Context.tools" title="Permalink to this definition">¶</a></dt>
+<dd><p>A cache for modules (wscript files) read by <tt class="xref py py-meth docutils literal"><span class="pre">Context.Context.load()</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Context.Context.__hash__">
+<tt class="descname">__hash__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#Context.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.Context.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a hash value for storing context objects in dicts or sets. The value is not persistent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">hash value</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Context.Context.load">
+<tt class="descname">load</tt><big>(</big><em>tool_list</em>, <em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#Context.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.Context.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a Waf tool as a module, and try calling the function named <tt class="xref py py-const docutils literal"><span class="pre">waflib.Context.Context.fun</span></tt> from it.
+A <tt class="docutils literal"><span class="pre">tooldir</span></tt> value may be provided as a list of module paths.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tool_list</strong> (<em>list of string or space-separated string</em>) &#8211; list of Waf tools to use</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Context.Context.execute">
+<tt class="descname">execute</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#Context.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.Context.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the command. Redefine this method in subclasses.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Context.Context.pre_recurse">
+<tt class="descname">pre_recurse</tt><big>(</big><em>node</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#Context.pre_recurse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.Context.pre_recurse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method executed immediately before a folder is read by <a class="reference internal" href="#waflib.Context.Context.recurse" title="waflib.Context.Context.recurse"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Context.Context.recurse()</span></tt></a>. The node given is set
+as an attribute <tt class="docutils literal"><span class="pre">self.cur_script</span></tt>, and as the current path <tt class="docutils literal"><span class="pre">self.path</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>node</strong> (<a class="reference internal" href="Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a>) &#8211; script</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Context.Context.post_recurse">
+<tt class="descname">post_recurse</tt><big>(</big><em>node</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#Context.post_recurse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.Context.post_recurse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restore <tt class="docutils literal"><span class="pre">self.cur_script</span></tt> and <tt class="docutils literal"><span class="pre">self.path</span></tt> right after <a class="reference internal" href="#waflib.Context.Context.recurse" title="waflib.Context.Context.recurse"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Context.Context.recurse()</span></tt></a> terminates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>node</strong> (<a class="reference internal" href="Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a>) &#8211; script</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Context.Context.recurse">
+<tt class="descname">recurse</tt><big>(</big><em>dirs</em>, <em>name=None</em>, <em>mandatory=True</em>, <em>once=True</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#Context.recurse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.Context.recurse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run user code from the supplied list of directories.
+The directories can be either absolute, or relative to the directory
+of the wscript file. The methods <a class="reference internal" href="#waflib.Context.Context.pre_recurse" title="waflib.Context.Context.pre_recurse"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Context.Context.pre_recurse()</span></tt></a> and <a class="reference internal" href="#waflib.Context.Context.post_recurse" title="waflib.Context.Context.post_recurse"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Context.Context.post_recurse()</span></tt></a>
+are called immediately before and after a script has been executed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dirs</strong> (<em>list of string or space-separated string</em>) &#8211; List of directories to visit</li>
+<li><strong>name</strong> (<em>string</em>) &#8211; Name of function to invoke from the wscript</li>
+<li><strong>mandatory</strong> (<em>bool</em>) &#8211; whether sub wscript files are required to exist</li>
+<li><strong>once</strong> (<em>bool</em>) &#8211; read the script file once for a particular context</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Context.Context.exec_command">
+<tt class="descname">exec_command</tt><big>(</big><em>cmd</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#Context.exec_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.Context.exec_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute a command and return the exit status. If the context has the attribute &#8216;log&#8217;,
+capture and log the process stderr/stdout for logging purposes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">tsk</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">tsk</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="s">&#39;touch foo.txt&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span>
+</pre></div>
+</div>
+<p>Do not confuse this method with <a class="reference internal" href="#waflib.Context.Context.cmd_and_log" title="waflib.Context.Context.cmd_and_log"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Context.Context.cmd_and_log()</span></tt></a> which is used to
+return the standard output/error values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cmd</strong> &#8211; command argument for subprocess.Popen</li>
+<li><strong>kw</strong> &#8211; keyword arguments for subprocess.Popen</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Context.Context.cmd_and_log">
+<tt class="descname">cmd_and_log</tt><big>(</big><em>cmd</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#Context.cmd_and_log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.Context.cmd_and_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute a command and return stdout if the execution is successful.
+An exception is thrown when the exit status is non-0. In that case, both stderr and stdout
+will be bound to the WafError object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="s">&#39;echo&#39;</span><span class="p">,</span> <span class="s">&#39;hello&#39;</span><span class="p">],</span> <span class="n">output</span><span class="o">=</span><span class="n">waflib</span><span class="o">.</span><span class="n">Context</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="n">waflib</span><span class="o">.</span><span class="n">Context</span><span class="o">.</span><span class="n">BOTH</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="s">&#39;echo&#39;</span><span class="p">,</span> <span class="s">&#39;hello&#39;</span><span class="p">],</span> <span class="n">output</span><span class="o">=</span><span class="n">waflib</span><span class="o">.</span><span class="n">Context</span><span class="o">.</span><span class="n">BOTH</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+                <span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="s">&#39;which&#39;</span><span class="p">,</span> <span class="s">&#39;someapp&#39;</span><span class="p">],</span> <span class="n">output</span><span class="o">=</span><span class="n">waflib</span><span class="o">.</span><span class="n">Context</span><span class="o">.</span><span class="n">BOTH</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cmd</strong> &#8211; args for subprocess.Popen</li>
+<li><strong>kw</strong> &#8211; keyword arguments for subprocess.Popen</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Context.Context.fatal">
+<tt class="descname">fatal</tt><big>(</big><em>msg</em>, <em>ex=None</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#Context.fatal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.Context.fatal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raise a configuration error to interrupt the execution immediately:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;a requirement is missing&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>msg</strong> (<em>string</em>) &#8211; message to display</li>
+<li><strong>ex</strong> (<em>exception</em>) &#8211; optional exception object</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Context.Context.to_log">
+<tt class="descname">to_log</tt><big>(</big><em>msg</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#Context.to_log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.Context.to_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log some information to the logger (if present), or to stderr. If the message is empty,
+it is not printed:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&#39;starting the build&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When in doubt, override this method, or provide a logger on the context class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>msg</strong> (<em>string</em>) &#8211; message</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Context.Context.msg">
+<tt class="descname">msg</tt><big>(</big><em>msg</em>, <em>result</em>, <em>color=None</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#Context.msg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.Context.msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a configuration message of the form <tt class="docutils literal"><span class="pre">msg:</span> <span class="pre">result</span></tt>.
+The second part of the message will be in colors. The output
+can be disabled easly by setting <tt class="docutils literal"><span class="pre">in_msg</span></tt> to a positive value:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_msg</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for library foo&#39;</span><span class="p">,</span> <span class="s">&#39;ok&#39;</span><span class="p">)</span>
+        <span class="c"># no output</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>msg</strong> (<em>string</em>) &#8211; message to display to the user</li>
+<li><strong>result</strong> (<em>string or boolean</em>) &#8211; result to display</li>
+<li><strong>color</strong> (<em>string</em>) &#8211; color to use, see <tt class="xref py py-const docutils literal"><span class="pre">waflib.Logs.colors_lst</span></tt></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Context.Context.start_msg">
+<tt class="descname">start_msg</tt><big>(</big><em>msg</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#Context.start_msg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.Context.start_msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the beginning of a &#8216;Checking for xxx&#8217; message. See <a class="reference internal" href="#waflib.Context.Context.msg" title="waflib.Context.Context.msg"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Context.Context.msg()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Context.Context.end_msg">
+<tt class="descname">end_msg</tt><big>(</big><em>result</em>, <em>color=None</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#Context.end_msg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.Context.end_msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the end of a &#8216;Checking for&#8217; message. See <a class="reference internal" href="#waflib.Context.Context.msg" title="waflib.Context.Context.msg"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Context.Context.msg()</span></tt></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Context.cache_modules">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">cache_modules</tt><a class="headerlink" href="#waflib.Context.cache_modules" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary holding already loaded modules, keyed by their absolute path.
+The modules are added automatically by <a class="reference internal" href="#waflib.Context.load_module" title="waflib.Context.load_module"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Context.load_module()</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Context.load_module">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">load_module</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#load_module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.load_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a source file as a python module.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>path</strong> (<em>string</em>) &#8211; file path</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Loaded Python module</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">module</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Context.load_tool">
+<tt class="descclassname">waflib.Context.</tt><tt class="descname">load_tool</tt><big>(</big><em>tool</em>, <em>tooldir=None</em><big>)</big><a class="reference internal" href="_modules/waflib/Context.html#load_tool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Context.load_tool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import a Waf tool (python module), and store it in the dict <a class="reference internal" href="#waflib.Context.Context.tools" title="waflib.Context.Context.tools"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Context.Context.tools</span></tt></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tool</strong> (<em>string</em>) &#8211; Name of the tool</li>
+<li><strong>tooldir</strong> (<em>list</em>) &#8211; List of directories to search for the tool module</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Configure.html"
+                        title="previous chapter">Configure</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Errors.html"
+                        title="next chapter">Errors</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/Context.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Errors.html" title="Errors"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Configure.html" title="Configure"
+             >previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,198 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The core modules &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="index.html" />
+    <link rel="next" title="Waf Tools" href="tools.html" />
+    <link rel="prev" title="Waf documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tools.html" title="Waf Tools"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Waf documentation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="the-core-modules">
+<span id="coremodules"></span><h1>The core modules<a class="headerlink" href="#the-core-modules" title="Permalink to this headline">¶</a></h1>
+<p>Waf is based on 13 core modules which provide the main functionality of the framework.
+They may be used alone, although the support for programming languages or compilers is provided by extensions called Waf tools.</p>
+<p class="graphviz">
+<img src="_images/graphviz-8212be076c96d7bc3ccff0b14ff0adf2f5f6a16a.png" alt="digraph module_deps {
+             size=&quot;8.0, 12.0&quot;;
+             &quot;Build&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;Build.html&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+             &quot;ConfigSet&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;ConfigSet.html&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+             &quot;Configure&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;Configure.html&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+             &quot;Context&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;Context.html&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+             &quot;Logs&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;Logs.html&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+             &quot;Node&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;Node.html&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+             &quot;Options&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;Options.html&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+             &quot;Runner&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;Runner.html&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+             &quot;Scripting&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;Scripting.html&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+             &quot;TaskGen&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;TaskGen.html&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+             &quot;Task&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;Task.html&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+             &quot;Utils&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;Utils.html&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+             &quot;Errors&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;Errors.html&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+
+             &quot;Build&quot; -&gt; &quot;Runner&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+             &quot;Build&quot; -&gt; &quot;TaskGen&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+             &quot;Build&quot; -&gt; &quot;ConfigSet&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+             &quot;Build&quot; -&gt; &quot;Options&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+
+             &quot;ConfigSet&quot; -&gt; &quot;Utils&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+             &quot;ConfigSet&quot; -&gt; &quot;Logs&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+
+             &quot;Configure&quot; -&gt; &quot;Build&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+
+             &quot;Context&quot; -&gt; &quot;Logs&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+             &quot;Context&quot; -&gt; &quot;Node&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+
+             &quot;Node&quot; -&gt; &quot;Utils&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+
+             &quot;Options&quot; -&gt; &quot;Context&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+
+             &quot;Runner&quot; -&gt; &quot;Task&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+
+             &quot;Scripting&quot; -&gt; &quot;Configure&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+
+             &quot;TaskGen&quot; -&gt; &quot;Task&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+
+             &quot;Task&quot; -&gt; &quot;Logs&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+
+             &quot;Utils&quot; -&gt; &quot;Errors&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#module_deps" />
+<map id="module_deps" name="module_deps">
+<area shape="rect" id="node1" href="Build.html" title="Build" alt="" coords="149,161,221,189"/>
+<area shape="rect" id="node2" href="ConfigSet.html" title="ConfigSet" alt="" coords="232,315,309,343"/>
+<area shape="rect" id="node7" href="Options.html" title="Options" alt="" coords="5,238,77,266"/>
+<area shape="rect" id="node8" href="Runner.html" title="Runner" alt="" coords="101,238,173,266"/>
+<area shape="rect" id="node10" href="TaskGen.html" title="TaskGen" alt="" coords="197,238,269,266"/>
+<area shape="rect" id="node5" href="Logs.html" title="Logs" alt="" coords="136,393,208,421"/>
+<area shape="rect" id="node12" href="Utils.html" title="Utils" alt="" coords="131,470,203,498"/>
+<area shape="rect" id="node3" href="Configure.html" title="Configure" alt="" coords="148,83,223,111"/>
+<area shape="rect" id="node4" href="Context.html" title="Context" alt="" coords="40,315,112,343"/>
+<area shape="rect" id="node6" href="Node.html" title="Node" alt="" coords="40,393,112,421"/>
+<area shape="rect" id="node11" href="Task.html" title="Task" alt="" coords="136,315,208,343"/>
+<area shape="rect" id="node9" href="Scripting.html" title="Scripting" alt="" coords="149,6,221,34"/>
+<area shape="rect" id="node13" href="Errors.html" title="Errors" alt="" coords="131,547,203,575"/>
+</map>
+</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Waf documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tools.html"
+                        title="next chapter">Waf Tools</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/coremodules.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tools.html" title="Waf Tools"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Waf documentation"
+             >previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

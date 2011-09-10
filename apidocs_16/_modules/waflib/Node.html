@@ -1,0 +1,936 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Node &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Node</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2005-2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Node: filesystem structure, contains lists of nodes</span>
+
+<span class="sd">#. Each file/folder is represented by exactly one node.</span>
+
+<span class="sd">#. Some potential class properties are stored on :py:class:`waflib.Build.BuildContext` : nodes to depend on, etc.</span>
+<span class="sd">   Unused class members can increase the `.wafpickle` file size sensibly.</span>
+
+<span class="sd">#. Node objects should never be created directly, use</span>
+<span class="sd">   the methods :py:func:`Node.make_node` or :py:func:`Node.find_node`</span>
+
+<span class="sd">#. The methods :py:func:`Node.find_resource`, :py:func:`Node.find_dir` :py:func:`Node.find_or_declare` should be</span>
+<span class="sd">   used when a build context is present</span>
+
+<span class="sd">#. Each instance of :py:class:`waflib.Context.Context` has a unique :py:class:`Node` subclass.</span>
+<span class="sd">   (:py:class:`waflib.Node.Nod3`, see the :py:class:`waflib.Context.Context` initializer). A reference to the context owning a node is held as self.ctx</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Errors</span>
+
+<span class="n">exclude_regs</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">**/*~</span>
+<span class="s">**/#*#</span>
+<span class="s">**/.#*</span>
+<span class="s">**/</span><span class="si">%*%</span><span class="s"></span>
+<span class="s">**/._*</span>
+<span class="s">**/CVS</span>
+<span class="s">**/CVS/**</span>
+<span class="s">**/.cvsignore</span>
+<span class="s">**/SCCS</span>
+<span class="s">**/SCCS/**</span>
+<span class="s">**/vssver.scc</span>
+<span class="s">**/.svn</span>
+<span class="s">**/.svn/**</span>
+<span class="s">**/BitKeeper</span>
+<span class="s">**/.git</span>
+<span class="s">**/.git/**</span>
+<span class="s">**/.gitignore</span>
+<span class="s">**/.bzr</span>
+<span class="s">**/.bzrignore</span>
+<span class="s">**/.bzr/**</span>
+<span class="s">**/.hg</span>
+<span class="s">**/.hg/**</span>
+<span class="s">**/_MTN</span>
+<span class="s">**/_MTN/**</span>
+<span class="s">**/.arch-ids</span>
+<span class="s">**/{arch}</span>
+<span class="s">**/_darcs</span>
+<span class="s">**/_darcs/**</span>
+<span class="s">**/.DS_Store&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Ant patterns for files and folders to exclude while doing the</span>
+<span class="sd">recursive traversal in :py:meth:`waflib.Node.Node.ant_glob`</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c"># TODO optimize split_path by performing a replacement when unpacking?</span>
+
+<div class="viewcode-block" id="split_path"><a class="viewcode-back" href="../../Node.html#waflib.Node.split_path">[docs]</a><span class="k">def</span> <span class="nf">split_path</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Split a path by os.sep (This is not os.path.split)</span>
+
+<span class="sd">	:param path: path to split</span>
+<span class="sd">	:type path: string</span>
+<span class="sd">	:rtype: list of string</span>
+<span class="sd">	:return: the path, split</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+</div>
+<span class="k">def</span> <span class="nf">split_path_cygwin</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+	<span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;//&#39;</span><span class="p">):</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]</span>
+		<span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="k">return</span> <span class="n">ret</span>
+	<span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+
+<span class="n">re_sp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;[/</span><span class="se">\\\\</span><span class="s">]&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">split_path_win32</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+	<span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\\\\</span><span class="s">&#39;</span><span class="p">):</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">re_sp</span><span class="p">,</span> <span class="n">path</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]</span>
+		<span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span> <span class="o">+</span> <span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="k">return</span> <span class="n">ret</span>
+	<span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">re_sp</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&#39;cygwin&#39;</span><span class="p">:</span>
+	<span class="n">split_path</span> <span class="o">=</span> <span class="n">split_path_cygwin</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&#39;win32&#39;</span><span class="p">:</span>
+	<span class="n">split_path</span> <span class="o">=</span> <span class="n">split_path_win32</span>
+
+<div class="viewcode-block" id="Node"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node">[docs]</a><span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	This class is organized in two parts</span>
+
+<span class="sd">	* The basic methods meant for filesystem access (compute paths, create folders, etc)</span>
+<span class="sd">	* The methods bound to a :py:class:`waflib.Build.BuildContext` (require ``bld.srcnode`` and ``bld.bldnode``)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;sig&#39;</span><span class="p">,</span> <span class="s">&#39;children&#39;</span><span class="p">,</span> <span class="s">&#39;parent&#39;</span><span class="p">,</span> <span class="s">&#39;cache_abspath&#39;</span><span class="p">,</span> <span class="s">&#39;cache_isdir&#39;</span><span class="p">)</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+
+		<span class="k">if</span> <span class="n">parent</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">parent</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;node </span><span class="si">%s</span><span class="s"> exists in the parent files </span><span class="si">%r</span><span class="s"> already&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">parent</span><span class="p">))</span>
+			<span class="n">parent</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="Node.__setstate__"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.__setstate__">[docs]</a>	<span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+		<span class="s">&quot;Deserializes from data&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+		<span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+		<span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">sig</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Node.__getstate__"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.__getstate__">[docs]</a>	<span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="s">&quot;Serialize the node info&quot;</span>
+		<span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;children&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;sig&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Node.__str__"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.__str__">[docs]</a>	<span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="s">&quot;String representation (name), for debugging purposes&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</div>
+<div class="viewcode-block" id="Node.__repr__"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.__repr__">[docs]</a>	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="s">&quot;String representation (abspath), for debugging purposes&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Node.__hash__"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.__hash__">[docs]</a>	<span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="s">&quot;Node hash, used for storage in dicts. This hash is not persistent.&quot;</span>
+		<span class="k">return</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Node.__eq__"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.__eq__">[docs]</a>	<span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+		<span class="s">&quot;Node comparison, based on the IDs&quot;</span>
+		<span class="k">return</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">id</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Node.__copy__"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.__copy__">[docs]</a>	<span class="k">def</span> <span class="nf">__copy__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="s">&quot;Implemented to prevent nodes from being copied (raises an exception)&quot;</span>
+		<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;nodes are not supposed to be copied&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Node.read"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.read">[docs]</a>	<span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return the contents of the file represented by this node::</span>
+
+<span class="sd">			def build(bld):</span>
+<span class="sd">				bld.path.find_node(&#39;wscript&#39;).read()</span>
+
+<span class="sd">		:type  fname: string</span>
+<span class="sd">		:param fname: Path to file</span>
+<span class="sd">		:type  m: string</span>
+<span class="sd">		:param m: Open mode</span>
+<span class="sd">		:rtype: string</span>
+<span class="sd">		:return: File contents</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Utils</span><span class="o">.</span><span class="n">readf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abspath</span><span class="p">(),</span> <span class="n">flags</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Node.write"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.write">[docs]</a>	<span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Write some text to the physical file represented by this node::</span>
+
+<span class="sd">			def build(bld):</span>
+<span class="sd">				bld.path.make_node(&#39;foo.txt&#39;).write(&#39;Hello, world!&#39;)</span>
+
+<span class="sd">		:type  data: string</span>
+<span class="sd">		:param data: data to write</span>
+<span class="sd">		:type  flags: string</span>
+<span class="sd">		:param flags: Write mode</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">f</span> <span class="o">=</span> <span class="bp">None</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abspath</span><span class="p">(),</span> <span class="n">flags</span><span class="p">)</span>
+			<span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+		<span class="k">finally</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">f</span><span class="p">:</span>
+				<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Node.chmod"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.chmod">[docs]</a>	<span class="k">def</span> <span class="nf">chmod</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Change file/dir permissions::</span>
+
+<span class="sd">			def build(bld):</span>
+<span class="sd">				bld.path.chmod(493) # 0755</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abspath</span><span class="p">(),</span> <span class="n">val</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Node.delete"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.delete">[docs]</a>	<span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Delete the file/folder physically (but not the node)&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;children&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+				<span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="k">pass</span>
+
+		<span class="k">try</span><span class="p">:</span>
+			<span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;children&#39;</span><span class="p">)</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="Node.suffix"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.suffix">[docs]</a>	<span class="k">def</span> <span class="nf">suffix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Return the file extension&quot;&quot;&quot;</span>
+		<span class="n">k</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">))</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+</div>
+<div class="viewcode-block" id="Node.height"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.height">[docs]</a>	<span class="k">def</span> <span class="nf">height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Depth in the folder hierarchy from the filesystem root or from all the file drives&quot;&quot;&quot;</span>
+		<span class="n">d</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">val</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+		<span class="k">while</span> <span class="n">d</span><span class="p">:</span>
+			<span class="n">d</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">parent</span>
+			<span class="n">val</span> <span class="o">+=</span> <span class="mi">1</span>
+		<span class="k">return</span> <span class="n">val</span>
+</div>
+<div class="viewcode-block" id="Node.listdir"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.listdir">[docs]</a>	<span class="k">def</span> <span class="nf">listdir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;List the folder contents&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Utils</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="Node.mkdir"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.mkdir">[docs]</a>	<span class="k">def</span> <span class="nf">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Create a folder represented by this node&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;cache_isdir&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">return</span>
+
+		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="k">pass</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+			<span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+				<span class="k">pass</span>
+
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abspath</span><span class="p">()):</span>
+				<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not a directory&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+
+			<span class="k">try</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">children</span>
+			<span class="k">except</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">{}</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">cache_isdir</span> <span class="o">=</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="Node.find_node"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.find_node">[docs]</a>	<span class="k">def</span> <span class="nf">find_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lst</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Find a node on the file system (files or folders), create intermediate nodes as needed</span>
+
+<span class="sd">		:param lst: path</span>
+<span class="sd">		:type lst: string or list of string</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">split_path</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">!=</span> <span class="s">&#39;.&#39;</span><span class="p">]</span>
+
+		<span class="n">cur</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="s">&#39;..&#39;</span><span class="p">:</span>
+				<span class="n">cur</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span>
+				<span class="k">continue</span>
+
+			<span class="k">try</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cur</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+					<span class="n">cur</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+					<span class="k">continue</span>
+			<span class="k">except</span><span class="p">:</span>
+				<span class="n">cur</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">{}</span>
+
+			<span class="c"># optimistic: create the node first then look if it was correct to do so</span>
+			<span class="n">cur</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">cur</span><span class="p">)</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">cur</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+			<span class="k">except</span><span class="p">:</span>
+				<span class="k">del</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+				<span class="k">return</span> <span class="bp">None</span>
+
+		<span class="n">ret</span> <span class="o">=</span> <span class="n">cur</span>
+
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">while</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">cur</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="s">&#39;cache_isdir&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+				<span class="n">cur</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span>
+				<span class="n">cur</span><span class="o">.</span><span class="n">cache_isdir</span> <span class="o">=</span> <span class="bp">True</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="k">pass</span>
+
+		<span class="k">return</span> <span class="n">ret</span>
+</div>
+<div class="viewcode-block" id="Node.make_node"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.make_node">[docs]</a>	<span class="k">def</span> <span class="nf">make_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lst</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Find or create a node without looking on the filesystem</span>
+
+<span class="sd">		:param lst: path</span>
+<span class="sd">		:type lst: string or list of string</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">split_path</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">!=</span> <span class="s">&#39;.&#39;</span><span class="p">]</span>
+
+		<span class="n">cur</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="s">&#39;..&#39;</span><span class="p">:</span>
+				<span class="n">cur</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span>
+				<span class="k">continue</span>
+
+			<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s">&#39;children&#39;</span><span class="p">,</span> <span class="p">{}):</span>
+				<span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cur</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+					<span class="n">cur</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+					<span class="k">continue</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">cur</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">{}</span>
+			<span class="n">cur</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">cur</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">cur</span>
+</div>
+<div class="viewcode-block" id="Node.search"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.search">[docs]</a>	<span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lst</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Search for a node without looking on the filesystem</span>
+
+<span class="sd">		:param lst: path</span>
+<span class="sd">		:type lst: string or list of string</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">split_path</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">!=</span> <span class="s">&#39;.&#39;</span><span class="p">]</span>
+
+		<span class="n">cur</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="s">&#39;..&#39;</span><span class="p">:</span>
+					<span class="n">cur</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">cur</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+			<span class="k">return</span> <span class="n">cur</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="Node.path_from"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.path_from">[docs]</a>	<span class="k">def</span> <span class="nf">path_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Path of this node seen from the other::</span>
+
+<span class="sd">			def build(bld):</span>
+<span class="sd">				n1 = bld.path.find_node(&#39;foo/bar/xyz.txt&#39;)</span>
+<span class="sd">				n2 = bld.path.find_node(&#39;foo/stuff/&#39;)</span>
+<span class="sd">				n1.path_from(n2) # &#39;./bar/xyz.txt&#39;</span>
+
+<span class="sd">		:param node: path to use as a reference</span>
+<span class="sd">		:type node: :py:class:`waflib.Node.Node`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="n">c1</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">c2</span> <span class="o">=</span> <span class="n">node</span>
+
+		<span class="n">c1h</span> <span class="o">=</span> <span class="n">c1</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+		<span class="n">c2h</span> <span class="o">=</span> <span class="n">c2</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+
+		<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">up</span> <span class="o">=</span> <span class="mi">0</span>
+
+		<span class="k">while</span> <span class="n">c1h</span> <span class="o">&gt;</span> <span class="n">c2h</span><span class="p">:</span>
+			<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c1</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+			<span class="n">c1</span> <span class="o">=</span> <span class="n">c1</span><span class="o">.</span><span class="n">parent</span>
+			<span class="n">c1h</span> <span class="o">-=</span> <span class="mi">1</span>
+
+		<span class="k">while</span> <span class="n">c2h</span> <span class="o">&gt;</span> <span class="n">c1h</span><span class="p">:</span>
+			<span class="n">up</span> <span class="o">+=</span> <span class="mi">1</span>
+			<span class="n">c2</span> <span class="o">=</span> <span class="n">c2</span><span class="o">.</span><span class="n">parent</span>
+			<span class="n">c2h</span> <span class="o">-=</span> <span class="mi">1</span>
+
+		<span class="k">while</span> <span class="nb">id</span><span class="p">(</span><span class="n">c1</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">id</span><span class="p">(</span><span class="n">c2</span><span class="p">):</span>
+			<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c1</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+			<span class="n">up</span> <span class="o">+=</span> <span class="mi">1</span>
+
+			<span class="n">c1</span> <span class="o">=</span> <span class="n">c1</span><span class="o">.</span><span class="n">parent</span>
+			<span class="n">c2</span> <span class="o">=</span> <span class="n">c2</span><span class="o">.</span><span class="n">parent</span>
+
+		<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">up</span><span class="p">):</span>
+			<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;..&#39;</span><span class="p">)</span>
+		<span class="n">lst</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+		<span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="ow">or</span> <span class="s">&#39;.&#39;</span>
+</div>
+<div class="viewcode-block" id="Node.abspath"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.abspath">[docs]</a>	<span class="k">def</span> <span class="nf">abspath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Absolute path. A cache is kept in the context as ``cache_node_abspath``</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_abspath</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="c"># think twice before touching this (performance + complexity + correctness)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+			<span class="n">val</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">==</span> <span class="s">&#39;/&#39;</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span>
+		<span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+			<span class="c"># drive letter for win32</span>
+			<span class="n">val</span> <span class="o">=</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">==</span> <span class="s">&#39;/&#39;</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">cache_abspath</span> <span class="o">=</span> <span class="n">val</span>
+		<span class="k">return</span> <span class="n">val</span>
+</div>
+<div class="viewcode-block" id="Node.is_child_of"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.is_child_of">[docs]</a>	<span class="k">def</span> <span class="nf">is_child_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Does this node belong to the subtree node?::</span>
+
+<span class="sd">			def build(bld):</span>
+<span class="sd">				node = bld.path.find_node(&#39;wscript&#39;)</span>
+<span class="sd">				node.is_child_of(bld.path) # True</span>
+
+<span class="sd">		:param node: path to use as a reference</span>
+<span class="sd">		:type node: :py:class:`waflib.Node.Node`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">p</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="n">node</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+		<span class="k">while</span> <span class="n">diff</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="n">diff</span> <span class="o">-=</span> <span class="mi">1</span>
+			<span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">parent</span>
+		<span class="k">return</span> <span class="nb">id</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="nb">id</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Node.ant_iter"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.ant_iter">[docs]</a>	<span class="k">def</span> <span class="nf">ant_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">accept</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">maxdepth</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">pats</span><span class="o">=</span><span class="p">[],</span> <span class="nb">dir</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">remove</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Semi-private and recursive method used by ant_glob.</span>
+
+<span class="sd">		:param accept: function used for accepting/rejecting a node, returns the patterns that can be still accepted in recursion</span>
+<span class="sd">		:type accept: function</span>
+<span class="sd">		:param maxdepth: maximum depth in the filesystem (25)</span>
+<span class="sd">		:type maxdepth: int</span>
+<span class="sd">		:param pats: list of patterns to accept and list of patterns to exclude</span>
+<span class="sd">		:type pats: tuple</span>
+<span class="sd">		:param dir: return folders too (False by default)</span>
+<span class="sd">		:type dir: bool</span>
+<span class="sd">		:param src: return files (True by default)</span>
+<span class="sd">		:type src: bool</span>
+<span class="sd">		:param remove: remove files/folders that do not exist (True by default)</span>
+<span class="sd">		:type remove: bool</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">dircont</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">listdir</span><span class="p">()</span>
+		<span class="n">dircont</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">lst</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+			<span class="k">if</span> <span class="n">remove</span><span class="p">:</span>
+				<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">dircont</span><span class="p">):</span>
+					<span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">{}</span>
+
+		<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">dircont</span><span class="p">:</span>
+			<span class="n">npats</span> <span class="o">=</span> <span class="n">accept</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">pats</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">npats</span> <span class="ow">and</span> <span class="n">npats</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+				<span class="n">accepted</span> <span class="o">=</span> <span class="p">[]</span> <span class="ow">in</span> <span class="n">npats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+				<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_node</span><span class="p">([</span><span class="n">name</span><span class="p">])</span>
+
+				<span class="n">isdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+				<span class="k">if</span> <span class="n">accepted</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">isdir</span><span class="p">:</span>
+						<span class="k">if</span> <span class="nb">dir</span><span class="p">:</span>
+							<span class="k">yield</span> <span class="n">node</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">src</span><span class="p">:</span>
+							<span class="k">yield</span> <span class="n">node</span>
+
+				<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s">&#39;cache_isdir&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">isdir</span><span class="p">:</span>
+					<span class="n">node</span><span class="o">.</span><span class="n">cache_isdir</span> <span class="o">=</span> <span class="bp">True</span>
+					<span class="k">if</span> <span class="n">maxdepth</span><span class="p">:</span>
+						<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">ant_iter</span><span class="p">(</span><span class="n">accept</span><span class="o">=</span><span class="n">accept</span><span class="p">,</span> <span class="n">maxdepth</span><span class="o">=</span><span class="n">maxdepth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">pats</span><span class="o">=</span><span class="n">npats</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="nb">dir</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">src</span><span class="p">):</span>
+							<span class="k">yield</span> <span class="n">k</span>
+		<span class="k">raise</span> <span class="ne">StopIteration</span>
+</div>
+<div class="viewcode-block" id="Node.ant_glob"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.ant_glob">[docs]</a>	<span class="k">def</span> <span class="nf">ant_glob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		This method is used for finding files across folders. It behaves like ant patterns:</span>
+
+<span class="sd">		* ``**/*`` find all files recursively</span>
+<span class="sd">		* ``**/*.class`` find all files ending by .class</span>
+<span class="sd">		* ``..`` find files having two dot characters</span>
+
+<span class="sd">		For example::</span>
+
+<span class="sd">			def configure(cfg):</span>
+<span class="sd">				cfg.path.ant_glob(&#39;**/*.cpp&#39;) # find all .cpp files</span>
+<span class="sd">				cfg.root.ant_glob(&#39;etc/*.txt&#39;) # using the filesystem root can be slow</span>
+<span class="sd">				cfg.path.ant_glob(&#39;*.cpp&#39;, excl=[&#39;*.c&#39;], src=True, dir=False)</span>
+
+<span class="sd">		For more information see http://ant.apache.org/manual/dirtasks.html</span>
+
+<span class="sd">		The nodes that correspond to files and folders that do not exist will be removed</span>
+
+<span class="sd">		:param incl: ant patterns or list of patterns to include</span>
+<span class="sd">		:type incl: string or list of strings</span>
+<span class="sd">		:param excl: ant patterns or list of patterns to exclude</span>
+<span class="sd">		:type excl: string or list of strings</span>
+<span class="sd">		:param dir: return folders too (False by default)</span>
+<span class="sd">		:type dir: bool</span>
+<span class="sd">		:param src: return files (True by default)</span>
+<span class="sd">		:type src: bool</span>
+<span class="sd">		:param remove: remove files/folders that do not exist (True by default)</span>
+<span class="sd">		:type remove: bool</span>
+<span class="sd">		:param maxdepth: maximum depth of recursion</span>
+<span class="sd">		:type maxdepth: int</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="n">src</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;src&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+		<span class="nb">dir</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;dir&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+
+		<span class="n">excl</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;excl&#39;</span><span class="p">,</span> <span class="n">exclude_regs</span><span class="p">)</span>
+		<span class="n">incl</span> <span class="o">=</span> <span class="n">k</span> <span class="ow">and</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;incl&#39;</span><span class="p">,</span> <span class="s">&#39;**&#39;</span><span class="p">)</span>
+
+		<span class="k">def</span> <span class="nf">to_pat</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+			<span class="n">lst</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+			<span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+				<span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;/&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;//&#39;</span><span class="p">,</span> <span class="s">&#39;/&#39;</span><span class="p">)</span>
+				<span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">):</span>
+					<span class="n">x</span> <span class="o">+=</span> <span class="s">&#39;**&#39;</span>
+				<span class="n">lst2</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+				<span class="n">accu</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">lst2</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s">&#39;**&#39;</span><span class="p">:</span>
+						<span class="n">accu</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="s">&#39;[.]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">,</span><span class="s">&#39;.*&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;?&#39;</span><span class="p">,</span> <span class="s">&#39;.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;+&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">+&#39;</span><span class="p">)</span>
+						<span class="n">k</span> <span class="o">=</span> <span class="s">&#39;^</span><span class="si">%s</span><span class="s">$&#39;</span> <span class="o">%</span> <span class="n">k</span>
+						<span class="k">try</span><span class="p">:</span>
+							<span class="c">#print &quot;pattern&quot;, k</span>
+							<span class="n">accu</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+						<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+							<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&quot;Invalid pattern: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">k</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+				<span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accu</span><span class="p">)</span>
+			<span class="k">return</span> <span class="n">ret</span>
+
+		<span class="k">def</span> <span class="nf">filtre</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">nn</span><span class="p">):</span>
+			<span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+			<span class="k">for</span> <span class="n">lst</span> <span class="ow">in</span> <span class="n">nn</span><span class="p">:</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="n">lst</span><span class="p">:</span>
+					<span class="k">pass</span>
+				<span class="k">elif</span> <span class="n">lst</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;**&#39;</span><span class="p">:</span>
+					<span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+					<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">lst</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+							<span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+				<span class="k">elif</span> <span class="n">lst</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+					<span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+			<span class="k">return</span> <span class="n">ret</span>
+
+		<span class="k">def</span> <span class="nf">accept</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">pats</span><span class="p">):</span>
+			<span class="n">nacc</span> <span class="o">=</span> <span class="n">filtre</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">pats</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+			<span class="n">nrej</span> <span class="o">=</span> <span class="n">filtre</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">pats</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+			<span class="k">if</span> <span class="p">[]</span> <span class="ow">in</span> <span class="n">nrej</span><span class="p">:</span>
+				<span class="n">nacc</span> <span class="o">=</span> <span class="p">[]</span>
+			<span class="k">return</span> <span class="p">[</span><span class="n">nacc</span><span class="p">,</span> <span class="n">nrej</span><span class="p">]</span>
+
+		<span class="n">ret</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ant_iter</span><span class="p">(</span><span class="n">accept</span><span class="o">=</span><span class="n">accept</span><span class="p">,</span> <span class="n">pats</span><span class="o">=</span><span class="p">[</span><span class="n">to_pat</span><span class="p">(</span><span class="n">incl</span><span class="p">),</span> <span class="n">to_pat</span><span class="p">(</span><span class="n">excl</span><span class="p">)],</span> <span class="n">maxdepth</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="nb">dir</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">src</span><span class="p">,</span> <span class="n">remove</span><span class="o">=</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;remove&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">))]</span>
+		<span class="k">if</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;flat&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+			<span class="k">return</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">path_from</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ret</span><span class="p">])</span>
+
+		<span class="k">return</span> <span class="n">ret</span>
+</div>
+	<span class="k">def</span> <span class="nf">find_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">find_dirs</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">find_files</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">match_fun</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">True</span><span class="p">):</span>
+		<span class="c"># FIXME not part of the stable API: find_node vs find_nodes? consistency with argument names on other functions?</span>
+		<span class="n">x</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">		Recursively finds nodes::</span>
+
+<span class="s">			def configure(cnf):</span>
+<span class="s">				cnf.find_nodes()</span>
+
+<span class="s">		:param find_dirs: whether to return directories</span>
+<span class="s">		:param find_files: whether to return files</span>
+<span class="s">		:param match_fun: matching function, taking a node as parameter</span>
+<span class="s">		:rtype generator</span>
+<span class="s">		:return: a generator that iterates over all the requested files</span>
+<span class="s">		&quot;&quot;&quot;</span>
+		<span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">listdir</span><span class="p">()</span>
+		<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_node</span><span class="p">([</span><span class="n">f</span><span class="p">])</span>
+			<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()):</span>
+				<span class="k">if</span> <span class="n">find_dirs</span> <span class="ow">and</span> <span class="n">match_fun</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+					<span class="k">yield</span> <span class="n">node</span>
+				<span class="n">gen</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">find_nodes</span><span class="p">(</span><span class="n">find_dirs</span><span class="p">,</span> <span class="n">find_files</span><span class="p">,</span> <span class="n">match_fun</span><span class="p">)</span>
+				<span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gen</span><span class="p">:</span>
+					<span class="k">yield</span> <span class="n">g</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">find_files</span> <span class="ow">and</span> <span class="n">match_fun</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+					<span class="k">yield</span> <span class="n">node</span>
+
+
+	<span class="c"># --------------------------------------------------------------------------------</span>
+	<span class="c"># the following methods require the source/build folders (bld.srcnode/bld.bldnode)</span>
+	<span class="c"># using a subclass is a possibility, but is that really necessary?</span>
+	<span class="c"># --------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="Node.is_src"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.is_src">[docs]</a>	<span class="k">def</span> <span class="nf">is_src</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		True if the node is below the source directory</span>
+<span class="sd">		note: !is_src does not imply is_bld()</span>
+
+<span class="sd">		:rtype: bool</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">cur</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">x</span> <span class="o">=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">srcnode</span><span class="p">)</span>
+		<span class="n">y</span> <span class="o">=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">bldnode</span><span class="p">)</span>
+		<span class="k">while</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span> <span class="o">==</span> <span class="n">y</span><span class="p">:</span>
+				<span class="k">return</span> <span class="bp">False</span>
+			<span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span> <span class="o">==</span> <span class="n">x</span><span class="p">:</span>
+				<span class="k">return</span> <span class="bp">True</span>
+			<span class="n">cur</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span>
+		<span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="Node.is_bld"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.is_bld">[docs]</a>	<span class="k">def</span> <span class="nf">is_bld</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		True if the node is below the build directory</span>
+<span class="sd">		note: !is_bld does not imply is_src</span>
+
+<span class="sd">		:rtype: bool</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">cur</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">y</span> <span class="o">=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">bldnode</span><span class="p">)</span>
+		<span class="k">while</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span> <span class="o">==</span> <span class="n">y</span><span class="p">:</span>
+				<span class="k">return</span> <span class="bp">True</span>
+			<span class="n">cur</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span>
+		<span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="Node.get_src"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.get_src">[docs]</a>	<span class="k">def</span> <span class="nf">get_src</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return the equivalent src node (or self if not possible)</span>
+
+<span class="sd">		:rtype: :py:class:`waflib.Node.Node`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">cur</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">x</span> <span class="o">=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">srcnode</span><span class="p">)</span>
+		<span class="n">y</span> <span class="o">=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">bldnode</span><span class="p">)</span>
+		<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">while</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span> <span class="o">==</span> <span class="n">y</span><span class="p">:</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+				<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">srcnode</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+			<span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span> <span class="o">==</span> <span class="n">x</span><span class="p">:</span>
+				<span class="k">return</span> <span class="bp">self</span>
+			<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+			<span class="n">cur</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span>
+		<span class="k">return</span> <span class="bp">self</span>
+</div>
+<div class="viewcode-block" id="Node.get_bld"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.get_bld">[docs]</a>	<span class="k">def</span> <span class="nf">get_bld</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return the equivalent bld node (or self if not possible)</span>
+
+<span class="sd">		:rtype: :py:class:`waflib.Node.Node`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">cur</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">x</span> <span class="o">=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">srcnode</span><span class="p">)</span>
+		<span class="n">y</span> <span class="o">=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">bldnode</span><span class="p">)</span>
+		<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">while</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span> <span class="o">==</span> <span class="n">y</span><span class="p">:</span>
+				<span class="k">return</span> <span class="bp">self</span>
+			<span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span> <span class="o">==</span> <span class="n">x</span><span class="p">:</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+				<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+			<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+			<span class="n">cur</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span>
+		<span class="k">return</span> <span class="bp">self</span>
+</div>
+<div class="viewcode-block" id="Node.find_resource"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.find_resource">[docs]</a>	<span class="k">def</span> <span class="nf">find_resource</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lst</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Try to find a declared build node or a source file</span>
+
+<span class="sd">		:param lst: path</span>
+<span class="sd">		:type lst: string or list of string</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">split_path</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">!=</span> <span class="s">&#39;.&#39;</span><span class="p">]</span>
+
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+			<span class="bp">self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_src</span><span class="p">()</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+				<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">pat</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+			<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">pat</span><span class="p">):</span>
+				<span class="k">return</span> <span class="bp">None</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Node.find_or_declare"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.find_or_declare">[docs]</a>	<span class="k">def</span> <span class="nf">find_or_declare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lst</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		if &#39;self&#39; is in build directory, try to return an existing node</span>
+<span class="sd">		if no node is found, go to the source directory</span>
+<span class="sd">		try to find an existing node in the source directory</span>
+<span class="sd">		if no node is found, create it in the build directory</span>
+
+<span class="sd">		:param lst: path</span>
+<span class="sd">		:type lst: string or list of string</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">split_path</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">!=</span> <span class="s">&#39;.&#39;</span><span class="p">]</span>
+
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">node</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()):</span>
+				<span class="n">node</span><span class="o">.</span><span class="n">sig</span> <span class="o">=</span> <span class="bp">None</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+				<span class="k">except</span><span class="p">:</span>
+					<span class="k">pass</span>
+			<span class="k">return</span> <span class="n">node</span>
+		<span class="bp">self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_src</span><span class="p">()</span>
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">node</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()):</span>
+				<span class="n">node</span><span class="o">.</span><span class="n">sig</span> <span class="o">=</span> <span class="bp">None</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+				<span class="k">except</span><span class="p">:</span>
+					<span class="k">pass</span>
+			<span class="k">return</span> <span class="n">node</span>
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+		<span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+		<span class="k">return</span> <span class="n">node</span>
+</div>
+<div class="viewcode-block" id="Node.find_dir"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.find_dir">[docs]</a>	<span class="k">def</span> <span class="nf">find_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lst</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Search for a folder in the filesystem</span>
+
+<span class="sd">		:param lst: path</span>
+<span class="sd">		:type lst: string or list of string</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">split_path</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">!=</span> <span class="s">&#39;.&#39;</span><span class="p">]</span>
+
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()):</span>
+				<span class="k">return</span> <span class="bp">None</span>
+		<span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+			<span class="c"># the node might be None, and raise an AttributeError</span>
+			<span class="k">return</span> <span class="bp">None</span>
+		<span class="k">return</span> <span class="n">node</span>
+
+	<span class="c"># helpers for building things</span></div>
+<div class="viewcode-block" id="Node.change_ext"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.change_ext">[docs]</a>	<span class="k">def</span> <span class="nf">change_ext</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ext</span><span class="p">,</span> <span class="n">ext_in</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		:return: A build node of the same path, but with a different extension</span>
+<span class="sd">		:rtype: :py:class:`waflib.Node.Node`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+		<span class="k">if</span> <span class="n">ext_in</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="n">k</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+				<span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[:</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">ext</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="n">ext</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[:</span><span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">ext_in</span><span class="p">)]</span> <span class="o">+</span> <span class="n">ext</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">([</span><span class="n">name</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="Node.nice_path"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.nice_path">[docs]</a>	<span class="k">def</span> <span class="nf">nice_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return the path seen from the launch directory. It is often used for printing nodes in the console to open</span>
+<span class="sd">		files easily.</span>
+
+<span class="sd">		:param env: unused, left for compatibility with waf 1.5</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">launch_node</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="Node.bldpath"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.bldpath">[docs]</a>	<span class="k">def</span> <span class="nf">bldpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="s">&quot;Path seen from the build directory default/src/foo.cpp&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">bldnode</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Node.srcpath"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.srcpath">[docs]</a>	<span class="k">def</span> <span class="nf">srcpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="s">&quot;Path seen from the source directory ../src/foo.cpp&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">srcnode</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Node.relpath"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.relpath">[docs]</a>	<span class="k">def</span> <span class="nf">relpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="s">&quot;If a file in the build directory, bldpath, else srcpath&quot;</span>
+		<span class="n">cur</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">x</span> <span class="o">=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">bldnode</span><span class="p">)</span>
+		<span class="k">while</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span> <span class="o">==</span> <span class="n">x</span><span class="p">:</span>
+				<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">path</span><span class="p">()</span>
+			<span class="n">cur</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">srcpath</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Node.bld_dir"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.bld_dir">[docs]</a>	<span class="k">def</span> <span class="nf">bld_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="s">&quot;Build path without the file name&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">bldpath</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Node.bld_base"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.bld_base">[docs]</a>	<span class="k">def</span> <span class="nf">bld_base</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="s">&quot;Build path without the extension: src/dir/foo(.cpp)&quot;</span>
+		<span class="n">s</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld_dir</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">s</span>
+</div>
+<div class="viewcode-block" id="Node.get_bld_sig"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.get_bld_sig">[docs]</a>	<span class="k">def</span> <span class="nf">get_bld_sig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Node signature, assuming the file is in the build directory</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">hash_cache</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)]</span>
+		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">hash_cache</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">ret</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bld</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">bldnode</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">srcnode</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">sig</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">h_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">hash_cache</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)]</span> <span class="o">=</span> <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig</span>
+		<span class="k">return</span> <span class="n">ret</span>
+</div></div>
+<span class="n">pickle_lock</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+<span class="sd">&quot;&quot;&quot;Lock mandatory for thread-safe node serialization&quot;&quot;&quot;</span>
+
+<span class="k">class</span> <span class="nc">Nod3</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Mandatory subclass for thread-safe node serialization&quot;&quot;&quot;</span>
+	<span class="k">pass</span> <span class="c"># do not remove</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

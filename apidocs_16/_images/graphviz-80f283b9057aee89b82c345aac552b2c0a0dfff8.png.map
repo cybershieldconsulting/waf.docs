@@ -1,0 +1,7 @@
+<map id="feature_cxxshlib" name="feature_cxxshlib">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.apply_implib" title="apply_implib" alt="" coords="5,6,99,34"/>
+<area shape="rect" id="node5" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="277,83,357,111"/>
+<area shape="rect" id="node2" href="tools/c_osx.html#waflib.Tools.c_osx.apply_bundle_remove_dynamiclib" title="apply_bundle_remove_dynamiclib" alt="" coords="123,6,336,34"/>
+<area shape="rect" id="node3" href="tools/ccroot.html#waflib.Tools.ccroot.apply_vnum" title="apply_vnum" alt="" coords="360,6,451,34"/>
+<area shape="rect" id="node4" href="tools/msvc.html#waflib.Tools.msvc.apply_manifest" title="apply_manifest" alt="" coords="475,6,584,34"/>
+</map>

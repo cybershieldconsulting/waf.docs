@@ -1,0 +1,319 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>intltool &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="up" title="Waf Tools" href="../tools.html" />
+    <link rel="next" title="lua" href="lua.html" />
+    <link rel="prev" title="gnu_dirs" href="gnu_dirs.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lua.html" title="lua"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gnu_dirs.html" title="gnu_dirs"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Tools.intltool">
+<span id="intltool"></span><h1>intltool<a class="headerlink" href="#module-waflib.Tools.intltool" title="Permalink to this headline">¶</a></h1>
+<p>Support for translation tools such as msgfmt and intltool</p>
+<p>Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;gnu_dirs intltool&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="c"># process the .po files into .gmo files, and install them in LOCALEDIR</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;intltool_po&#39;</span><span class="p">,</span> <span class="n">appname</span><span class="o">=</span><span class="s">&#39;myapp&#39;</span><span class="p">,</span> <span class="n">podir</span><span class="o">=</span><span class="s">&#39;po&#39;</span><span class="p">,</span> <span class="n">install_path</span><span class="o">=</span><span class="s">&quot;${LOCALEDIR}&quot;</span><span class="p">)</span>
+
+        <span class="c"># process an input file, substituting the translations from the po dir</span>
+        <span class="n">bld</span><span class="p">(</span>
+                <span class="n">features</span>  <span class="o">=</span> <span class="s">&quot;intltool_in&quot;</span><span class="p">,</span>
+                <span class="n">podir</span>     <span class="o">=</span> <span class="s">&quot;../po&quot;</span><span class="p">,</span>
+                <span class="n">flags</span>     <span class="o">=</span> <span class="p">[</span><span class="s">&quot;-d&quot;</span><span class="p">,</span> <span class="s">&quot;-q&quot;</span><span class="p">,</span> <span class="s">&quot;-u&quot;</span><span class="p">,</span> <span class="s">&quot;-c&quot;</span><span class="p">],</span>
+                <span class="n">source</span>    <span class="o">=</span> <span class="s">&#39;kupfer.desktop.in&#39;</span><span class="p">,</span>
+                <span class="n">install_path</span> <span class="o">=</span> <span class="s">&quot;${DATADIR}/applications&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+<p>Usage of the <a class="reference internal" href="gnu_dirs.html#module-waflib.Tools.gnu_dirs" title="waflib.Tools.gnu_dirs"><tt class="xref py py-mod docutils literal"><span class="pre">waflib.Tools.gnu_dirs</span></tt></a> is recommended, but not obligatory.</p>
+<dl class="function">
+<dt id="waflib.Tools.intltool.apply_intltool_in_f">
+<tt class="descclassname">waflib.Tools.intltool.</tt><tt class="descname">apply_intltool_in_f</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/intltool.html#apply_intltool_in_f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.intltool.apply_intltool_in_f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Task generator method</p>
+<p>Create tasks to translate files by intltool-merge:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span>
+                <span class="n">features</span>  <span class="o">=</span> <span class="s">&quot;intltool_in&quot;</span><span class="p">,</span>
+                <span class="n">podir</span>     <span class="o">=</span> <span class="s">&quot;../po&quot;</span><span class="p">,</span>
+                <span class="n">flags</span>     <span class="o">=</span> <span class="p">[</span><span class="s">&quot;-d&quot;</span><span class="p">,</span> <span class="s">&quot;-q&quot;</span><span class="p">,</span> <span class="s">&quot;-u&quot;</span><span class="p">,</span> <span class="s">&quot;-c&quot;</span><span class="p">],</span>
+                <span class="n">source</span>    <span class="o">=</span> <span class="s">&#39;kupfer.desktop.in&#39;</span><span class="p">,</span>
+                <span class="n">install_path</span> <span class="o">=</span> <span class="s">&quot;${DATADIR}/applications&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>podir</strong> (<em>string</em>) &#8211; location of the .po files</li>
+<li><strong>source</strong> (<em>list of string</em>) &#8211; source files to process</li>
+<li><strong>flags</strong> (<em>list of string</em>) &#8211; compilation flags (&#8220;-quc&#8221; by default)</li>
+<li><strong>install_path</strong> (<em>string</em>) &#8211; installation path</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Feature :</th><td class="field-body"><p class="first last"><a class="reference external" href="../featuremap.html#feature-intltool_in">intltool_in</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.intltool.apply_intltool_po">
+<tt class="descclassname">waflib.Tools.intltool.</tt><tt class="descname">apply_intltool_po</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/intltool.html#apply_intltool_po"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.intltool.apply_intltool_po" title="Permalink to this definition">¶</a></dt>
+<dd><p>Task generator method</p>
+<p>Create tasks to process po files:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;intltool_po&#39;</span><span class="p">,</span> <span class="n">appname</span><span class="o">=</span><span class="s">&#39;myapp&#39;</span><span class="p">,</span> <span class="n">podir</span><span class="o">=</span><span class="s">&#39;po&#39;</span><span class="p">,</span> <span class="n">install_path</span><span class="o">=</span><span class="s">&quot;${LOCALEDIR}&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The relevant task generator arguments are:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>podir</strong> (<em>string</em>) &#8211; directory of the .po files</li>
+<li><strong>appname</strong> (<em>string</em>) &#8211; name of the application</li>
+<li><strong>install_path</strong> (<em>string</em>) &#8211; installation directory</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The file LINGUAS must be present in the directory pointed by <em>podir</em> and list the translation files to process.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Feature :</th><td class="field-body"><a class="reference external" href="../featuremap.html#feature-intltool_po">intltool_po</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.intltool.po">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.intltool.</tt><tt class="descname">po</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/intltool.html#po"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.intltool.po" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
+<p>Compile .po files into .gmo files</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.intltool.intltool">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.intltool.</tt><tt class="descname">intltool</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/intltool.html#intltool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.intltool.intltool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
+<p>Let intltool-merge translate an input file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.intltool.configure">
+<tt class="descclassname">waflib.Tools.intltool.</tt><tt class="descname">configure</tt><big>(</big><em>conf</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/intltool.html#configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.intltool.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detect the program <em>msgfmt</em> and set <em>conf.env.MSGFMT</em>.
+Detect the program <em>intltool-merge</em> and set <em>conf.env.INTLTOOL</em>.
+It is possible to set INTLTOOL in the environment, but it must not have spaces in it:</p>
+<div class="highlight-python"><pre>$ INTLTOOL="/path/to/the program/intltool" waf configure</pre>
+</div>
+<p>If a C/C++ compiler is present, execute a compilation test to find the header <em>locale.h</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.intltool.feature">
+<tt class="descclassname">waflib.Tools.intltool.</tt><tt class="descname">feature</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.intltool.feature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method that will be executed when the
+object attribute &#8216;feature&#8217; contains the corresponding key(s):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.Task</span> <span class="kn">import</span> <span class="n">feature</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">myfunction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;that is my feature!&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>k</strong> (<em>list of string</em>) &#8211; feature names</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.intltool.before_method">
+<tt class="descclassname">waflib.Tools.intltool.</tt><tt class="descname">before_method</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.intltool.before_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method which will be executed
+before the functions of given name(s):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;fun2&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fun1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;feature 1!&#39;</span><span class="p">)</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fun2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;feature 2!&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>k</strong> (<em>list of string</em>) &#8211; method names</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.intltool.error">
+<tt class="descclassname">waflib.Tools.intltool.</tt><tt class="descname">error</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.intltool.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap logging.errors, display the origin of the message when &#8216;-vv&#8217; is set</p>
+</dd></dl>
+
+<p>Features defined in this module:</p>
+<ul class="simple">
+<li><a class="reference external" href="../featuremap.html#feature-intltool_in">intltool_in</a></li>
+<li><a class="reference external" href="../featuremap.html#feature-intltool_po">intltool_po</a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gnu_dirs.html"
+                        title="previous chapter">gnu_dirs</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="lua.html"
+                        title="next chapter">lua</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tools/intltool.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lua.html" title="lua"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gnu_dirs.html" title="gnu_dirs"
+             >previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

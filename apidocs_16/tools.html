@@ -1,0 +1,305 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Waf Tools &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="index.html" />
+    <link rel="next" title="compiler_c" href="tools/compiler_c.html" />
+    <link rel="prev" title="The core modules" href="coremodules.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tools/compiler_c.html" title="compiler_c"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="coremodules.html" title="The core modules"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="waf-tools">
+<h1>Waf Tools<a class="headerlink" href="#waf-tools" title="Permalink to this headline">¶</a></h1>
+<p>Special python modules called Waf <strong>tools</strong> provide functions and classes to help
+using compilers, libraries or programs. The typical usage from a user script is:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">function</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="c"># ...</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;toolname&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Where the function is usually:</p>
+<ul class="simple">
+<li>options: add command-line options used by the tool</li>
+<li>configure: modify <tt class="docutils literal"><span class="pre">conf.env</span></tt>, raise a configuration error if a prerequisite is not met</li>
+</ul>
+<p>The tools will usually enhance the application by adding:</p>
+<ul class="simple">
+<li>new commands deriving from <a class="reference internal" href="Context.html#waflib.Context.Context" title="waflib.Context.Context"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Context.Context</span></tt></a></li>
+<li>new task classes deriving from <a class="reference internal" href="Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></li>
+<li>new methods to <a class="reference internal" href="Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a> and <a class="reference internal" href="Build.html#waflib.Build.BuildContext" title="waflib.Build.BuildContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Build.BuildContext</span></tt></a> through <a class="reference internal" href="Configure.html#waflib.Configure.conf" title="waflib.Configure.conf"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Configure.conf()</span></tt></a></li>
+<li>new task generator methods to <a class="reference internal" href="TaskGen.html#waflib.TaskGen.task_gen" title="waflib.TaskGen.task_gen"><tt class="xref py py-class docutils literal"><span class="pre">waflib.TaskGen.task_gen</span></tt></a> through <a class="reference internal" href="TaskGen.html#waflib.TaskGen.taskgen_method" title="waflib.TaskGen.taskgen_method"><tt class="xref py py-func docutils literal"><span class="pre">waflib.TaskGen.taskgen_method()</span></tt></a>, <a class="reference internal" href="TaskGen.html#waflib.TaskGen.after" title="waflib.TaskGen.after"><tt class="xref py py-func docutils literal"><span class="pre">waflib.TaskGen.after()</span></tt></a></li>
+</ul>
+<p>As a general rule, existing methods or classes are hardly ever replaced.</p>
+<div class="section" id="c-c-compiler-detection">
+<h2>C/C++ compiler detection<a class="headerlink" href="#c-c-compiler-detection" title="Permalink to this headline">¶</a></h2>
+<p>The following Waf tools are used for loading specific C or C++ compilers. They may
+be used directly, for example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
+        <span class="n">opt</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;compiler_c&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;compiler_c&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tools/compiler_c.html">compiler_c</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/compiler_cxx.html">compiler_cxx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/ar.html">ar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/gcc.html">gcc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/gxx.html">gxx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/icc.html">icc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/icpc.html">icpc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/suncc.html">suncc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/suncxx.html">suncxx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/xlc.html">xlc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/xlcxx.html">xlcxx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/msvc.html">msvc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/winres.html">winres</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/irixcc.html">irixcc</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="c-c-support">
+<h2>C/C++ support<a class="headerlink" href="#c-c-support" title="Permalink to this headline">¶</a></h2>
+<p>The following modules contain the functions and classes required for building C and C++ applications. They
+are almost always loaded by other Waf tools. Among these, the most important from a user point of view
+is <a class="reference internal" href="tools/c_config.html#module-waflib.Tools.c_config" title="waflib.Tools.c_config"><tt class="xref py py-mod docutils literal"><span class="pre">waflib.Tools.c_config</span></tt></a> which provides the <a class="reference internal" href="tools/c_config.html#waflib.Tools.c_config.check" title="waflib.Tools.c_config.check"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Tools.c_config.check()</span></tt></a> and
+<a class="reference internal" href="tools/c_config.html#waflib.Tools.c_config.check_cfg" title="waflib.Tools.c_config.check_cfg"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Tools.c_config.check_cfg()</span></tt></a> functions.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tools/ccroot.html">ccroot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/c.html">c</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/cxx.html">cxx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/c_config.html">c_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/c_osx.html">c_osx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/c_preproc.html">c_preproc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/c_tests.html">c_tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/c_aliases.html">c_aliases</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="assembly">
+<h2>Assembly<a class="headerlink" href="#assembly" title="Permalink to this headline">¶</a></h2>
+<p>The following tools provide support for assembly. The module <a class="reference internal" href="tools/asm.html#module-waflib.Tools.asm" title="waflib.Tools.asm"><tt class="xref py py-mod docutils literal"><span class="pre">waflib.Tools.asm</span></tt></a> is loaded automatically by <a class="reference internal" href="tools/nasm.html#module-waflib.Tools.nasm" title="waflib.Tools.nasm"><tt class="xref py py-mod docutils literal"><span class="pre">waflib.Tools.nasm</span></tt></a> or <a class="reference internal" href="tools/gas.html#module-waflib.Tools.gas" title="waflib.Tools.gas"><tt class="xref py py-mod docutils literal"><span class="pre">waflib.Tools.gas</span></tt></a>.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tools/gas.html">gas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/nasm.html">nasm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/asm.html">asm</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="d-language-and-compilers">
+<h2>D language and compilers<a class="headerlink" href="#d-language-and-compilers" title="Permalink to this headline">¶</a></h2>
+<p>The first three tools in the following list may be used for detecting D compilers. The remaining contain the support functions and classes.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tools/compiler_d.html">compiler_d</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/dmd.html">dmd</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/gdc.html">gdc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/d_config.html">d_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/d.html">d</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/d_scan.html">d_scan</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="fortran-support">
+<h2>Fortran support<a class="headerlink" href="#fortran-support" title="Permalink to this headline">¶</a></h2>
+<p>The first four tools in the following list are used for detecting fortran compilers. The three remaining contain the routines for compiling fortran applications.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tools/compiler_fc.html">compiler_fc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/g95.html">g95</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/gfortran.html">gfortran</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/ifort.html">ifort</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/fc.html">fc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/fc_config.html">fc_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/fc_scan.html">fc_scan</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="c-c-related-applications">
+<h2>C/C++-related applications<a class="headerlink" href="#c-c-related-applications" title="Permalink to this headline">¶</a></h2>
+<p>The next tools provide support for code generators used in C and C++ projects.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tools/bison.html">bison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/flex.html">flex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/dbus.html">dbus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/vala.html">vala</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/glib2.html">glib2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/qt4.html">qt4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/kde4.html">kde4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/perl.html">perl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/python.html">python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/ruby.html">ruby</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="other-compilers-and-tools">
+<h2>Other compilers and tools<a class="headerlink" href="#other-compilers-and-tools" title="Permalink to this headline">¶</a></h2>
+<p>The following tools provide support for specific compilers or configurations. More tools are present in the <a class="reference external" href="http://code.google.com/p/waf/source/browse/trunk/waflib/extras/">extras</a> folder, although they are not documented and as stable as the default tools.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tools/waf_unit_test.html">waf_unit_test</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/tex.html">tex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/javaw.html">javaw</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/cs.html">cs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/gnu_dirs.html">gnu_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/intltool.html">intltool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools/lua.html">lua</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Waf Tools</a><ul>
+<li><a class="reference internal" href="#c-c-compiler-detection">C/C++ compiler detection</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#c-c-support">C/C++ support</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#assembly">Assembly</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#d-language-and-compilers">D language and compilers</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#fortran-support">Fortran support</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#c-c-related-applications">C/C++-related applications</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#other-compilers-and-tools">Other compilers and tools</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="coremodules.html"
+                        title="previous chapter">The core modules</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tools/compiler_c.html"
+                        title="next chapter">compiler_c</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tools.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tools/compiler_c.html" title="compiler_c"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="coremodules.html" title="The core modules"
+             >previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

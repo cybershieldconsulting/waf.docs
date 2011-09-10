@@ -1,0 +1,1134 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.c_preproc &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.c_preproc</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2006-2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">C/C++ preprocessor for finding dependencies</span>
+
+<span class="sd">Reasons for using the Waf preprocessor by default</span>
+
+<span class="sd">#. Some c/c++ extensions (Qt) require a custom preprocessor for obtaining the dependencies (.moc files)</span>
+<span class="sd">#. Not all compilers provide .d files for obtaining the dependencies (portability)</span>
+<span class="sd">#. A naive file scanner will not catch the constructs such as &quot;#include foo()&quot;</span>
+<span class="sd">#. A naive file scanner will catch unnecessary dependencies (change an unused header -&gt; recompile everything)</span>
+
+<span class="sd">Regarding the speed concerns:</span>
+
+<span class="sd">* the preprocessing is performed only when files must be compiled</span>
+<span class="sd">* the macros are evaluated only for #if/#elif/#include</span>
+<span class="sd">* system headers are not scanned by default</span>
+
+<span class="sd">Now if you do not want the Waf preprocessor, the tool +gccdeps* uses the .d files produced</span>
+<span class="sd">during the compilation to track the dependencies (useful when used with the boost libraries).</span>
+<span class="sd">It only works with gcc &gt;= 4.4 though.</span>
+
+<span class="sd">A dumb preprocessor is also available in the tool *c_dumbpreproc*</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c"># TODO: more varargs, pragma once</span>
+
+<span class="kn">import</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">string</span><span class="o">,</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">stat</span> <span class="kn">import</span> <span class="n">S_ISREG</span><span class="p">,</span> <span class="n">ST_MODE</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">waflib.Logs</span> <span class="kn">import</span> <span class="n">debug</span><span class="p">,</span> <span class="n">error</span>
+
+<span class="k">class</span> <span class="nc">PreprocError</span><span class="p">(</span><span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">):</span>
+	<span class="k">pass</span>
+
+<span class="n">POPFILE</span> <span class="o">=</span> <span class="s">&#39;-&#39;</span>
+<span class="s">&quot;Constant representing a special token used in :py:meth:`waflib.Tools.c_preproc.c_parser.start` iteration to switch to a header read previously&quot;</span>
+
+<span class="n">recursion_limit</span> <span class="o">=</span> <span class="mi">9000</span>
+<span class="s">&quot;Limit on the amount of files to read in the dependency scanner&quot;</span>
+
+<span class="n">go_absolute</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="s">&quot;Set to 1 to track headers on files in /usr/include - else absolute paths are ignored&quot;</span>
+
+<span class="n">standard_includes</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;/usr/include&#39;</span><span class="p">]</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&quot;win32&quot;</span><span class="p">:</span>
+	<span class="n">standard_includes</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="n">use_trigraphs</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="sd">&quot;&quot;&quot;Apply trigraph rules (False by default)&quot;&quot;&quot;</span>
+
+<span class="n">strict_quotes</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="sd">&quot;&quot;&quot;Reserve the &quot;#include &lt;&gt;&quot; quotes for system includes (do not search for those includes). False by default.&quot;&quot;&quot;</span>
+
+<span class="n">g_optrans</span> <span class="o">=</span> <span class="p">{</span>
+<span class="s">&#39;not&#39;</span><span class="p">:</span><span class="s">&#39;!&#39;</span><span class="p">,</span>
+<span class="s">&#39;and&#39;</span><span class="p">:</span><span class="s">&#39;&amp;&amp;&#39;</span><span class="p">,</span>
+<span class="s">&#39;bitand&#39;</span><span class="p">:</span><span class="s">&#39;&amp;&#39;</span><span class="p">,</span>
+<span class="s">&#39;and_eq&#39;</span><span class="p">:</span><span class="s">&#39;&amp;=&#39;</span><span class="p">,</span>
+<span class="s">&#39;or&#39;</span><span class="p">:</span><span class="s">&#39;||&#39;</span><span class="p">,</span>
+<span class="s">&#39;bitor&#39;</span><span class="p">:</span><span class="s">&#39;|&#39;</span><span class="p">,</span>
+<span class="s">&#39;or_eq&#39;</span><span class="p">:</span><span class="s">&#39;|=&#39;</span><span class="p">,</span>
+<span class="s">&#39;xor&#39;</span><span class="p">:</span><span class="s">&#39;^&#39;</span><span class="p">,</span>
+<span class="s">&#39;xor_eq&#39;</span><span class="p">:</span><span class="s">&#39;^=&#39;</span><span class="p">,</span>
+<span class="s">&#39;compl&#39;</span><span class="p">:</span><span class="s">&#39;~&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="sd">&quot;&quot;&quot;Operators such as and/or/xor for c++. Set an empty dict to disable.&quot;&quot;&quot;</span>
+
+<span class="c"># ignore #warning and #error</span>
+<span class="n">re_lines</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+	<span class="s">&#39;^[ </span><span class="se">\t</span><span class="s">]*(#|%:)[ </span><span class="se">\t</span><span class="s">]*(ifdef|ifndef|if|else|elif|endif|include|import|define|undef|pragma)[ </span><span class="se">\t</span><span class="s">]*(.*)</span><span class="se">\r</span><span class="s">*$&#39;</span><span class="p">,</span>
+	<span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Match #include lines&quot;&quot;&quot;</span>
+
+<span class="n">re_mac</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&quot;^[a-zA-Z_]\w*&quot;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Match macro definitions&quot;&quot;&quot;</span>
+
+<span class="n">re_fun</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^[a-zA-Z_][a-zA-Z0-9_]*[(]&#39;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Match macro functions&quot;&quot;&quot;</span>
+
+<span class="n">re_pragma_once</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^\s*once\s*&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Match #pragma once statements&quot;&quot;&quot;</span>
+
+<span class="n">re_nl</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\\\\\r</span><span class="s">*</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Match newlines&quot;&quot;&quot;</span>
+
+<span class="n">re_cpp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+	<span class="s">r&quot;&quot;&quot;(/\*[^*]*\*+([^/*][^*]*\*+)*/)|//[^\n]*|(&quot;(\\.|[^&quot;\\])*&quot;|&#39;(\\.|[^&#39;\\])*&#39;|.[^/&quot;&#39;\\]*)&quot;&quot;&quot;</span><span class="p">,</span>
+	<span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Filter C/C++ comments&quot;&quot;&quot;</span>
+
+<span class="n">trig_def</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&#39;??&#39;</span><span class="o">+</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="s">&quot;=-/!&#39;()&lt;&gt;&quot;</span><span class="p">,</span> <span class="s">r&#39;#~\|^[]{}&#39;</span><span class="p">)]</span>
+<span class="sd">&quot;&quot;&quot;Trigraph definitions&quot;&quot;&quot;</span>
+
+<span class="n">chr_esc</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;0&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">:</span><span class="mi">7</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">:</span><span class="mi">8</span><span class="p">,</span> <span class="s">&#39;t&#39;</span><span class="p">:</span><span class="mi">9</span><span class="p">,</span> <span class="s">&#39;n&#39;</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span> <span class="s">&#39;f&#39;</span><span class="p">:</span><span class="mi">11</span><span class="p">,</span> <span class="s">&#39;v&#39;</span><span class="p">:</span><span class="mi">12</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">:</span><span class="mi">13</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">:</span><span class="mi">92</span><span class="p">,</span> <span class="s">&quot;&#39;&quot;</span><span class="p">:</span><span class="mi">39</span><span class="p">}</span>
+<span class="sd">&quot;&quot;&quot;Escape characters&quot;&quot;&quot;</span>
+
+<span class="n">NUM</span>   <span class="o">=</span> <span class="s">&#39;i&#39;</span>
+<span class="sd">&quot;&quot;&quot;Number token&quot;&quot;&quot;</span>
+
+<span class="n">OP</span>    <span class="o">=</span> <span class="s">&#39;O&#39;</span>
+<span class="sd">&quot;&quot;&quot;Operator token&quot;&quot;&quot;</span>
+
+<span class="n">IDENT</span> <span class="o">=</span> <span class="s">&#39;T&#39;</span>
+<span class="sd">&quot;&quot;&quot;Identifier token&quot;&quot;&quot;</span>
+
+<span class="n">STR</span>   <span class="o">=</span> <span class="s">&#39;s&#39;</span>
+<span class="sd">&quot;&quot;&quot;String token&quot;&quot;&quot;</span>
+
+<span class="n">CHAR</span>  <span class="o">=</span> <span class="s">&#39;c&#39;</span>
+<span class="sd">&quot;&quot;&quot;Character token&quot;&quot;&quot;</span>
+
+<span class="n">tok_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">NUM</span><span class="p">,</span> <span class="n">STR</span><span class="p">,</span> <span class="n">IDENT</span><span class="p">,</span> <span class="n">OP</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;Token types&quot;&quot;&quot;</span>
+
+<span class="n">exp_types</span> <span class="o">=</span> <span class="p">[</span>
+	<span class="s">r&quot;&quot;&quot;0[xX](?P&lt;hex&gt;[a-fA-F0-9]+)(?P&lt;qual1&gt;[uUlL]*)|L*?&#39;(?P&lt;char&gt;(\\.|[^\\&#39;])+)&#39;|(?P&lt;n1&gt;\d+)[Ee](?P&lt;exp0&gt;[+-]*?\d+)(?P&lt;float0&gt;[fFlL]*)|(?P&lt;n2&gt;\d*\.\d+)([Ee](?P&lt;exp1&gt;[+-]*?\d+))?(?P&lt;float1&gt;[fFlL]*)|(?P&lt;n4&gt;\d+\.\d*)([Ee](?P&lt;exp2&gt;[+-]*?\d+))?(?P&lt;float2&gt;[fFlL]*)|(?P&lt;oct&gt;0*)(?P&lt;n0&gt;\d+)(?P&lt;qual2&gt;[uUlL]*)&quot;&quot;&quot;</span><span class="p">,</span>
+	<span class="s">r&#39;L?&quot;([^&quot;</span><span class="se">\\</span><span class="s">]|</span><span class="se">\\</span><span class="s">.)*&quot;&#39;</span><span class="p">,</span>
+	<span class="s">r&#39;[a-zA-Z_]\w*&#39;</span><span class="p">,</span>
+	<span class="s">r&#39;%:%:|&lt;&lt;=|&gt;&gt;=|\.\.\.|&lt;&lt;|&lt;%|&lt;:|&lt;=|&gt;&gt;|&gt;=|\+\+|\+=|--|-&gt;|-=|\*=|/=|%:|%=|%&gt;|==|&amp;&amp;|&amp;=|\|\||\|=|\^=|:&gt;|!=|##|[\(\)\{\}\[\]&lt;&gt;\?\|\^\*\+&amp;=:!#;,%/\-\?\~\.]&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;Expression types&quot;&quot;&quot;</span>
+
+<span class="n">re_clexer</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&quot;(?P&lt;</span><span class="si">%s</span><span class="s">&gt;</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">part</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tok_types</span><span class="p">,</span> <span class="n">exp_types</span><span class="p">)]),</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Match expressions into tokens&quot;&quot;&quot;</span>
+
+<span class="n">accepted</span>  <span class="o">=</span> <span class="s">&#39;a&#39;</span>
+<span class="sd">&quot;&quot;&quot;Parser state is *accepted*&quot;&quot;&quot;</span>
+
+<span class="n">ignored</span>   <span class="o">=</span> <span class="s">&#39;i&#39;</span>
+<span class="sd">&quot;&quot;&quot;Parser state is *ignored*, for example preprocessor lines in an #if 0 block&quot;&quot;&quot;</span>
+
+<span class="n">undefined</span> <span class="o">=</span> <span class="s">&#39;u&#39;</span>
+<span class="sd">&quot;&quot;&quot;Parser state is *undefined* at the moment&quot;&quot;&quot;</span>
+
+<span class="n">skipped</span>   <span class="o">=</span> <span class="s">&#39;s&#39;</span>
+<span class="sd">&quot;&quot;&quot;Parser state is *skipped*, for example preprocessor lines in a #elif 0 block&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="repl"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.repl">[docs]</a><span class="k">def</span> <span class="nf">repl</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Replace function used with :py:attr:`waflib.Tools.c_preproc.re_cpp`&quot;&quot;&quot;</span>
+	<span class="n">s</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">s</span><span class="p">:</span>
+		<span class="k">return</span> <span class="s">&#39; &#39;</span>
+	<span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span>
+</div>
+<div class="viewcode-block" id="filter_comments"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.filter_comments">[docs]</a><span class="k">def</span> <span class="nf">filter_comments</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Filter the comments from a c/h file, and return the preprocessor lines.</span>
+<span class="sd">	The regexps :py:attr:`waflib.Tools.c_preproc.re_cpp`, :py:attr:`waflib.Tools.c_preproc.re_nl` and :py:attr:`waflib.Tools.c_preproc.re_lines` are used internally.</span>
+
+<span class="sd">	:return: the preprocessor directives as a list of (keyword, line)</span>
+<span class="sd">	:rtype: a list of string pairs</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c"># return a list of tuples : keyword, line</span>
+	<span class="n">code</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">readf</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">use_trigraphs</span><span class="p">:</span>
+		<span class="k">for</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="ow">in</span> <span class="n">trig_def</span><span class="p">:</span> <span class="n">code</span> <span class="o">=</span> <span class="n">code</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+	<span class="n">code</span> <span class="o">=</span> <span class="n">re_nl</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">code</span><span class="p">)</span>
+	<span class="n">code</span> <span class="o">=</span> <span class="n">re_cpp</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">repl</span><span class="p">,</span> <span class="n">code</span><span class="p">)</span>
+	<span class="k">return</span> <span class="p">[(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">re_lines</span><span class="p">,</span> <span class="n">code</span><span class="p">)]</span>
+</div>
+<span class="n">prec</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Operator precendence rules required for parsing expressions of the form::</span>
+
+<span class="sd">	#if 1 &amp;&amp; 2 != 0</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">ops</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;* / %&#39;</span><span class="p">,</span> <span class="s">&#39;+ -&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;&lt; &gt;&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;&lt; &lt;= &gt;= &gt;&#39;</span><span class="p">,</span> <span class="s">&#39;== !=&#39;</span><span class="p">,</span> <span class="s">&#39;&amp; | ^&#39;</span><span class="p">,</span> <span class="s">&#39;&amp;&amp; ||&#39;</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ops</span><span class="p">)):</span>
+	<span class="n">syms</span> <span class="o">=</span> <span class="n">ops</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+	<span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">syms</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+		<span class="n">prec</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
+
+<div class="viewcode-block" id="trimquotes"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.trimquotes">[docs]</a><span class="k">def</span> <span class="nf">trimquotes</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Remove the single quotes around an expression::</span>
+
+<span class="sd">		trimquotes(&quot;&#39;test&#39;&quot;) == &quot;test&quot;</span>
+
+<span class="sd">	:param s: expression to transform</span>
+<span class="sd">	:type s: string</span>
+<span class="sd">	:rtype: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="p">:</span> <span class="k">return</span> <span class="s">&#39;&#39;</span>
+	<span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot;&#39;&quot;</span> <span class="ow">and</span> <span class="n">s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot;&#39;&quot;</span><span class="p">:</span> <span class="k">return</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+	<span class="k">return</span> <span class="n">s</span>
+</div>
+<div class="viewcode-block" id="reduce_nums"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.reduce_nums">[docs]</a><span class="k">def</span> <span class="nf">reduce_nums</span><span class="p">(</span><span class="n">val_1</span><span class="p">,</span> <span class="n">val_2</span><span class="p">,</span> <span class="n">val_op</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Apply arithmetic rules to compute a result</span>
+
+<span class="sd">	:param val1: input parameter</span>
+<span class="sd">	:type val1: int or string</span>
+<span class="sd">	:param val2: input parameter</span>
+<span class="sd">	:type val2: int or string</span>
+<span class="sd">	:param val_op: C operator in *+*, */*, *-*, etc</span>
+<span class="sd">	:type val_op: string</span>
+<span class="sd">	:rtype: int</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c">#print val_1, val_2, val_op</span>
+
+	<span class="c"># now perform the operation, make certain a and b are numeric</span>
+	<span class="k">try</span><span class="p">:</span>    <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">+</span> <span class="n">val_1</span>
+	<span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span> <span class="n">a</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">val_1</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>    <span class="n">b</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">+</span> <span class="n">val_2</span>
+	<span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span> <span class="n">b</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">val_2</span><span class="p">)</span>
+
+	<span class="n">d</span> <span class="o">=</span> <span class="n">val_op</span>
+	<span class="k">if</span> <span class="n">d</span> <span class="o">==</span> <span class="s">&#39;%&#39;</span><span class="p">:</span>  <span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="o">%</span><span class="n">b</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;+&#39;</span><span class="p">:</span>  <span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;-&#39;</span><span class="p">:</span>  <span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="o">-</span><span class="n">b</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;*&#39;</span><span class="p">:</span>  <span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">b</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;/&#39;</span><span class="p">:</span>  <span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="o">/</span><span class="n">b</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;^&#39;</span><span class="p">:</span>  <span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="o">^</span><span class="n">b</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;|&#39;</span><span class="p">:</span>  <span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="o">|</span><span class="n">b</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;||&#39;</span><span class="p">:</span> <span class="n">c</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span> <span class="ow">or</span> <span class="n">b</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;&amp;&#39;</span><span class="p">:</span>  <span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="o">&amp;</span><span class="n">b</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;&amp;&amp;&#39;</span><span class="p">:</span> <span class="n">c</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span> <span class="ow">and</span> <span class="n">b</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;==&#39;</span><span class="p">:</span> <span class="n">c</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;!=&#39;</span><span class="p">:</span> <span class="n">c</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span> <span class="o">!=</span> <span class="n">b</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;&lt;=&#39;</span><span class="p">:</span> <span class="n">c</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;&lt;&#39;</span><span class="p">:</span>  <span class="n">c</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span> <span class="o">&lt;</span> <span class="n">b</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;&gt;&#39;</span><span class="p">:</span>  <span class="n">c</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span> <span class="o">&gt;</span> <span class="n">b</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;&gt;=&#39;</span><span class="p">:</span> <span class="n">c</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span> <span class="o">&gt;=</span> <span class="n">b</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;^&#39;</span><span class="p">:</span>  <span class="n">c</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span><span class="o">^</span><span class="n">b</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;&lt;&lt;&#39;</span><span class="p">:</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="o">&lt;&lt;</span><span class="n">b</span>
+	<span class="k">elif</span> <span class="n">d</span><span class="o">==</span><span class="s">&#39;&gt;&gt;&#39;</span><span class="p">:</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="o">&gt;&gt;</span><span class="n">b</span>
+	<span class="k">else</span><span class="p">:</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="k">return</span> <span class="n">c</span>
+</div>
+<div class="viewcode-block" id="get_num"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.get_num">[docs]</a><span class="k">def</span> <span class="nf">get_num</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Try to obtain a number from a list of tokens. The token types are defined in :py:attr:`waflib.Tools.ccroot.tok_types`.</span>
+
+<span class="sd">	:param lst: list of preprocessor tokens</span>
+<span class="sd">	:type lst: list of tuple (tokentype, value)</span>
+<span class="sd">	:return: a pair containing the number and the rest of the list</span>
+<span class="sd">	:rtype: tuple(value, list)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">lst</span><span class="p">:</span> <span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;empty list for get_num&quot;</span><span class="p">)</span>
+	<span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+	<span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="n">OP</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;(&#39;</span><span class="p">:</span>
+			<span class="n">count_par</span> <span class="o">=</span> <span class="mi">1</span>
+			<span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+			<span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+				<span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+				<span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="n">OP</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;)&#39;</span><span class="p">:</span>
+						<span class="n">count_par</span> <span class="o">-=</span> <span class="mi">1</span>
+						<span class="k">if</span> <span class="n">count_par</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+							<span class="k">break</span>
+					<span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;(&#39;</span><span class="p">:</span>
+						<span class="n">count_par</span> <span class="o">+=</span> <span class="mi">1</span>
+				<span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;rparen expected </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">lst</span><span class="p">)</span>
+
+			<span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="o">=</span> <span class="n">get_term</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">i</span><span class="p">])</span>
+			<span class="k">return</span> <span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:])</span>
+
+		<span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;+&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">get_num</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+		<span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;-&#39;</span><span class="p">:</span>
+			<span class="n">num</span><span class="p">,</span> <span class="n">lst</span> <span class="o">=</span> <span class="n">get_num</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+			<span class="k">return</span> <span class="p">(</span><span class="n">reduce_nums</span><span class="p">(</span><span class="s">&#39;-1&#39;</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="s">&#39;*&#39;</span><span class="p">),</span> <span class="n">lst</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;!&#39;</span><span class="p">:</span>
+			<span class="n">num</span><span class="p">,</span> <span class="n">lst</span> <span class="o">=</span> <span class="n">get_num</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+			<span class="k">return</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="ow">not</span> <span class="nb">int</span><span class="p">(</span><span class="n">num</span><span class="p">)),</span> <span class="n">lst</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;~&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="p">(</span><span class="o">~</span> <span class="nb">int</span><span class="p">(</span><span class="n">num</span><span class="p">),</span> <span class="n">lst</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;invalid op token </span><span class="si">%r</span><span class="s"> for get_num&quot;</span> <span class="o">%</span> <span class="n">lst</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">p</span> <span class="o">==</span> <span class="n">NUM</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">v</span><span class="p">,</span> <span class="n">lst</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+	<span class="k">elif</span> <span class="n">p</span> <span class="o">==</span> <span class="n">IDENT</span><span class="p">:</span>
+		<span class="c"># all macros should have been replaced, remaining identifiers eval to 0</span>
+		<span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">lst</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;invalid token </span><span class="si">%r</span><span class="s"> for get_num&quot;</span> <span class="o">%</span> <span class="n">lst</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="get_term"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.get_term">[docs]</a><span class="k">def</span> <span class="nf">get_term</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Evaluate an expression recursively, for example::</span>
+
+<span class="sd">		1+1+1 -&gt; 2+1 -&gt; 3</span>
+
+<span class="sd">	:param lst: list of tokens</span>
+<span class="sd">	:type lst: list of tuple(token, value)</span>
+<span class="sd">	:return: the value and the remaining tokens</span>
+<span class="sd">	:rtype: value, list</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">lst</span><span class="p">:</span> <span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;empty list for get_term&quot;</span><span class="p">)</span>
+	<span class="n">num</span><span class="p">,</span> <span class="n">lst</span> <span class="o">=</span> <span class="n">get_num</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">lst</span><span class="p">:</span>
+		<span class="k">return</span> <span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="p">[])</span>
+	<span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+	<span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="n">OP</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;&amp;&amp;&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">num</span><span class="p">:</span>
+			<span class="k">return</span> <span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="p">[])</span>
+		<span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;||&#39;</span> <span class="ow">and</span> <span class="n">num</span><span class="p">:</span>
+			<span class="k">return</span> <span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="p">[])</span>
+		<span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;,&#39;</span><span class="p">:</span>
+			<span class="c"># skip</span>
+			<span class="k">return</span> <span class="n">get_term</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+		<span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;?&#39;</span><span class="p">:</span>
+			<span class="n">count_par</span> <span class="o">=</span> <span class="mi">0</span>
+			<span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+			<span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+				<span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+				<span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="n">OP</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;)&#39;</span><span class="p">:</span>
+						<span class="n">count_par</span> <span class="o">-=</span> <span class="mi">1</span>
+					<span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;(&#39;</span><span class="p">:</span>
+						<span class="n">count_par</span> <span class="o">+=</span> <span class="mi">1</span>
+					<span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;:&#39;</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">count_par</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+							<span class="k">break</span>
+				<span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;rparen expected </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">lst</span><span class="p">)</span>
+
+			<span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">num</span><span class="p">):</span>
+				<span class="k">return</span> <span class="n">get_term</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">i</span><span class="p">])</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">return</span> <span class="n">get_term</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:])</span>
+
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">num2</span><span class="p">,</span> <span class="n">lst</span> <span class="o">=</span> <span class="n">get_num</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">lst</span><span class="p">:</span>
+				<span class="c"># no more tokens to process</span>
+				<span class="n">num2</span> <span class="o">=</span> <span class="n">reduce_nums</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">num2</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+				<span class="k">return</span> <span class="n">get_term</span><span class="p">([(</span><span class="n">NUM</span><span class="p">,</span> <span class="n">num2</span><span class="p">)]</span> <span class="o">+</span> <span class="n">lst</span><span class="p">)</span>
+
+			<span class="c"># operator precedence</span>
+			<span class="n">p2</span><span class="p">,</span> <span class="n">v2</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+			<span class="k">if</span> <span class="n">p2</span> <span class="o">!=</span> <span class="n">OP</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;op expected </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">lst</span><span class="p">)</span>
+
+			<span class="k">if</span> <span class="n">prec</span><span class="p">[</span><span class="n">v2</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">prec</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+				<span class="n">num2</span> <span class="o">=</span> <span class="n">reduce_nums</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">num2</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+				<span class="k">return</span> <span class="n">get_term</span><span class="p">([(</span><span class="n">NUM</span><span class="p">,</span> <span class="n">num2</span><span class="p">)]</span> <span class="o">+</span> <span class="n">lst</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">num3</span><span class="p">,</span> <span class="n">lst</span> <span class="o">=</span> <span class="n">get_num</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+				<span class="n">num3</span> <span class="o">=</span> <span class="n">reduce_nums</span><span class="p">(</span><span class="n">num2</span><span class="p">,</span> <span class="n">num3</span><span class="p">,</span> <span class="n">v2</span><span class="p">)</span>
+				<span class="k">return</span> <span class="n">get_term</span><span class="p">([(</span><span class="n">NUM</span><span class="p">,</span> <span class="n">num</span><span class="p">),</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="p">(</span><span class="n">NUM</span><span class="p">,</span> <span class="n">num3</span><span class="p">)]</span> <span class="o">+</span> <span class="n">lst</span><span class="p">)</span>
+
+
+	<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;cannot reduce </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">lst</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="reduce_eval"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.reduce_eval">[docs]</a><span class="k">def</span> <span class="nf">reduce_eval</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Take a list of tokens and output true or false for #if/#elif conditions.</span>
+
+<span class="sd">	:param lst: a list of tokens</span>
+<span class="sd">	:type lst: list of tuple(token, value)</span>
+<span class="sd">	:return: a token</span>
+<span class="sd">	:rtype: tuple(NUM, int)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">num</span><span class="p">,</span> <span class="n">lst</span> <span class="o">=</span> <span class="n">get_term</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+	<span class="k">return</span> <span class="p">(</span><span class="n">NUM</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="stringize"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.stringize">[docs]</a><span class="k">def</span> <span class="nf">stringize</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Merge a list of tokens into a string</span>
+
+<span class="sd">	:param lst: a list of tokens</span>
+<span class="sd">	:type lst: list of tuple(token, value)</span>
+<span class="sd">	:rtype: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="n">v2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">]</span>
+	<span class="k">return</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="paste_tokens"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.paste_tokens">[docs]</a><span class="k">def</span> <span class="nf">paste_tokens</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Token pasting works between identifiers, particular operators, and identifiers and numbers::</span>
+
+<span class="sd">		a ## b  -&gt;  ab</span>
+<span class="sd">		&gt; ## =  -&gt;  &gt;=</span>
+<span class="sd">		a ## 2  -&gt;  a2</span>
+
+<span class="sd">	:param t1: token</span>
+<span class="sd">	:type t1: tuple(type, value)</span>
+<span class="sd">	:param t2: token</span>
+<span class="sd">	:type t2: tuple(type, value)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">p1</span> <span class="o">=</span> <span class="bp">None</span>
+	<span class="k">if</span> <span class="n">t1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">OP</span> <span class="ow">and</span> <span class="n">t2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">OP</span><span class="p">:</span>
+		<span class="n">p1</span> <span class="o">=</span> <span class="n">OP</span>
+	<span class="k">elif</span> <span class="n">t1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">IDENT</span> <span class="ow">and</span> <span class="p">(</span><span class="n">t2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">IDENT</span> <span class="ow">or</span> <span class="n">t2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">NUM</span><span class="p">):</span>
+		<span class="n">p1</span> <span class="o">=</span> <span class="n">IDENT</span>
+	<span class="k">elif</span> <span class="n">t1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">NUM</span> <span class="ow">and</span> <span class="n">t2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">NUM</span><span class="p">:</span>
+		<span class="n">p1</span> <span class="o">=</span> <span class="n">NUM</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">p1</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&#39;tokens do not make a valid paste </span><span class="si">%r</span><span class="s"> and </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">))</span>
+	<span class="k">return</span> <span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">t1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">t2</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="reduce_tokens"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.reduce_tokens">[docs]</a><span class="k">def</span> <span class="nf">reduce_tokens</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">defs</span><span class="p">,</span> <span class="n">ban</span><span class="o">=</span><span class="p">[]):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Replace the tokens in lst, using the macros provided in defs, and a list of macros that cannot be re-applied</span>
+
+<span class="sd">	:param lst: list of tokens</span>
+<span class="sd">	:type lst: list of tuple(token, value)</span>
+<span class="sd">	:param defs: macro definitions</span>
+<span class="sd">	:type defs: dict</span>
+<span class="sd">	:param ban: macros that cannot be substituted (recursion is not allowed)</span>
+<span class="sd">	:type ban: list of string</span>
+<span class="sd">	:return: the new list of tokens</span>
+<span class="sd">	:rtype: value, list</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+
+	<span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+		<span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+		<span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="n">IDENT</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&quot;defined&quot;</span><span class="p">:</span>
+			<span class="k">del</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+			<span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+				<span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="n">v2</span><span class="p">)</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+				<span class="k">if</span> <span class="n">p2</span> <span class="o">==</span> <span class="n">IDENT</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">v2</span> <span class="ow">in</span> <span class="n">defs</span><span class="p">:</span>
+						<span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">NUM</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">NUM</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+				<span class="k">elif</span> <span class="n">p2</span> <span class="o">==</span> <span class="n">OP</span> <span class="ow">and</span> <span class="n">v2</span> <span class="o">==</span> <span class="s">&#39;(&#39;</span><span class="p">:</span>
+					<span class="k">del</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+					<span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="n">v2</span><span class="p">)</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+					<span class="k">del</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="c"># remove the ident, and change the ) for the value</span>
+					<span class="k">if</span> <span class="n">v2</span> <span class="ow">in</span> <span class="n">defs</span><span class="p">:</span>
+						<span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">NUM</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">NUM</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;invalid define expression </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">lst</span><span class="p">)</span>
+
+		<span class="k">elif</span> <span class="n">p</span> <span class="o">==</span> <span class="n">IDENT</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">defs</span><span class="p">:</span>
+
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">defs</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+				<span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">extract_macro</span><span class="p">(</span><span class="n">defs</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
+				<span class="n">defs</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span>
+			<span class="n">macro_def</span> <span class="o">=</span> <span class="n">defs</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+			<span class="n">to_add</span> <span class="o">=</span> <span class="n">macro_def</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">macro_def</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+				<span class="c"># macro without arguments</span>
+				<span class="k">del</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+				<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">to_add</span><span class="p">)):</span>
+					<span class="n">lst</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">to_add</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+					<span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="c"># collect the arguments for the funcall</span>
+
+				<span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="k">del</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+				<span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+					<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;expected &#39;(&#39; after </span><span class="si">%r</span><span class="s"> (got nothing)&quot;</span> <span class="o">%</span> <span class="n">v</span><span class="p">)</span>
+
+				<span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="n">v2</span><span class="p">)</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+				<span class="k">if</span> <span class="n">p2</span> <span class="o">!=</span> <span class="n">OP</span> <span class="ow">or</span> <span class="n">v2</span> <span class="o">!=</span> <span class="s">&#39;(&#39;</span><span class="p">:</span>
+					<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;expected &#39;(&#39; after </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">v</span><span class="p">)</span>
+
+				<span class="k">del</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+				<span class="n">one_param</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">count_paren</span> <span class="o">=</span> <span class="mi">0</span>
+				<span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+					<span class="n">p2</span><span class="p">,</span> <span class="n">v2</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+					<span class="k">del</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+					<span class="k">if</span> <span class="n">p2</span> <span class="o">==</span> <span class="n">OP</span> <span class="ow">and</span> <span class="n">count_paren</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">v2</span> <span class="o">==</span> <span class="s">&#39;(&#39;</span><span class="p">:</span>
+							<span class="n">one_param</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">p2</span><span class="p">,</span> <span class="n">v2</span><span class="p">))</span>
+							<span class="n">count_paren</span> <span class="o">+=</span> <span class="mi">1</span>
+						<span class="k">elif</span> <span class="n">v2</span> <span class="o">==</span> <span class="s">&#39;)&#39;</span><span class="p">:</span>
+							<span class="k">if</span> <span class="n">one_param</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">one_param</span><span class="p">)</span>
+							<span class="k">break</span>
+						<span class="k">elif</span> <span class="n">v2</span> <span class="o">==</span> <span class="s">&#39;,&#39;</span><span class="p">:</span>
+							<span class="k">if</span> <span class="ow">not</span> <span class="n">one_param</span><span class="p">:</span> <span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;empty param in funcall </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">p</span><span class="p">)</span>
+							<span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">one_param</span><span class="p">)</span>
+							<span class="n">one_param</span> <span class="o">=</span> <span class="p">[]</span>
+						<span class="k">else</span><span class="p">:</span>
+							<span class="n">one_param</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">p2</span><span class="p">,</span> <span class="n">v2</span><span class="p">))</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">one_param</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">p2</span><span class="p">,</span> <span class="n">v2</span><span class="p">))</span>
+						<span class="k">if</span>   <span class="n">v2</span> <span class="o">==</span> <span class="s">&#39;(&#39;</span><span class="p">:</span> <span class="n">count_paren</span> <span class="o">+=</span> <span class="mi">1</span>
+						<span class="k">elif</span> <span class="n">v2</span> <span class="o">==</span> <span class="s">&#39;)&#39;</span><span class="p">:</span> <span class="n">count_paren</span> <span class="o">-=</span> <span class="mi">1</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&#39;malformed macro&#39;</span><span class="p">)</span>
+
+				<span class="c"># substitute the arguments within the define expression</span>
+				<span class="n">accu</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">arg_table</span> <span class="o">=</span> <span class="n">macro_def</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+				<span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+				<span class="k">while</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_add</span><span class="p">):</span>
+					<span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="n">v2</span><span class="p">)</span> <span class="o">=</span> <span class="n">to_add</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+					<span class="k">if</span> <span class="n">p2</span> <span class="o">==</span> <span class="n">OP</span> <span class="ow">and</span> <span class="n">v2</span> <span class="o">==</span> <span class="s">&#39;#&#39;</span><span class="p">:</span>
+						<span class="c"># stringize is for arguments only</span>
+						<span class="k">if</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_add</span><span class="p">)</span> <span class="ow">and</span> <span class="n">to_add</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">IDENT</span> <span class="ow">and</span> <span class="n">to_add</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">arg_table</span><span class="p">:</span>
+							<span class="n">toks</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="n">arg_table</span><span class="p">[</span><span class="n">to_add</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]]]</span>
+							<span class="n">accu</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">STR</span><span class="p">,</span> <span class="n">stringize</span><span class="p">(</span><span class="n">toks</span><span class="p">)))</span>
+							<span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+						<span class="k">else</span><span class="p">:</span>
+							<span class="n">accu</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">p2</span><span class="p">,</span> <span class="n">v2</span><span class="p">))</span>
+					<span class="k">elif</span> <span class="n">p2</span> <span class="o">==</span> <span class="n">OP</span> <span class="ow">and</span> <span class="n">v2</span> <span class="o">==</span> <span class="s">&#39;##&#39;</span><span class="p">:</span>
+						<span class="c"># token pasting, how can man invent such a complicated system?</span>
+						<span class="k">if</span> <span class="n">accu</span> <span class="ow">and</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_add</span><span class="p">):</span>
+							<span class="c"># we have at least two tokens</span>
+
+							<span class="n">t1</span> <span class="o">=</span> <span class="n">accu</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+							<span class="k">if</span> <span class="n">to_add</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">IDENT</span> <span class="ow">and</span> <span class="n">to_add</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">arg_table</span><span class="p">:</span>
+								<span class="n">toks</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="n">arg_table</span><span class="p">[</span><span class="n">to_add</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]]]</span>
+
+								<span class="k">if</span> <span class="n">toks</span><span class="p">:</span>
+									<span class="n">accu</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">paste_tokens</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">toks</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c">#(IDENT, accu[-1][1] + toks[0][1])</span>
+									<span class="n">accu</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">toks</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+								<span class="k">else</span><span class="p">:</span>
+									<span class="c"># error, case &quot;a##&quot;</span>
+									<span class="n">accu</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">p2</span><span class="p">,</span> <span class="n">v2</span><span class="p">))</span>
+									<span class="n">accu</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">toks</span><span class="p">)</span>
+							<span class="k">elif</span> <span class="n">to_add</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">IDENT</span> <span class="ow">and</span> <span class="n">to_add</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;__VA_ARGS__&#39;</span><span class="p">:</span>
+								<span class="c"># TODO not sure</span>
+								<span class="c"># first collect the tokens</span>
+								<span class="n">va_toks</span> <span class="o">=</span> <span class="p">[]</span>
+								<span class="n">st</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">macro_def</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+								<span class="n">pt</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+								<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span><span class="p">[</span><span class="n">pt</span><span class="o">-</span><span class="n">st</span><span class="o">+</span><span class="mi">1</span><span class="p">:]:</span>
+									<span class="n">va_toks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+									<span class="n">va_toks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">OP</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="p">))</span>
+								<span class="k">if</span> <span class="n">va_toks</span><span class="p">:</span> <span class="n">va_toks</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span> <span class="c"># extra comma</span>
+								<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">accu</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+									<span class="p">(</span><span class="n">p3</span><span class="p">,</span> <span class="n">v3</span><span class="p">)</span> <span class="o">=</span> <span class="n">accu</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+									<span class="p">(</span><span class="n">p4</span><span class="p">,</span> <span class="n">v4</span><span class="p">)</span> <span class="o">=</span> <span class="n">accu</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+									<span class="k">if</span> <span class="n">v3</span> <span class="o">==</span> <span class="s">&#39;##&#39;</span><span class="p">:</span>
+										<span class="c"># remove the token paste</span>
+										<span class="n">accu</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+										<span class="k">if</span> <span class="n">v4</span> <span class="o">==</span> <span class="s">&#39;,&#39;</span> <span class="ow">and</span> <span class="n">pt</span> <span class="o">&lt;</span> <span class="n">st</span><span class="p">:</span>
+											<span class="c"># remove the comma</span>
+											<span class="n">accu</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+								<span class="n">accu</span> <span class="o">+=</span> <span class="n">va_toks</span>
+							<span class="k">else</span><span class="p">:</span>
+								<span class="n">accu</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">paste_tokens</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">to_add</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+
+							<span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+						<span class="k">else</span><span class="p">:</span>
+							<span class="c"># invalid paste, case    &quot;##a&quot; or &quot;b##&quot;</span>
+							<span class="n">accu</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">p2</span><span class="p">,</span> <span class="n">v2</span><span class="p">))</span>
+
+					<span class="k">elif</span> <span class="n">p2</span> <span class="o">==</span> <span class="n">IDENT</span> <span class="ow">and</span> <span class="n">v2</span> <span class="ow">in</span> <span class="n">arg_table</span><span class="p">:</span>
+						<span class="n">toks</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="n">arg_table</span><span class="p">[</span><span class="n">v2</span><span class="p">]]</span>
+						<span class="n">reduce_tokens</span><span class="p">(</span><span class="n">toks</span><span class="p">,</span> <span class="n">defs</span><span class="p">,</span> <span class="n">ban</span><span class="o">+</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
+						<span class="n">accu</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">toks</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">accu</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">p2</span><span class="p">,</span> <span class="n">v2</span><span class="p">))</span>
+
+					<span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+				<span class="n">reduce_tokens</span><span class="p">(</span><span class="n">accu</span><span class="p">,</span> <span class="n">defs</span><span class="p">,</span> <span class="n">ban</span><span class="o">+</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
+
+				<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">accu</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+					<span class="n">lst</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">accu</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+
+		<span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+</div>
+<div class="viewcode-block" id="eval_macro"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.eval_macro">[docs]</a><span class="k">def</span> <span class="nf">eval_macro</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">defs</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Reduce the tokens by :py:func:`waflib.Tools.c_preproc.reduce_tokens` and try to return a 0/1 result by :py:func:`waflib.Tools.c_preproc.reduce_eval`.</span>
+
+<span class="sd">	:param lst: list of tokens</span>
+<span class="sd">	:type lst: list of tuple(token, value)</span>
+<span class="sd">	:param defs: macro definitions</span>
+<span class="sd">	:type defs: dict</span>
+<span class="sd">	:rtype: int</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">reduce_tokens</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">defs</span><span class="p">,</span> <span class="p">[])</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">lst</span><span class="p">:</span> <span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;missing tokens to evaluate&quot;</span><span class="p">)</span>
+	<span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="n">reduce_eval</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+	<span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+</div>
+<div class="viewcode-block" id="extract_macro"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.extract_macro">[docs]</a><span class="k">def</span> <span class="nf">extract_macro</span><span class="p">(</span><span class="n">txt</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process a macro definition of the form::</span>
+<span class="sd">		 #define f(x, y) x * y</span>
+
+<span class="sd">	into a function or a simple macro without arguments</span>
+
+<span class="sd">	:param txt: expression to exact a macro definition from</span>
+<span class="sd">	:type txt: string</span>
+<span class="sd">	:return: a tuple containing the name, the list of arguments and the replacement</span>
+<span class="sd">	:rtype: tuple(string, [list, list])</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">t</span> <span class="o">=</span> <span class="n">tokenize</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">re_fun</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">txt</span><span class="p">):</span>
+		<span class="n">p</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+		<span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+		<span class="k">if</span> <span class="n">p</span> <span class="o">!=</span> <span class="n">OP</span><span class="p">:</span> <span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;expected open parenthesis&quot;</span><span class="p">)</span>
+
+		<span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+		<span class="n">pindex</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="n">prev</span> <span class="o">=</span> <span class="s">&#39;(&#39;</span>
+
+		<span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+			<span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+			<span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+			<span class="k">if</span> <span class="n">prev</span> <span class="o">==</span> <span class="s">&#39;(&#39;</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="n">IDENT</span><span class="p">:</span>
+					<span class="n">params</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">pindex</span>
+					<span class="n">pindex</span> <span class="o">+=</span> <span class="mi">1</span>
+					<span class="n">prev</span> <span class="o">=</span> <span class="n">p</span>
+				<span class="k">elif</span> <span class="n">p</span> <span class="o">==</span> <span class="n">OP</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;)&#39;</span><span class="p">:</span>
+					<span class="k">break</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;unexpected token (3)&quot;</span><span class="p">)</span>
+			<span class="k">elif</span> <span class="n">prev</span> <span class="o">==</span> <span class="n">IDENT</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="n">OP</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;,&#39;</span><span class="p">:</span>
+					<span class="n">prev</span> <span class="o">=</span> <span class="n">v</span>
+				<span class="k">elif</span> <span class="n">p</span> <span class="o">==</span> <span class="n">OP</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;)&#39;</span><span class="p">:</span>
+					<span class="k">break</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;comma or ... expected&quot;</span><span class="p">)</span>
+			<span class="k">elif</span> <span class="n">prev</span> <span class="o">==</span> <span class="s">&#39;,&#39;</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="n">IDENT</span><span class="p">:</span>
+					<span class="n">params</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">pindex</span>
+					<span class="n">pindex</span> <span class="o">+=</span> <span class="mi">1</span>
+					<span class="n">prev</span> <span class="o">=</span> <span class="n">p</span>
+				<span class="k">elif</span> <span class="n">p</span> <span class="o">==</span> <span class="n">OP</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;...&#39;</span><span class="p">:</span>
+					<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;not implemented (1)&quot;</span><span class="p">)</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;comma or ... expected (2)&quot;</span><span class="p">)</span>
+			<span class="k">elif</span> <span class="n">prev</span> <span class="o">==</span> <span class="s">&#39;...&#39;</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;not implemented (2)&quot;</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;unexpected else&quot;</span><span class="p">)</span>
+
+		<span class="c">#~ print (name, [params, t[i+1:]])</span>
+		<span class="k">return</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">[</span><span class="n">params</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]])</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="k">return</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">[[],</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">:]])</span>
+</div>
+<span class="n">re_include</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^\s*(&lt;(?P&lt;a&gt;.*)&gt;|&quot;(?P&lt;b&gt;.*)&quot;)&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="extract_include"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.extract_include">[docs]</a><span class="k">def</span> <span class="nf">extract_include</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">defs</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process a line in the form::</span>
+
+<span class="sd">		#include foo</span>
+
+<span class="sd">	:param txt: include line to process</span>
+<span class="sd">	:type txt: string</span>
+<span class="sd">	:param defs: macro definitions</span>
+<span class="sd">	:type defs: dict</span>
+<span class="sd">	:return: the file name</span>
+<span class="sd">	:rtype: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">m</span> <span class="o">=</span> <span class="n">re_include</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">):</span> <span class="k">return</span> <span class="s">&#39;&lt;&#39;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">):</span> <span class="k">return</span> <span class="s">&#39;&quot;&#39;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">)</span>
+
+	<span class="c"># perform preprocessing and look at the result, it must match an include</span>
+	<span class="n">toks</span> <span class="o">=</span> <span class="n">tokenize</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+	<span class="n">reduce_tokens</span><span class="p">(</span><span class="n">toks</span><span class="p">,</span> <span class="n">defs</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;waf_include&#39;</span><span class="p">])</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">toks</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;could not parse include </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">txt</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">toks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">toks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">STR</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s">&#39;&quot;&#39;</span><span class="p">,</span> <span class="n">toks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">toks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;&lt;&#39;</span> <span class="ow">and</span> <span class="n">toks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;&gt;&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">stringize</span><span class="p">(</span><span class="n">toks</span><span class="p">)</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s">&#39;&lt;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;&gt;&#39;</span><span class="p">)</span>
+
+	<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;could not parse include </span><span class="si">%s</span><span class="s">.&quot;</span> <span class="o">%</span> <span class="n">txt</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="parse_char"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.parse_char">[docs]</a><span class="k">def</span> <span class="nf">parse_char</span><span class="p">(</span><span class="n">txt</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Parse a c character</span>
+
+<span class="sd">	:param txt: character to parse</span>
+<span class="sd">	:type txt: string</span>
+<span class="sd">	:return: a character literal</span>
+<span class="sd">	:rtype: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">txt</span><span class="p">:</span> <span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;attempted to parse a null char&quot;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">txt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">:</span>
+		<span class="k">return</span> <span class="nb">ord</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+	<span class="n">c</span> <span class="o">=</span> <span class="n">txt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+	<span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s">&#39;x&#39;</span><span class="p">:</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">txt</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">hexdigits</span><span class="p">:</span> <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">txt</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="mi">16</span><span class="p">)</span>
+		<span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">txt</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="mi">16</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">c</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+		<span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s">&#39;0&#39;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span> <span class="k">return</span> <span class="mi">0</span>
+		<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">i</span> <span class="ow">and</span> <span class="n">txt</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="o">+</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+				<span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">i</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">txt</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="o">+</span><span class="n">i</span><span class="p">],</span> <span class="mi">8</span><span class="p">))</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">try</span><span class="p">:</span> <span class="k">return</span> <span class="n">chr_esc</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>
+		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span> <span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;could not parse char literal &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">txt</span><span class="p">)</span>
+</div>
+<span class="nd">@Utils.run_once</span>
+<span class="k">def</span> <span class="nf">tokenize</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Convert a string into a list of tokens (shlex.split does not apply to c/c++/d)</span>
+
+<span class="sd">	:param s: input to tokenize</span>
+<span class="sd">	:type s: string</span>
+<span class="sd">	:return: a list of tokens</span>
+<span class="sd">	:rtype: list of tuple(token, value)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c"># the same headers are read again and again - 10% improvement on preprocessing the samba headers</span>
+	<span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">re_clexer</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+		<span class="n">m</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span>
+		<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">tok_types</span><span class="p">:</span>
+			<span class="n">v</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">v</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="n">IDENT</span><span class="p">:</span>
+					<span class="k">try</span><span class="p">:</span> <span class="n">v</span> <span class="o">=</span> <span class="n">g_optrans</span><span class="p">[</span><span class="n">v</span><span class="p">];</span> <span class="n">name</span> <span class="o">=</span> <span class="n">OP</span>
+					<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+						<span class="c"># c++ specific</span>
+						<span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;true&quot;</span><span class="p">:</span>
+							<span class="n">v</span> <span class="o">=</span> <span class="mi">1</span>
+							<span class="n">name</span> <span class="o">=</span> <span class="n">NUM</span>
+						<span class="k">elif</span> <span class="n">v</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;false&quot;</span><span class="p">:</span>
+							<span class="n">v</span> <span class="o">=</span> <span class="mi">0</span>
+							<span class="n">name</span> <span class="o">=</span> <span class="n">NUM</span>
+				<span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="n">NUM</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">m</span><span class="p">(</span><span class="s">&#39;oct&#39;</span><span class="p">):</span> <span class="n">v</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+					<span class="k">elif</span> <span class="n">m</span><span class="p">(</span><span class="s">&#39;hex&#39;</span><span class="p">):</span> <span class="n">v</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="p">(</span><span class="s">&#39;hex&#39;</span><span class="p">),</span> <span class="mi">16</span><span class="p">)</span>
+					<span class="k">elif</span> <span class="n">m</span><span class="p">(</span><span class="s">&#39;n0&#39;</span><span class="p">):</span> <span class="n">v</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span><span class="s">&#39;n0&#39;</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">v</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span><span class="s">&#39;char&#39;</span><span class="p">)</span>
+						<span class="k">if</span> <span class="n">v</span><span class="p">:</span> <span class="n">v</span> <span class="o">=</span> <span class="n">parse_char</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+						<span class="k">else</span><span class="p">:</span> <span class="n">v</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span><span class="s">&#39;n2&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">m</span><span class="p">(</span><span class="s">&#39;n4&#39;</span><span class="p">)</span>
+				<span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="n">OP</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;%:&#39;</span><span class="p">:</span> <span class="n">v</span> <span class="o">=</span> <span class="s">&#39;#&#39;</span>
+					<span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="s">&#39;%:%:&#39;</span><span class="p">:</span> <span class="n">v</span> <span class="o">=</span> <span class="s">&#39;##&#39;</span>
+				<span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="n">STR</span><span class="p">:</span>
+					<span class="c"># remove the quotes around the string</span>
+					<span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+				<span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+				<span class="k">break</span>
+	<span class="k">return</span> <span class="n">ret</span>
+
+<span class="nd">@Utils.run_once</span>
+<span class="k">def</span> <span class="nf">define_name</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	:param line: define line</span>
+<span class="sd">	:type line: string</span>
+<span class="sd">	:rtype: string</span>
+<span class="sd">	:return: the define name</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">return</span> <span class="n">re_mac</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="c_parser"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.c_parser">[docs]</a><span class="k">class</span> <span class="nc">c_parser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Used by :py:func:`waflib.Tools.c_preproc.scan` to parse c/h files. Note that by default,</span>
+<span class="sd">	only project headers are parsed.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodepaths</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">defines</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="sd">&quot;&quot;&quot;list of lines read&quot;&quot;&quot;</span>
+
+		<span class="k">if</span> <span class="n">defines</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">defs</span>  <span class="o">=</span> <span class="p">{}</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">defs</span>  <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">defines</span><span class="p">)</span> <span class="c"># make a copy</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="p">[]</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">count_files</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">currentnode_stack</span> <span class="o">=</span> <span class="p">[]</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">nodepaths</span> <span class="o">=</span> <span class="n">nodepaths</span> <span class="ow">or</span> <span class="p">[]</span>
+		<span class="sd">&quot;&quot;&quot;Include paths&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="sd">&quot;&quot;&quot;List of :py:class:`waflib.Node.Node` found so far&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="sd">&quot;&quot;&quot;List of file names that could not be matched by any file&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">curfile</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+		<span class="sd">&quot;&quot;&quot;Current file&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">ban_includes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+		<span class="sd">&quot;&quot;&quot;Includes that must not be read (#pragma once)&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="c_parser.cached_find_resource"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.c_parser.cached_find_resource">[docs]</a>	<span class="k">def</span> <span class="nf">cached_find_resource</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Find a file from the input directory</span>
+
+<span class="sd">		:param node: directory</span>
+<span class="sd">		:type node: :py:class:`waflib.Node.Node`</span>
+<span class="sd">		:param filename: header to find</span>
+<span class="sd">		:type filename: string</span>
+<span class="sd">		:return: the node if found, or None</span>
+<span class="sd">		:rtype: :py:class:`waflib.Node.Node`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">nd</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">cache_nd</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="n">nd</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">cache_nd</span> <span class="o">=</span> <span class="p">{}</span>
+
+		<span class="n">tup</span> <span class="o">=</span> <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">nd</span><span class="p">[</span><span class="n">tup</span><span class="p">]</span>
+		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+			<span class="n">ret</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="n">S_ISREG</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">abspath</span><span class="p">())[</span><span class="n">ST_MODE</span><span class="p">]):</span>
+					<span class="n">ret</span> <span class="o">=</span> <span class="bp">None</span>
+			<span class="k">except</span><span class="p">:</span>
+				<span class="n">ret</span> <span class="o">=</span> <span class="bp">None</span>
+			<span class="n">nd</span><span class="p">[</span><span class="n">tup</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span>
+			<span class="k">return</span> <span class="n">ret</span>
+</div>
+<div class="viewcode-block" id="c_parser.tryfind"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.c_parser.tryfind">[docs]</a>	<span class="k">def</span> <span class="nf">tryfind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Try to obtain a node from the filename based from the include paths. Will add</span>
+<span class="sd">		the node found to :py:attr:`waflib.Tools.c_preproc.c_parser.nodes` or the file name to</span>
+<span class="sd">		:py:attr:`waflib.Tools.c_preproc.c_parser.names` if no corresponding file is found. Called by</span>
+<span class="sd">		:py:attr:`waflib.Tools.c_preproc.c_parser.start`.</span>
+
+<span class="sd">		:param filename: header to find</span>
+<span class="sd">		:type filename: string</span>
+<span class="sd">		:return: the node if found</span>
+<span class="sd">		:rtype: :py:class:`waflib.Node.Node`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">curfile</span> <span class="o">=</span> <span class="n">filename</span>
+
+		<span class="c"># for msvc it should be a for loop on the whole stack</span>
+		<span class="n">found</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_find_resource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">currentnode_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">filename</span><span class="p">)</span>
+
+		<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodepaths</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+				<span class="k">break</span>
+			<span class="n">found</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_find_resource</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+			<span class="c"># TODO the duplicates do not increase the no-op build times too much, but they may be worth removing</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">filename</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">:]</span> <span class="o">!=</span> <span class="s">&#39;.moc&#39;</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">addlines</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">found</span>
+</div>
+<div class="viewcode-block" id="c_parser.addlines"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.c_parser.addlines">[docs]</a>	<span class="k">def</span> <span class="nf">addlines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Add the lines from a header in the list of preprocessor lines to parse</span>
+
+<span class="sd">		:param node: header</span>
+<span class="sd">		:type node: :py:class:`waflib.Node.Node`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">currentnode_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+		<span class="n">filepath</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">count_files</span> <span class="o">+=</span> <span class="mi">1</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_files</span> <span class="o">&gt;</span> <span class="n">recursion_limit</span><span class="p">:</span> <span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;recursion limit exceeded&quot;</span><span class="p">)</span>
+		<span class="n">pc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_cache</span>
+		<span class="n">debug</span><span class="p">(</span><span class="s">&#39;preproc: reading file </span><span class="si">%r</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">lns</span> <span class="o">=</span> <span class="n">pc</span><span class="p">[</span><span class="n">filepath</span><span class="p">]</span>
+		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">lns</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">lines</span> <span class="o">=</span> <span class="n">filter_comments</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+			<span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">POPFILE</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">))</span>
+			<span class="n">lines</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+			<span class="n">pc</span><span class="p">[</span><span class="n">filepath</span><span class="p">]</span> <span class="o">=</span> <span class="n">lines</span> <span class="c"># cache the lines filtered</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;could not read the file </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">filepath</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">Logs</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+				<span class="n">error</span><span class="p">(</span><span class="s">&quot;parsing </span><span class="si">%s</span><span class="s"> failed&quot;</span> <span class="o">%</span> <span class="n">filepath</span><span class="p">)</span>
+				<span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="c_parser.start"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.c_parser.start">[docs]</a>	<span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">env</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Preprocess a source file to obtain the dependencies, which are accumulated to :py:attr:`waflib.Tools.c_preproc.c_parser.nodes`</span>
+<span class="sd">		and :py:attr:`waflib.Tools.c_preproc.c_parser.names`.</span>
+
+<span class="sd">		:param node: source file</span>
+<span class="sd">		:type node: :py:class:`waflib.Node.Node`</span>
+<span class="sd">		:param env: config set containing additional defines to take into account</span>
+<span class="sd">		:type env: :py:class:`waflib.ConfigSet.ConfigSet`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="n">debug</span><span class="p">(</span><span class="s">&#39;preproc: scanning </span><span class="si">%s</span><span class="s"> (in </span><span class="si">%s</span><span class="s">)&#39;</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+		<span class="n">bld</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">ctx</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">parse_cache</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">parse_cache</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="n">bld</span><span class="o">.</span><span class="n">parse_cache</span> <span class="o">=</span> <span class="p">{}</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">parse_cache</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">parse_cache</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">addlines</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+		<span class="c"># macros may be defined on the command-line, so they must be parsed as if they were part of the file</span>
+		<span class="k">if</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;DEFINES&#39;</span><span class="p">]:</span>
+			<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">trimquotes</span><span class="p">(</span><span class="s">&#39;=&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:])))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">y</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;=&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;DEFINES&#39;</span><span class="p">]]]</span>
+			<span class="n">lst</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">([(</span><span class="s">&#39;define&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">])</span>
+
+		<span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">:</span>
+			<span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+			<span class="k">if</span> <span class="n">token</span> <span class="o">==</span> <span class="n">POPFILE</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">count_files</span> <span class="o">-=</span> <span class="mi">1</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">currentnode_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+				<span class="k">continue</span>
+
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">ve</span> <span class="o">=</span> <span class="n">Logs</span><span class="o">.</span><span class="n">verbose</span>
+				<span class="k">if</span> <span class="n">ve</span><span class="p">:</span> <span class="n">debug</span><span class="p">(</span><span class="s">&#39;preproc: line is </span><span class="si">%s</span><span class="s"> - </span><span class="si">%s</span><span class="s"> state is </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+				<span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span>
+
+				<span class="c"># make certain we define the state if we are about to enter in an if block</span>
+				<span class="k">if</span> <span class="n">token</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;if&#39;</span><span class="p">:</span>
+					<span class="n">state</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">undefined</span><span class="p">)</span>
+				<span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;endif&#39;</span><span class="p">:</span>
+					<span class="n">state</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+				<span class="c"># skip lines when in a dead &#39;if&#39; branch, wait for the endif</span>
+				<span class="k">if</span> <span class="n">token</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;e&#39;</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">skipped</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="ow">or</span> <span class="n">ignored</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">:</span>
+						<span class="k">continue</span>
+
+				<span class="k">if</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;if&#39;</span><span class="p">:</span>
+					<span class="n">ret</span> <span class="o">=</span> <span class="n">eval_macro</span><span class="p">(</span><span class="n">tokenize</span><span class="p">(</span><span class="n">line</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">defs</span><span class="p">)</span>
+					<span class="k">if</span> <span class="n">ret</span><span class="p">:</span> <span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">accepted</span>
+					<span class="k">else</span><span class="p">:</span> <span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ignored</span>
+				<span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;ifdef&#39;</span><span class="p">:</span>
+					<span class="n">m</span> <span class="o">=</span> <span class="n">re_mac</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+					<span class="k">if</span> <span class="n">m</span> <span class="ow">and</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">defs</span><span class="p">:</span> <span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">accepted</span>
+					<span class="k">else</span><span class="p">:</span> <span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ignored</span>
+				<span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;ifndef&#39;</span><span class="p">:</span>
+					<span class="n">m</span> <span class="o">=</span> <span class="n">re_mac</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+					<span class="k">if</span> <span class="n">m</span> <span class="ow">and</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">defs</span><span class="p">:</span> <span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ignored</span>
+					<span class="k">else</span><span class="p">:</span> <span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">accepted</span>
+				<span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;include&#39;</span> <span class="ow">or</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;import&#39;</span><span class="p">:</span>
+					<span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">inc</span><span class="p">)</span> <span class="o">=</span> <span class="n">extract_include</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">defs</span><span class="p">)</span>
+					<span class="k">if</span> <span class="n">inc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ban_includes</span><span class="p">:</span>
+						<span class="k">continue</span>
+					<span class="k">if</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;import&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ban_includes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">inc</span><span class="p">)</span>
+					<span class="k">if</span> <span class="n">ve</span><span class="p">:</span> <span class="n">debug</span><span class="p">(</span><span class="s">&#39;preproc: include found </span><span class="si">%s</span><span class="s">    (</span><span class="si">%s</span><span class="s">) &#39;</span><span class="p">,</span> <span class="n">inc</span><span class="p">,</span> <span class="n">kind</span><span class="p">)</span>
+					<span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;&quot;&#39;</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">strict_quotes</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">tryfind</span><span class="p">(</span><span class="n">inc</span><span class="p">)</span>
+				<span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;elif&#39;</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">accepted</span><span class="p">:</span>
+						<span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">skipped</span>
+					<span class="k">elif</span> <span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">ignored</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">eval_macro</span><span class="p">(</span><span class="n">tokenize</span><span class="p">(</span><span class="n">line</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">defs</span><span class="p">):</span>
+							<span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">accepted</span>
+				<span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;else&#39;</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">accepted</span><span class="p">:</span> <span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">skipped</span>
+					<span class="k">elif</span> <span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">ignored</span><span class="p">:</span> <span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">accepted</span>
+				<span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;define&#39;</span><span class="p">:</span>
+					<span class="k">try</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">defs</span><span class="p">[</span><span class="n">define_name</span><span class="p">(</span><span class="n">line</span><span class="p">)]</span> <span class="o">=</span> <span class="n">line</span>
+					<span class="k">except</span><span class="p">:</span>
+						<span class="k">raise</span> <span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;invalid define line </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">line</span><span class="p">)</span>
+				<span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;undef&#39;</span><span class="p">:</span>
+					<span class="n">m</span> <span class="o">=</span> <span class="n">re_mac</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+					<span class="k">if</span> <span class="n">m</span> <span class="ow">and</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">defs</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">defs</span><span class="o">.</span><span class="n">__delitem__</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+						<span class="c">#print &quot;undef %s&quot; % name</span>
+				<span class="k">elif</span> <span class="n">token</span> <span class="o">==</span> <span class="s">&#39;pragma&#39;</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">re_pragma_once</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">ban_includes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curfile</span><span class="p">)</span>
+			<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">Logs</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+					<span class="n">debug</span><span class="p">(</span><span class="s">&#39;preproc: line parsing failed (</span><span class="si">%s</span><span class="s">): </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">Utils</span><span class="o">.</span><span class="n">ex_stack</span><span class="p">())</span>
+</div></div>
+<div class="viewcode-block" id="scan"><a class="viewcode-back" href="../../../tools/c_preproc.html#waflib.Tools.c_preproc.scan">[docs]</a><span class="k">def</span> <span class="nf">scan</span><span class="p">(</span><span class="n">task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Get the dependencies using a c/c++ preprocessor, this is required for finding dependencies of the kind::</span>
+
+<span class="sd">		#include some_macro()</span>
+
+<span class="sd">	Replacing this method may be a better choice than replacing &quot;ccroot.scan&quot; from all the tasks that use it</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">global</span> <span class="n">go_absolute</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">incn</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">includes_nodes</span>
+	<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%r</span><span class="s"> is missing a feature such as &quot;c&quot;, &quot;cxx&quot; or &quot;includes&quot;: &#39;</span> <span class="o">%</span> <span class="n">task</span><span class="o">.</span><span class="n">generator</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">go_absolute</span><span class="p">:</span>
+		<span class="n">nodepaths</span> <span class="o">=</span> <span class="n">incn</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">nodepaths</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">incn</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">is_child_of</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">srcnode</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span><span class="o">.</span><span class="n">is_child_of</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">bldnode</span><span class="p">)]</span>
+
+	<span class="n">tmp</span> <span class="o">=</span> <span class="n">c_parser</span><span class="p">(</span><span class="n">nodepaths</span><span class="p">)</span>
+	<span class="n">tmp</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">task</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">Logs</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+		<span class="n">debug</span><span class="p">(</span><span class="s">&#39;deps: deps for </span><span class="si">%r</span><span class="s">: </span><span class="si">%r</span><span class="s">; unresolved </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">tmp</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">tmp</span><span class="o">.</span><span class="n">names</span><span class="p">))</span>
+	<span class="k">return</span> <span class="p">(</span><span class="n">tmp</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">tmp</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

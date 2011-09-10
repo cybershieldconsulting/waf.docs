@@ -1,0 +1,309 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Waf tutorial &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="index.html" />
+    <link rel="next" title="About this documentation" href="about.html" />
+    <link rel="prev" title="lua" href="tools/lua.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="about.html" title="About this documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tools/lua.html" title="lua"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="waf-tutorial">
+<h1>Waf tutorial<a class="headerlink" href="#waf-tutorial" title="Permalink to this headline">¶</a></h1>
+<p>Waf is a piece of software used to help building software projects.
+The goal of this tutorial is to provide a quick overview of how to set up
+the scripts for a project using Waf.</p>
+<div class="section" id="waf-scripts-and-commands">
+<h2>Waf scripts and commands<a class="headerlink" href="#waf-scripts-and-commands" title="Permalink to this headline">¶</a></h2>
+<p>A software typically has <em>source files</em> which are kept in a version control system (git, subversion, etc),
+and <em>build scripts</em> (Makefiles, ..) which describe what to do with those files. A few <em>build files</em> are usually
+obtained after transforming the <em>source files</em>, but they are optional. The build scripts in Waf are files named &#8216;wscript&#8217;.</p>
+<p>In general, a project will consist of several phases:</p>
+<ul class="simple">
+<li>configure: configure the project, find the location of the prerequisites</li>
+<li>build: transform the source files into build files</li>
+<li>install: install the build files</li>
+<li>uninstall: uninstall the build files</li>
+<li>dist: create an archive of the source files</li>
+<li>clean: remove the build files</li>
+</ul>
+<p>Each phase is modelled in the wscript file as a python function which takes as argument an instance of <a class="reference internal" href="Context.html#waflib.Context.Context" title="waflib.Context.Context"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Context.Context</span></tt></a>.
+Let&#8217;s start with a new wscript file in the directory &#8216;/tmp/myproject&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;configure!&quot;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;build!&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We will also use a Waf binary file, for example <a class="reference external" href="http://waf.googlecode.com/files/waf-1.6.1">http://waf.googlecode.com/files/waf-1.6.1</a>, which we will copy in the project directory:</p>
+<div class="highlight-python"><pre>$ cd /tmp/myproject
+$ wget http://waf.googlecode.com/files/waf-1.6.1</pre>
+</div>
+<p>To execute the project, we will simply call the command as an argument to <tt class="docutils literal"><span class="pre">waf</span></tt>:</p>
+<div class="highlight-python"><pre>$ ./waf-1.6.1 configure build
+configure!
+build!</pre>
+</div>
+</div>
+<div class="section" id="targets">
+<h2>Targets<a class="headerlink" href="#targets" title="Permalink to this headline">¶</a></h2>
+<p>An important part of the build system is to declare the creation of targets. Here is a very simple example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">tg</span> <span class="o">=</span> <span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="s">&#39;cp ${SRC} ${TGT}&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;wscript&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;foo.txt&#39;</span><span class="p">)</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="s">&#39;cp ${SRC} ${TGT}&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;foo.txt&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;bar.txt&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The call <tt class="docutils literal"><span class="pre">bld(..)</span></tt> creates an object called <em>task generator</em>, which is used to create <em>tasks</em> which will actually
+call the command <tt class="docutils literal"><span class="pre">cp</span></tt>. The commands are not executed unless all the scripts have been read, which is important
+for computing the build order.</p>
+<p>The expressions <em>${SRC}</em> and <em>${TGT}</em> are shortcuts to avoid repeating the file names. More shortcuts can be defined
+by using the <em>${}</em> symbol, which reads the values from the attribute bld.env:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">MESSAGE</span> <span class="o">=</span> <span class="s">&#39;Hello, world!&#39;</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="s">&#39;echo ${MESSAGE}&#39;</span><span class="p">,</span> <span class="n">always</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The bld object is an instance of <a class="reference internal" href="Build.html#waflib.Build.BuildContext" title="waflib.Build.BuildContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Build.BuildContext</span></tt></a>, its <em>env</em> attribute is an instance <a class="reference internal" href="ConfigSet.html#waflib.ConfigSet.ConfigSet" title="waflib.ConfigSet.ConfigSet"><tt class="xref py py-class docutils literal"><span class="pre">waflib.ConfigSet.ConfigSet</span></tt></a>.
+The values are set in this object to be shared/stored/loaded easily. Here is how to do the same thing by sharing data between the configuration and build:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">cnf</span><span class="p">):</span>
+        <span class="n">cnf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">MESSAGE</span> <span class="o">=</span> <span class="s">&#39;Hello, world!&#39;</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="s">&#39;echo ${MESSAGE}&#39;</span><span class="p">,</span> <span class="n">always</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="scripts-and-tools">
+<h2>Scripts and Tools<a class="headerlink" href="#scripts-and-tools" title="Permalink to this headline">¶</a></h2>
+<p>To let a script use a script from a subdirectory, the method <a class="reference internal" href="Context.html#waflib.Context.Context.recurse" title="waflib.Context.Context.recurse"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Context.Context.recurse()</span></tt></a> has to be used with
+the relative path to the folder containing the wscript file. For example, to call the function <em>build</em> in the script <tt class="docutils literal"><span class="pre">src/wscript</span></tt>,
+one should write:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">recurse</span><span class="p">(</span><span class="s">&#39;src&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The support for specific languages and compilers is provided through specific modules called <em>Waf tools</em>. The tools are
+similar to wscript files and provide functions such as <em>configure</em> or <em>build</em>. Here is a simple project for the C programming language:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
+        <span class="n">opt</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;compiler_c&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">cnf</span><span class="p">):</span>
+        <span class="n">cnf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;compiler_c&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;c cprogram&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;main.c&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The function <em>options</em> is another predefined command used for setting command-line options. Its argument is an instance of <a class="reference internal" href="Options.html#waflib.Options.OptionsContext" title="waflib.Options.OptionsContext"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Options.OptionsContext()</span></tt></a>. The tool <em>compiler_c</em> is provided for detecting if a C compiler is present and to set various variables such as <tt class="docutils literal"><span class="pre">cnf.env.CFLAGS</span></tt>.</p>
+<p>The task generator declared in <em>bld</em> does not have a <em>rule</em> keyword, but a list of <em>features</em> which is used to reference methods that will call the appropriate rules. In this case, a rule is called for compiling the file, and another is used for linking the object files into the binary <em>app</em>. Other tool-dependent features exist such as <em>javac</em>, <em>cs</em>, or <em>tex</em>.</p>
+</div>
+<div class="section" id="a-c-and-c-project">
+<h2>A C and C++ project<a class="headerlink" href="#a-c-and-c-project" title="Permalink to this headline">¶</a></h2>
+<p>Here is a script for a more complicated project:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
+        <span class="n">opt</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;compiler_c compiler_cxx&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">cnf</span><span class="p">):</span>
+        <span class="n">cnf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;compiler_c compiler_cxx&#39;</span><span class="p">)</span>
+        <span class="n">cnf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;cxx cxxprogram&#39;</span><span class="p">,</span> <span class="n">lib</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;m&#39;</span><span class="p">],</span> <span class="n">cflags</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;-Wall&#39;</span><span class="p">],</span> <span class="n">defines</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;var=foo&#39;</span><span class="p">],</span> <span class="n">uselib_store</span><span class="o">=</span><span class="s">&#39;M&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;c cshlib&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;b.c&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;mylib&#39;</span><span class="p">)</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;c cxx cxxprogram&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;a.c main.cpp&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;M&#39;</span><span class="p">,</span><span class="s">&#39;mylib&#39;</span><span class="p">],</span> <span class="n">lib</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;dl&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The method <a class="reference internal" href="tools/c_config.html#waflib.Tools.c_config.check" title="waflib.Tools.c_config.check"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Tools.c_config.check()</span></tt></a> executes a build internally to check if the library <tt class="docutils literal"><span class="pre">libm</span></tt> is present on the operating system.
+It will then define variables such as:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">conf.env.LIB_M</span> <span class="pre">=</span> <span class="pre">['m']</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">conf.env.CFLAGS_M</span> <span class="pre">=</span> <span class="pre">['-Wall']</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">conf.env.DEFINES_M</span> <span class="pre">=</span> <span class="pre">['var=foo']</span></tt></li>
+</ul>
+<p>By stating <tt class="docutils literal"><span class="pre">use=['M',</span> <span class="pre">'mylib']</span></tt>, the program <em>app</em> is going to inherit all the <em>M</em> variables defined
+during the configuration. The program will also use the library <em>mylib</em> and both the build order and the dependencies
+will be modified so that <em>mylib</em> is linked before <em>app</em>.</p>
+<p>The <tt class="docutils literal"><span class="pre">use</span></tt> attribute is also working for other languages such as Java (dependencies between jar files) or C# (dependencies between assemblies).</p>
+</div>
+<div class="section" id="project-specific-extensions">
+<h2>Project-specific extensions<a class="headerlink" href="#project-specific-extensions" title="Permalink to this headline">¶</a></h2>
+<p>The <em>feature</em> keyword is a high-level reference to existing Waf methods.
+For example, the <strong>c</strong> feature will add the method <a class="reference internal" href="tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths" title="waflib.Tools.ccroot.apply_incpaths"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Tools.ccroot.apply_incpaths()</span></tt></a> for execution.
+To add a new method that will add the task generator path to the include path for all C targets,
+one may use such a declaration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before_method</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;c&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;apply_incpaths&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">add_current_dir_to_includes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">includes</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">includes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">includes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">tg</span> <span class="o">=</span> <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;main.c&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <em>feature</em> methods are bound to the <a class="reference internal" href="TaskGen.html#waflib.TaskGen.task_gen" title="waflib.TaskGen.task_gen"><tt class="xref py py-class docutils literal"><span class="pre">waflib.TaskGen.task_gen</span></tt></a> class, which is the class of the
+object <em>tg</em> in the example. New features can be declared in the same manner:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after_method</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;debug_tasks&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">print_debug</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;tasks created </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">tg</span> <span class="o">=</span> <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;c cprogram debug_tasks&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;main.c&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The declaration can be made more user-friendly by binding new methods to the context classes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.Build</span> <span class="kn">import</span> <span class="n">BuildContext</span>
+<span class="k">def</span> <span class="nf">enterprise_program</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">kw</span><span class="p">[</span><span class="s">&#39;features&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;c cprogram debug_tasks&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+<span class="n">BuildContext</span><span class="o">.</span><span class="n">enterprise_program</span> <span class="o">=</span> <span class="n">enterprise_program</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="c"># no feature line</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">enterprise_program</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;main.c&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The support code may be turned into a Waf tool by moving it to a separate file.
+To ease the deployment, the new Waf tool can even be added to the waf file (see <a class="reference external" href="http://code.google.com/p/waf/source/browse/trunk/README">http://code.google.com/p/waf/source/browse/trunk/README</a>).</p>
+</div>
+<div class="section" id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
+<p>This concludes the tutorial. For more information consult the apis, the Waf book and the examples.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Waf tutorial</a><ul>
+<li><a class="reference internal" href="#waf-scripts-and-commands">Waf scripts and commands</a></li>
+<li><a class="reference internal" href="#targets">Targets</a></li>
+<li><a class="reference internal" href="#scripts-and-tools">Scripts and Tools</a></li>
+<li><a class="reference internal" href="#a-c-and-c-project">A C and C++ project</a></li>
+<li><a class="reference internal" href="#project-specific-extensions">Project-specific extensions</a></li>
+<li><a class="reference internal" href="#conclusion">Conclusion</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tools/lua.html"
+                        title="previous chapter">lua</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="about.html"
+                        title="next chapter">About this documentation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tutorial.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="about.html" title="About this documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tools/lua.html" title="lua"
+             >previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

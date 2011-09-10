@@ -1,0 +1,483 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.tex &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.tex</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2006-2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">TeX/LaTeX/PDFLaTeX/XeLaTeX support</span>
+
+<span class="sd">Example::</span>
+
+<span class="sd">	def configure(conf):</span>
+<span class="sd">		conf.load(&#39;tex&#39;)</span>
+<span class="sd">		if not conf.env.LATEX:</span>
+<span class="sd">			conf.fatal(&#39;The program LaTex is required&#39;)</span>
+
+<span class="sd">	def build(bld):</span>
+<span class="sd">		bld(</span>
+<span class="sd">			features = &#39;tex&#39;,</span>
+<span class="sd">			type     = &#39;latex&#39;, # pdflatex or xelatex</span>
+<span class="sd">			source   = &#39;document.ltx&#39;, # mandatory, the source</span>
+<span class="sd">			outs     = &#39;ps&#39;, # &#39;pdf&#39; or &#39;ps pdf&#39;</span>
+<span class="sd">			deps     = &#39;crossreferencing.lst&#39;, # to give dependencies directly</span>
+<span class="sd">			prompt   = 1, # 0 for the batch mode</span>
+<span class="sd">			)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Runner</span><span class="p">,</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before</span>
+<span class="kn">from</span> <span class="nn">waflib.Logs</span> <span class="kn">import</span> <span class="n">error</span><span class="p">,</span> <span class="n">warn</span><span class="p">,</span> <span class="n">debug</span>
+
+<span class="n">re_bibunit</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;</span><span class="se">\\</span><span class="s">(?P&lt;type&gt;putbib)\[(?P&lt;file&gt;[^\[\]]*)\]&#39;</span><span class="p">,</span><span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+<div class="viewcode-block" id="bibunitscan"><a class="viewcode-back" href="../../../tools/tex.html#waflib.Tools.tex.bibunitscan">[docs]</a><span class="k">def</span> <span class="nf">bibunitscan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Parse the inputs and try to find the *bibunit* dependencies</span>
+
+<span class="sd">	:return: list of bibunit files</span>
+<span class="sd">	:rtype: list of :py:class:`waflib.Node.Node`</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+	<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+
+	<span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span> <span class="k">return</span> <span class="n">nodes</span>
+
+	<span class="n">code</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">readf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+
+	<span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">re_bibunit</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
+		<span class="n">path</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;file&#39;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;.bib&#39;</span><span class="p">]:</span>
+				<span class="c"># add another loop for the tex include paths?</span>
+				<span class="n">debug</span><span class="p">(</span><span class="s">&#39;tex: trying </span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+				<span class="n">fi</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span>
+				<span class="k">if</span> <span class="n">fi</span><span class="p">:</span>
+					<span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fi</span><span class="p">)</span>
+					<span class="c"># no break, people are crazy</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">debug</span><span class="p">(</span><span class="s">&#39;tex: could not find </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+
+	<span class="n">debug</span><span class="p">(</span><span class="s">&quot;tex: found the following bibunit files: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">nodes</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">nodes</span>
+</div>
+<span class="n">exts_deps_tex</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;.ltx&#39;</span><span class="p">,</span> <span class="s">&#39;.tex&#39;</span><span class="p">,</span> <span class="s">&#39;.bib&#39;</span><span class="p">,</span> <span class="s">&#39;.pdf&#39;</span><span class="p">,</span> <span class="s">&#39;.png&#39;</span><span class="p">,</span> <span class="s">&#39;.eps&#39;</span><span class="p">,</span> <span class="s">&#39;.ps&#39;</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;List of typical file extensions included in latex files&quot;&quot;&quot;</span>
+
+<span class="n">re_tex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;</span><span class="se">\\</span><span class="s">(?P&lt;type&gt;include|bibliography|putbib|includegraphics|input|import|bringin|lstinputlisting)(\[[^\[\]]*\])?{(?P&lt;file&gt;[^{}]*)}&#39;</span><span class="p">,</span><span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Regexp for expressions that may include latex files&quot;&quot;&quot;</span>
+
+<span class="n">g_bibtex_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;bibdata&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Regexp for bibtex files&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="tex"><a class="viewcode-back" href="../../../tools/tex.html#waflib.Tools.tex.tex">[docs]</a><span class="k">class</span> <span class="nc">tex</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Compile a tex/latex file.</span>
+
+<span class="sd">	.. inheritance-diagram:: waflib.Tools.tex.latex waflib.Tools.tex.xelatex waflib.Tools.tex.pdflatex</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">bibtex_fun</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">compile_fun</span><span class="p">(</span><span class="s">&#39;${BIBTEX} ${BIBTEXFLAGS} ${SRCFILE}&#39;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+	<span class="n">bibtex_fun</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">	Execute the program **bibtex**</span>
+<span class="s">	&quot;&quot;&quot;</span>
+
+	<span class="n">makeindex_fun</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">compile_fun</span><span class="p">(</span><span class="s">&#39;${MAKEINDEX} ${MAKEINDEXFLAGS} ${SRCFILE}&#39;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+	<span class="n">makeindex_fun</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">	Execute the program **makeindex**</span>
+<span class="s">	&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="tex.scan"><a class="viewcode-back" href="../../../tools/tex.html#waflib.Tools.tex.tex.scan">[docs]</a>	<span class="k">def</span> <span class="nf">scan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		A recursive regex-based scanner that finds latex dependencies. It uses :py:attr:`waflib.Tools.tex.re_tex`</span>
+
+<span class="sd">		Depending on your needs you might want:</span>
+
+<span class="sd">		* to change re_tex::</span>
+
+<span class="sd">			from waflib.Tools import tex</span>
+<span class="sd">			tex.re_tex = myregex</span>
+
+<span class="sd">		* or to change the method scan from the latex tasks::</span>
+
+<span class="sd">			from waflib.Task import classes</span>
+<span class="sd">			classes[&#39;latex&#39;].scan = myscanfunction</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+
+		<span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">seen</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span> <span class="k">return</span> <span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+
+		<span class="k">def</span> <span class="nf">parse_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+			<span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+				<span class="k">return</span>
+			<span class="n">seen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span>
+<span class="p">)</span>
+			<span class="n">code</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+			<span class="k">global</span> <span class="n">re_tex</span>
+			<span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">re_tex</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
+				<span class="n">path</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;file&#39;</span><span class="p">)</span>
+				<span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+					<span class="n">add_name</span> <span class="o">=</span> <span class="bp">True</span>
+					<span class="n">found</span> <span class="o">=</span> <span class="bp">None</span>
+					<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">exts_deps_tex</span><span class="p">:</span>
+						<span class="n">debug</span><span class="p">(</span><span class="s">&#39;tex: trying </span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+						<span class="n">found</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span>
+						<span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+							<span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+							<span class="n">add_name</span> <span class="o">=</span> <span class="bp">False</span>
+							<span class="k">if</span> <span class="n">found</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.tex&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">found</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.ltx&#39;</span><span class="p">):</span>
+								<span class="n">parse_node</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+						<span class="c"># no break, people are crazy</span>
+					<span class="k">if</span> <span class="n">add_name</span><span class="p">:</span>
+						<span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+		<span class="n">parse_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+			<span class="n">x</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+
+		<span class="n">debug</span><span class="p">(</span><span class="s">&quot;tex: found the following : </span><span class="si">%s</span><span class="s"> and names </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">names</span><span class="p">))</span>
+		<span class="k">return</span> <span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="tex.check_status"><a class="viewcode-back" href="../../../tools/tex.html#waflib.Tools.tex.tex.check_status">[docs]</a>	<span class="k">def</span> <span class="nf">check_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">retcode</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Check an exit status and raise an error with a particular message</span>
+
+<span class="sd">		:param msg: message to display if the code is non-zero</span>
+<span class="sd">		:type msg: string</span>
+<span class="sd">		:param retcode: condition</span>
+<span class="sd">		:type retcode: boolean</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">retcode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%r</span><span class="s"> command exit status </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">retcode</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="tex.bibfile"><a class="viewcode-back" href="../../../tools/tex.html#waflib.Tools.tex.tex.bibfile">[docs]</a>	<span class="k">def</span> <span class="nf">bibfile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Parse the *.aux* file to find a bibfile to process.</span>
+<span class="sd">		If yes, execute :py:meth:`waflib.Tools.tex.tex.bibtex_fun`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">ct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aux_node</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+		<span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">):</span>
+			<span class="n">error</span><span class="p">(</span><span class="s">&#39;error bibtex scan&#39;</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">fo</span> <span class="o">=</span> <span class="n">g_bibtex_re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">ct</span><span class="p">)</span>
+
+			<span class="c"># there is a .aux file to process</span>
+			<span class="k">if</span> <span class="n">fo</span><span class="p">:</span>
+				<span class="n">warn</span><span class="p">(</span><span class="s">&#39;calling bibtex&#39;</span><span class="p">)</span>
+
+				<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">)</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;BIBINPUTS&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEXINPUTS</span><span class="p">,</span> <span class="s">&#39;BSTINPUTS&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEXINPUTS</span><span class="p">})</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">SRCFILE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aux_node</span><span class="o">.</span><span class="n">name</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">check_status</span><span class="p">(</span><span class="s">&#39;error when calling bibtex&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bibtex_fun</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="tex.bibunits"><a class="viewcode-back" href="../../../tools/tex.html#waflib.Tools.tex.tex.bibunits">[docs]</a>	<span class="k">def</span> <span class="nf">bibunits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Parse the *.aux* file to find bibunit files. If there are bibunit files,</span>
+<span class="sd">		execute :py:meth:`waflib.Tools.tex.tex.bibtex_fun`.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">bibunits</span> <span class="o">=</span> <span class="n">bibunitscan</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+		<span class="k">except</span> <span class="n">FSError</span><span class="p">:</span>
+			<span class="n">error</span><span class="p">(</span><span class="s">&#39;error bibunitscan&#39;</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">bibunits</span><span class="p">:</span>
+				<span class="n">fn</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;bu&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bibunits</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+				<span class="k">if</span> <span class="n">fn</span><span class="p">:</span>
+					<span class="n">warn</span><span class="p">(</span><span class="s">&#39;calling bibtex on bibunits&#39;</span><span class="p">)</span>
+
+				<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fn</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;BIBINPUTS&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEXINPUTS</span><span class="p">,</span> <span class="s">&#39;BSTINPUTS&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEXINPUTS</span><span class="p">}</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">SRCFILE</span> <span class="o">=</span> <span class="n">f</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">check_status</span><span class="p">(</span><span class="s">&#39;error when calling bibtex&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bibtex_fun</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="tex.makeindex"><a class="viewcode-back" href="../../../tools/tex.html#waflib.Tools.tex.tex.makeindex">[docs]</a>	<span class="k">def</span> <span class="nf">makeindex</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Look on the filesystem if there is a *.idx* file to process. If yes, execute</span>
+<span class="sd">		:py:meth:`waflib.Tools.tex.tex.makeindex_fun`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">idx_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx_node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+			<span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">idx_path</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+			<span class="n">warn</span><span class="p">(</span><span class="s">&#39;index file </span><span class="si">%s</span><span class="s"> absent, not calling makeindex&#39;</span> <span class="o">%</span> <span class="n">idx_path</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">warn</span><span class="p">(</span><span class="s">&#39;calling makeindex&#39;</span><span class="p">)</span>
+
+			<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">SRCFILE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx_node</span><span class="o">.</span><span class="n">name</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">check_status</span><span class="p">(</span><span class="s">&#39;error when calling makeindex </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">idx_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">makeindex_fun</span><span class="p">())</span>
+</div>
+	<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Runs the TeX build process.</span>
+
+<span class="sd">		It may require multiple passes, depending on the</span>
+<span class="sd">		usage of cross-references, bibliographies, content susceptible of</span>
+<span class="sd">		needing such passes.</span>
+<span class="sd">		The appropriate TeX compiler is called until the *.aux* file ceases</span>
+<span class="sd">		changing.</span>
+
+<span class="sd">		Makeindex and bibtex are called if necessary.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+		<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;PROMPT_LATEX&#39;</span><span class="p">]:</span>
+			<span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;LATEXFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;-interaction=batchmode&#39;</span><span class="p">)</span>
+			<span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;PDFLATEXFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;-interaction=batchmode&#39;</span><span class="p">)</span>
+			<span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;XELATEXFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;-interaction=batchmode&#39;</span><span class="p">)</span>
+
+		<span class="n">fun</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">texfun</span>
+
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="n">srcfile</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">TEXINPUTS</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_src</span><span class="p">()</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">aux_node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.aux&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">idx_node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.idx&#39;</span><span class="p">)</span>
+
+		<span class="c"># important, set the cwd for everybody</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">cwd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+
+		<span class="n">warn</span><span class="p">(</span><span class="s">&#39;first pass on </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;TEXINPUTS&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEXINPUTS</span><span class="p">})</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">SRCFILE</span> <span class="o">=</span> <span class="n">srcfile</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">check_status</span><span class="p">(</span><span class="s">&#39;error when calling latex&#39;</span><span class="p">,</span> <span class="n">fun</span><span class="p">())</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">bibfile</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">bibunits</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">makeindex</span><span class="p">()</span>
+
+		<span class="nb">hash</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+		<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+			<span class="c"># prevent against infinite loops - one never knows</span>
+
+			<span class="c"># watch the contents of file.aux and stop if file.aux does not change anymore</span>
+			<span class="n">prev_hash</span> <span class="o">=</span> <span class="nb">hash</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="nb">hash</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">h_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aux_node</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+			<span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">):</span>
+				<span class="n">error</span><span class="p">(</span><span class="s">&#39;could not read aux.h -&gt; </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">aux_node</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+				<span class="k">pass</span>
+			<span class="k">if</span> <span class="nb">hash</span> <span class="ow">and</span> <span class="nb">hash</span> <span class="o">==</span> <span class="n">prev_hash</span><span class="p">:</span>
+				<span class="k">break</span>
+
+			<span class="c"># run the command</span>
+			<span class="n">warn</span><span class="p">(</span><span class="s">&#39;calling </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+
+			<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;TEXINPUTS&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEXINPUTS</span><span class="p">})</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">SRCFILE</span> <span class="o">=</span> <span class="n">srcfile</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">check_status</span><span class="p">(</span><span class="s">&#39;error when calling </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">fun</span><span class="p">())</span>
+</div>
+<span class="k">class</span> <span class="nc">latex</span><span class="p">(</span><span class="n">tex</span><span class="p">):</span>
+	<span class="n">texfun</span><span class="p">,</span> <span class="nb">vars</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">compile_fun</span><span class="p">(</span><span class="s">&#39;${LATEX} ${LATEXFLAGS} ${SRCFILE}&#39;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">pdflatex</span><span class="p">(</span><span class="n">tex</span><span class="p">):</span>
+	<span class="n">texfun</span><span class="p">,</span> <span class="nb">vars</span> <span class="o">=</span>  <span class="n">Task</span><span class="o">.</span><span class="n">compile_fun</span><span class="p">(</span><span class="s">&#39;${PDFLATEX} ${PDFLATEXFLAGS} ${SRCFILE}&#39;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">xelatex</span><span class="p">(</span><span class="n">tex</span><span class="p">):</span>
+	<span class="n">texfun</span><span class="p">,</span> <span class="nb">vars</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">compile_fun</span><span class="p">(</span><span class="s">&#39;${XELATEX} ${XELATEXFLAGS} ${SRCFILE}&#39;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">dvips</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${DVIPS} ${DVIPSFLAGS} ${SRC} -o ${TGT}&#39;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+	<span class="n">after</span>   <span class="o">=</span> <span class="p">[</span><span class="s">&#39;latex&#39;</span><span class="p">,</span> <span class="s">&#39;pdflatex&#39;</span><span class="p">,</span> <span class="s">&#39;xelatex&#39;</span><span class="p">]</span>
+
+<span class="k">class</span> <span class="nc">dvipdf</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${DVIPDF} ${DVIPDFFLAGS} ${SRC} ${TGT}&#39;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+	<span class="n">after</span>   <span class="o">=</span> <span class="p">[</span><span class="s">&#39;latex&#39;</span><span class="p">,</span> <span class="s">&#39;pdflatex&#39;</span><span class="p">,</span> <span class="s">&#39;xelatex&#39;</span><span class="p">]</span>
+
+<span class="k">class</span> <span class="nc">pdf2ps</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${PDF2PS} ${PDF2PSFLAGS} ${SRC} ${TGT}&#39;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+	<span class="n">after</span>   <span class="o">=</span> <span class="p">[</span><span class="s">&#39;latex&#39;</span><span class="p">,</span> <span class="s">&#39;pdflatex&#39;</span><span class="p">,</span> <span class="s">&#39;xelatex&#39;</span><span class="p">]</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;tex&#39;</span><span class="p">)</span>
+<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="apply_tex"><a class="viewcode-back" href="../../../tools/tex.html#waflib.Tools.tex.apply_tex">[docs]</a><span class="k">def</span> <span class="nf">apply_tex</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create :py:class:`waflib.Tools.tex.tex` objects, and dvips/dvipdf/pdf2ps tasks if necessary (outs=&#39;ps&#39;, etc).</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;type&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;latex&#39;</span><span class="p">,</span> <span class="s">&#39;pdflatex&#39;</span><span class="p">,</span> <span class="s">&#39;xelatex&#39;</span><span class="p">]:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s">&#39;pdflatex&#39;</span>
+
+	<span class="n">tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span>
+	<span class="n">outs</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;outs&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+
+	<span class="c"># prompt for incomplete files (else the batchmode is used)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PROMPT_LATEX&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;prompt&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+	<span class="n">deps_lst</span> <span class="o">=</span> <span class="p">[]</span>
+
+	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;deps&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="n">deps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deps</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">:</span>
+			<span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">deps_lst</span><span class="p">:</span> <span class="n">deps_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+	<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_nodes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">):</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;latex&#39;</span><span class="p">:</span>
+			<span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;latex&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.dvi&#39;</span><span class="p">))</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;pdflatex&#39;</span><span class="p">:</span>
+			<span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;pdflatex&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.pdf&#39;</span><span class="p">))</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;xelatex&#39;</span><span class="p">:</span>
+			<span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;xelatex&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.pdf&#39;</span><span class="p">))</span>
+
+		<span class="n">task</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+
+		<span class="c"># add the manual dependencies</span>
+		<span class="k">if</span> <span class="n">deps_lst</span><span class="p">:</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">lst</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">node_deps</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">uid</span><span class="p">()]</span>
+				<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">deps_lst</span><span class="p">:</span>
+					<span class="k">if</span> <span class="ow">not</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+						<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+			<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+				<span class="n">tree</span><span class="o">.</span><span class="n">node_deps</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">uid</span><span class="p">()]</span> <span class="o">=</span> <span class="n">deps_lst</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;latex&#39;</span><span class="p">:</span>
+			<span class="k">if</span> <span class="s">&#39;ps&#39;</span> <span class="ow">in</span> <span class="n">outs</span><span class="p">:</span>
+				<span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;dvips&#39;</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.ps&#39;</span><span class="p">))</span>
+				<span class="n">tsk</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;TEXINPUTS&#39;</span> <span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">abspath</span><span class="p">()}</span>
+			<span class="k">if</span> <span class="s">&#39;pdf&#39;</span> <span class="ow">in</span> <span class="n">outs</span><span class="p">:</span>
+				<span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;dvipdf&#39;</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.pdf&#39;</span><span class="p">))</span>
+				<span class="n">tsk</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;TEXINPUTS&#39;</span> <span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">abspath</span><span class="p">()}</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;pdflatex&#39;</span><span class="p">:</span>
+			<span class="k">if</span> <span class="s">&#39;ps&#39;</span> <span class="ow">in</span> <span class="n">outs</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;pdf2ps&#39;</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.ps&#39;</span><span class="p">))</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="p">[]</span>
+</div>
+<div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/tex.html#waflib.Tools.tex.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Try to find the programs tex, latex and others. Do not raise any error if they</span>
+<span class="sd">	are not found.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+	<span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="s">&#39;tex latex pdflatex xelatex bibtex dvips dvipdf ps2pdf makeindex pdf2ps&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+		<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+			<span class="k">pass</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DVIPSFLAGS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;-Ppdf&#39;</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

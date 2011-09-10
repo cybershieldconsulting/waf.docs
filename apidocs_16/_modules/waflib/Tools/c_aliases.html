@@ -1,0 +1,239 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.c_aliases &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.c_aliases</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2005-2010 (ita)</span>
+
+<span class="s">&quot;base for all c/c++ programs and libraries&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Build</span>
+<span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
+
+<div class="viewcode-block" id="get_extensions"><a class="viewcode-back" href="../../../tools/c_aliases.html#waflib.Tools.c_aliases.get_extensions">[docs]</a><span class="k">def</span> <span class="nf">get_extensions</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	:param lst: files to process</span>
+<span class="sd">	:list lst: list of string or :py:class:`waflib.Node.Node`</span>
+<span class="sd">	:return: list of file extensions</span>
+<span class="sd">	:rtype: list of string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+				<span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span>
+			<span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:])</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="k">pass</span>
+	<span class="k">return</span> <span class="n">ret</span>
+</div>
+<div class="viewcode-block" id="sniff_features"><a class="viewcode-back" href="../../../tools/c_aliases.html#waflib.Tools.c_aliases.sniff_features">[docs]</a><span class="k">def</span> <span class="nf">sniff_features</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Look at the source files and return the features for a task generator (mainly cc and cxx)::</span>
+
+<span class="sd">		snif_features(source=[&#39;foo.c&#39;, &#39;foo.cxx&#39;], type=&#39;shlib&#39;)</span>
+<span class="sd">		# returns  [&#39;cxx&#39;, &#39;c&#39;, &#39;cxxshlib&#39;, &#39;cshlib&#39;]</span>
+
+<span class="sd">	:param source: source files to process</span>
+<span class="sd">	:type source: list of string or :py:class:`waflib.Node.Node`</span>
+<span class="sd">	:param type: object type in *program*, *shlib* or *stlib*</span>
+<span class="sd">	:type type: string</span>
+<span class="sd">	:return: the list of features for a task generator processing the source files</span>
+<span class="sd">	:rtype: list of string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">exts</span> <span class="o">=</span> <span class="n">get_extensions</span><span class="p">(</span><span class="n">kw</span><span class="p">[</span><span class="s">&#39;source&#39;</span><span class="p">])</span>
+	<span class="nb">type</span> <span class="o">=</span> <span class="n">kw</span><span class="p">[</span><span class="s">&#39;_type&#39;</span><span class="p">]</span>
+	<span class="n">feats</span> <span class="o">=</span> <span class="p">[]</span>
+
+	<span class="c"># watch the order, cxx will have the precedence</span>
+	<span class="k">if</span> <span class="s">&#39;cxx&#39;</span> <span class="ow">in</span> <span class="n">exts</span> <span class="ow">or</span> <span class="s">&#39;cpp&#39;</span> <span class="ow">in</span> <span class="n">exts</span> <span class="ow">or</span> <span class="s">&#39;c++&#39;</span> <span class="ow">in</span> <span class="n">exts</span> <span class="ow">or</span> <span class="s">&#39;cc&#39;</span> <span class="ow">in</span> <span class="n">exts</span><span class="p">:</span>
+		<span class="n">feats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;cxx&#39;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="s">&#39;c&#39;</span> <span class="ow">in</span> <span class="n">exts</span> <span class="ow">or</span> <span class="s">&#39;vala&#39;</span> <span class="ow">in</span> <span class="n">exts</span><span class="p">:</span>
+		<span class="n">feats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;c&#39;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="s">&#39;d&#39;</span> <span class="ow">in</span> <span class="n">exts</span><span class="p">:</span>
+		<span class="n">feats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;d&#39;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="s">&#39;java&#39;</span> <span class="ow">in</span> <span class="n">exts</span><span class="p">:</span>
+		<span class="n">feats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;java&#39;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="s">&#39;java&#39;</span> <span class="ow">in</span> <span class="n">exts</span><span class="p">:</span>
+		<span class="k">return</span> <span class="s">&#39;java&#39;</span>
+
+	<span class="k">if</span> <span class="nb">type</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;program&#39;</span><span class="p">,</span> <span class="s">&#39;shlib&#39;</span><span class="p">,</span> <span class="s">&#39;stlib&#39;</span><span class="p">]:</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">feats</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;cxx&#39;</span><span class="p">,</span> <span class="s">&#39;d&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">]:</span>
+				<span class="n">feats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="nb">type</span><span class="p">)</span>
+
+	<span class="k">return</span> <span class="n">feats</span>
+</div>
+<span class="k">def</span> <span class="nf">set_features</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="n">_type</span><span class="p">):</span>
+	<span class="n">kw</span><span class="p">[</span><span class="s">&#39;_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_type</span>
+	<span class="n">kw</span><span class="p">[</span><span class="s">&#39;features&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;features&#39;</span><span class="p">,</span> <span class="p">[]))</span> <span class="o">+</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">sniff_features</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">))</span>
+
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="program"><a class="viewcode-back" href="../../../tools/c_aliases.html#waflib.Tools.c_aliases.program">[docs]</a><span class="k">def</span> <span class="nf">program</span><span class="p">(</span><span class="n">bld</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Alias for creating programs by looking at the file extensions::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.program(source=&#39;foo.c&#39;, target=&#39;app&#39;)</span>
+<span class="sd">			# equivalent to:</span>
+<span class="sd">			# bld(features=&#39;c cprogram&#39;, source=&#39;foo.c&#39;, target=&#39;app&#39;)</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">set_features</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s">&#39;program&#39;</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">bld</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="shlib"><a class="viewcode-back" href="../../../tools/c_aliases.html#waflib.Tools.c_aliases.shlib">[docs]</a><span class="k">def</span> <span class="nf">shlib</span><span class="p">(</span><span class="n">bld</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Alias for creating shared libraries by looking at the file extensions::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.shlib(source=&#39;foo.c&#39;, target=&#39;app&#39;)</span>
+<span class="sd">			# equivalent to:</span>
+<span class="sd">			# bld(features=&#39;c cshlib&#39;, source=&#39;foo.c&#39;, target=&#39;app&#39;)</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">set_features</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s">&#39;shlib&#39;</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">bld</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="stlib"><a class="viewcode-back" href="../../../tools/c_aliases.html#waflib.Tools.c_aliases.stlib">[docs]</a><span class="k">def</span> <span class="nf">stlib</span><span class="p">(</span><span class="n">bld</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Alias for creating static libraries by looking at the file extensions::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.stlib(source=&#39;foo.cpp&#39;, target=&#39;app&#39;)</span>
+<span class="sd">			# equivalent to:</span>
+<span class="sd">			# bld(features=&#39;cxx cxxstlib&#39;, source=&#39;foo.cpp&#39;, target=&#39;app&#39;)</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">set_features</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s">&#39;stlib&#39;</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">bld</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="objects"><a class="viewcode-back" href="../../../tools/c_aliases.html#waflib.Tools.c_aliases.objects">[docs]</a><span class="k">def</span> <span class="nf">objects</span><span class="p">(</span><span class="n">bld</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Alias for creating object files by looking at the file extensions::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.program(source=&#39;foo.c&#39;, target=&#39;app&#39;)</span>
+<span class="sd">			# equivalent to:</span>
+<span class="sd">			# bld(features=&#39;c&#39;, source=&#39;foo.c&#39;, target=&#39;app&#39;)</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">set_features</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s">&#39;objects&#39;</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">bld</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

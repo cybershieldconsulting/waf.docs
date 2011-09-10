@@ -1,0 +1,147 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>errcheck &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="prev" title="Utils" href="../Utils.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../Utils.html" title="Utils"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Tools.errcheck">
+<span id="errcheck"></span><h1>errcheck<a class="headerlink" href="#module-waflib.Tools.errcheck" title="Permalink to this headline">¶</a></h1>
+<p>errheck: Search for common mistakes</p>
+<p>There is a performance hit, so this tool is only loaded when running &#8220;waf -vv&#8221;</p>
+<dl class="function">
+<dt id="waflib.Tools.errcheck.replace">
+<tt class="descclassname">waflib.Tools.errcheck.</tt><tt class="descname">replace</tt><big>(</big><em>m</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/errcheck.html#replace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.errcheck.replace" title="Permalink to this definition">¶</a></dt>
+<dd><p>We could add properties, but they would not work in some cases:
+bld.program(...) requires &#8216;source&#8217; in the attributes</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.errcheck.enhance_lib">
+<tt class="descclassname">waflib.Tools.errcheck.</tt><tt class="descname">enhance_lib</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/errcheck.html#enhance_lib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.errcheck.enhance_lib" title="Permalink to this definition">¶</a></dt>
+<dd><p>modify existing classes and methods</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.errcheck.options">
+<tt class="descclassname">waflib.Tools.errcheck.</tt><tt class="descname">options</tt><big>(</big><em>opt</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/errcheck.html#options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.errcheck.options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a few methods</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../Utils.html"
+                        title="previous chapter">Utils</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tools/errcheck.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../Utils.html" title="Utils"
+             >previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

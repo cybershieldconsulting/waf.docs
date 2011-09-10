@@ -1,0 +1,654 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.qt4 &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.qt4</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2006-2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Support for the Qt4 libraries and tools::</span>
+
+<span class="sd">	def options(opt):</span>
+<span class="sd">		opt.load(&#39;compiler_cxx qt4&#39;)</span>
+<span class="sd">	def configure(conf):</span>
+<span class="sd">		conf.load(&#39;compiler_cxx qt4&#39;)</span>
+<span class="sd">		conf.env.append_value(&#39;CXXFLAGS&#39;, [&#39;-g&#39;]) # test</span>
+<span class="sd">	def build(bld):</span>
+<span class="sd">		bld(</span>
+<span class="sd">			features = &#39;qt4 cxx cxxprogram&#39;,</span>
+<span class="sd">			uselib   = &#39;QTCORE QTGUI QTOPENGL QTSVG&#39;,</span>
+<span class="sd">			source   = &#39;main.cpp textures.qrc aboutDialog.ui&#39;,</span>
+<span class="sd">			target   = &#39;window&#39;,</span>
+<span class="sd">		)</span>
+
+<span class="sd">This module also demonstrates how to add tasks dynamically (when the build has started)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">from</span> <span class="nn">xml.sax</span> <span class="kn">import</span> <span class="n">make_parser</span>
+	<span class="kn">from</span> <span class="nn">xml.sax.handler</span> <span class="kn">import</span> <span class="n">ContentHandler</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+	<span class="n">has_xml</span> <span class="o">=</span> <span class="bp">False</span>
+	<span class="n">ContentHandler</span> <span class="o">=</span> <span class="nb">object</span>
+<span class="k">else</span><span class="p">:</span>
+	<span class="n">has_xml</span> <span class="o">=</span> <span class="bp">True</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">c_preproc</span><span class="p">,</span> <span class="n">cxx</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">TaskGen</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Runner</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">extension</span>
+<span class="kn">from</span> <span class="nn">waflib.Logs</span> <span class="kn">import</span> <span class="n">error</span>
+
+<span class="n">MOC_H</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.h&#39;</span><span class="p">,</span> <span class="s">&#39;.hpp&#39;</span><span class="p">,</span> <span class="s">&#39;.hxx&#39;</span><span class="p">,</span> <span class="s">&#39;.hh&#39;</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">File extensions associated to the .moc files</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">EXT_RCC</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.qrc&#39;</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">File extension for the resource (.qrc) files</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">EXT_UI</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.ui&#39;</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">File extension for the user interface (.ui) files</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">EXT_QT4</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.cpp&#39;</span><span class="p">,</span> <span class="s">&#39;.cc&#39;</span><span class="p">,</span> <span class="s">&#39;.cxx&#39;</span><span class="p">,</span> <span class="s">&#39;.C&#39;</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">File extensions of C++ files that may require a .moc processing</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="qxx"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.qxx">[docs]</a><span class="k">class</span> <span class="nc">qxx</span><span class="p">(</span><span class="n">cxx</span><span class="o">.</span><span class="n">cxx</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Each C++ file can have zero or several .moc files to create.</span>
+<span class="sd">	They are known only when the files are scanned (preprocessor)</span>
+<span class="sd">	To avoid scanning the c++ files each time (parsing C/C++), the results</span>
+<span class="sd">	are retrieved from the task cache (bld.node_deps/bld.raw_deps).</span>
+<span class="sd">	The moc tasks are also created *dynamically* during the build.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+		<span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">moc_done</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="qxx.scan"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.qxx.scan">[docs]</a>	<span class="k">def</span> <span class="nf">scan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Re-use the C/C++ scanner, but remove the moc files from the dependencies&quot;&quot;&quot;</span>
+		<span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span> <span class="o">=</span> <span class="n">c_preproc</span><span class="o">.</span><span class="n">scan</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+		<span class="c"># for some reasons (variants) the moc node may end in the list of node deps</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.moc&#39;</span><span class="p">):</span>
+				<span class="n">nodes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+				<span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">path_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()))</span>
+		<span class="k">return</span> <span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="qxx.runnable_status"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.qxx.runnable_status">[docs]</a>	<span class="k">def</span> <span class="nf">runnable_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compute the task signature to make sure the scanner was executed. Create the</span>
+<span class="sd">		moc tasks by using :py:meth:`waflib.Tools.qt4.qxx.add_moc_tasks` (if necessary),</span>
+<span class="sd">		then postpone the task execution (there is no need to recompute the task signature).</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moc_done</span><span class="p">:</span>
+			<span class="c"># if there is a moc task, delay the computation of the file signature</span>
+			<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_after</span><span class="p">:</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="n">t</span><span class="o">.</span><span class="n">hasrun</span><span class="p">:</span>
+					<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">ASK_LATER</span>
+			<span class="c"># the moc file enters in the dependency calculation</span>
+			<span class="c"># so we need to recompute the signature when the moc file is present</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">()</span>
+			<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">runnable_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="c"># yes, really, there are people who generate cxx files</span>
+			<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_after</span><span class="p">:</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="n">t</span><span class="o">.</span><span class="n">hasrun</span><span class="p">:</span>
+					<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">ASK_LATER</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">add_moc_tasks</span><span class="p">()</span>
+			<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">ASK_LATER</span>
+</div>
+<div class="viewcode-block" id="qxx.add_moc_tasks"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.qxx.add_moc_tasks">[docs]</a>	<span class="k">def</span> <span class="nf">add_moc_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Create the moc tasks by looking in ``bld.raw_deps[self.uid()]``</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span>
+
+		<span class="k">try</span><span class="p">:</span>
+			<span class="c"># compute the signature once to know if there is a moc file to create</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">()</span>
+		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+			<span class="c"># the moc file may be referenced somewhere else</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="c"># remove the signature, it must be recomputed with the moc task</span>
+			<span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;cache_sig&#39;</span><span class="p">)</span>
+
+		<span class="n">moctasks</span><span class="o">=</span><span class="p">[]</span>
+		<span class="n">mocfiles</span><span class="o">=</span><span class="p">[]</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">tmp_lst</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">raw_deps</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">()]</span>
+			<span class="n">bld</span><span class="o">.</span><span class="n">raw_deps</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">()]</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+			<span class="n">tmp_lst</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tmp_lst</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">d</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.moc&#39;</span><span class="p">):</span>
+				<span class="k">continue</span>
+			<span class="c"># paranoid check</span>
+			<span class="k">if</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">mocfiles</span><span class="p">:</span>
+				<span class="n">error</span><span class="p">(</span><span class="s">&quot;paranoia owns&quot;</span><span class="p">)</span>
+				<span class="k">continue</span>
+			<span class="c"># process that base.moc only once</span>
+			<span class="n">mocfiles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+			<span class="c"># find the extension - this search is done only once</span>
+			<span class="n">ext</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+			<span class="k">try</span><span class="p">:</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">qt_header_ext</span>
+			<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="k">pass</span>
+
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">ext</span><span class="p">:</span>
+				<span class="n">base2</span> <span class="o">=</span> <span class="n">d</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+				<span class="k">for</span> <span class="n">exth</span> <span class="ow">in</span> <span class="n">MOC_H</span><span class="p">:</span>
+					<span class="n">k</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">base2</span><span class="o">+</span><span class="n">exth</span><span class="p">)</span>
+					<span class="k">if</span> <span class="n">k</span><span class="p">:</span>
+						<span class="k">break</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;no header found for </span><span class="si">%r</span><span class="s"> which is a moc file&#39;</span> <span class="o">%</span> <span class="n">d</span><span class="p">)</span>
+
+			<span class="c"># next time we will not search for the extension (look at the &#39;for&#39; loop below)</span>
+
+			<span class="n">h_node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">base2</span> <span class="o">+</span> <span class="n">exth</span><span class="p">)</span>
+			<span class="n">m_node</span> <span class="o">=</span> <span class="n">h_node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.moc&#39;</span><span class="p">)</span>
+			<span class="n">bld</span><span class="o">.</span><span class="n">node_deps</span><span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">(),</span> <span class="n">m_node</span><span class="o">.</span><span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">h_node</span>
+
+			<span class="c"># create the task</span>
+			<span class="n">task</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">classes</span><span class="p">[</span><span class="s">&#39;moc&#39;</span><span class="p">](</span><span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="p">)</span>
+			<span class="n">task</span><span class="o">.</span><span class="n">set_inputs</span><span class="p">(</span><span class="n">h_node</span><span class="p">)</span>
+			<span class="n">task</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">m_node</span><span class="p">)</span>
+
+			<span class="c"># direct injection in the build phase (safe because called from the main thread)</span>
+			<span class="n">gen</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">producer</span>
+			<span class="n">gen</span><span class="o">.</span><span class="n">outstanding</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+			<span class="n">gen</span><span class="o">.</span><span class="n">total</span> <span class="o">+=</span> <span class="mi">1</span>
+
+			<span class="n">moctasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+
+		<span class="c"># remove raw deps except the moc files to save space (optimization)</span>
+		<span class="n">tmp_lst</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">raw_deps</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">()]</span> <span class="o">=</span> <span class="n">mocfiles</span>
+
+		<span class="c"># look at the file inputs, it is set right above</span>
+		<span class="n">lst</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">node_deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">(),</span> <span class="p">())</span>
+		<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+			<span class="n">name</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">name</span>
+			<span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.moc&#39;</span><span class="p">):</span>
+				<span class="n">task</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">classes</span><span class="p">[</span><span class="s">&#39;moc&#39;</span><span class="p">](</span><span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="p">)</span>
+				<span class="n">task</span><span class="o">.</span><span class="n">set_inputs</span><span class="p">(</span><span class="n">bld</span><span class="o">.</span><span class="n">node_deps</span><span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">(),</span> <span class="n">name</span><span class="p">)])</span> <span class="c"># 1st element in a tuple</span>
+				<span class="n">task</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+				<span class="n">gen</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">producer</span>
+				<span class="n">gen</span><span class="o">.</span><span class="n">outstanding</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+				<span class="n">gen</span><span class="o">.</span><span class="n">total</span> <span class="o">+=</span> <span class="mi">1</span>
+
+				<span class="n">moctasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+
+		<span class="c"># simple scheduler dependency: run the moc task before others</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">run_after</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">moctasks</span><span class="p">))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">moc_done</span> <span class="o">=</span> <span class="mi">1</span>
+</div>
+	<span class="n">run</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">classes</span><span class="p">[</span><span class="s">&#39;cxx&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">__dict__</span><span class="p">[</span><span class="s">&#39;run&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="trans_update"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.trans_update">[docs]</a><span class="k">class</span> <span class="nc">trans_update</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Update a .ts files from a list of C++ files&quot;&quot;&quot;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${QT_LUPDATE} ${SRC} -ts ${TGT}&#39;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span></div>
+<span class="n">Task</span><span class="o">.</span><span class="n">update_outputs</span><span class="p">(</span><span class="n">trans_update</span><span class="p">)</span>
+
+<div class="viewcode-block" id="XMLHandler"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.XMLHandler">[docs]</a><span class="k">class</span> <span class="nc">XMLHandler</span><span class="p">(</span><span class="n">ContentHandler</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Parser for *.qrc* files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">buf</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">def</span> <span class="nf">startElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;file&#39;</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">buf</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">def</span> <span class="nf">endElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;file&#39;</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buf</span><span class="p">)))</span>
+	<span class="k">def</span> <span class="nf">characters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cars</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">buf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cars</span><span class="p">)</span>
+</div>
+<span class="nd">@extension</span><span class="p">(</span><span class="o">*</span><span class="n">EXT_RCC</span><span class="p">)</span>
+<div class="viewcode-block" id="create_rcc_task"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.create_rcc_task">[docs]</a><span class="k">def</span> <span class="nf">create_rcc_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+	<span class="s">&quot;Create rcc and cxx tasks for *.qrc* files&quot;</span>
+	<span class="n">rcnode</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;_rc.cpp&#39;</span><span class="p">)</span>
+	<span class="n">rcctask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;rcc&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">rcnode</span><span class="p">)</span>
+	<span class="n">cpptask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;cxx&#39;</span><span class="p">,</span> <span class="n">rcnode</span><span class="p">,</span> <span class="n">rcnode</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.o&#39;</span><span class="p">))</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">compiled_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cpptask</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">cpptask</span>
+</div>
+<span class="nd">@extension</span><span class="p">(</span><span class="o">*</span><span class="n">EXT_UI</span><span class="p">)</span>
+<div class="viewcode-block" id="create_uic_task"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.create_uic_task">[docs]</a><span class="k">def</span> <span class="nf">create_uic_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+	<span class="s">&quot;hook for uic tasks&quot;</span>
+	<span class="n">uictask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;ui4&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+	<span class="n">uictask</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;ui_PATTERN&#39;</span><span class="p">]</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">])]</span>
+</div>
+<span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.ts&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="add_lang"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.add_lang">[docs]</a><span class="k">def</span> <span class="nf">add_lang</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;add all the .ts file into self.lang&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">lang</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;lang&#39;</span><span class="p">,</span> <span class="p">[]))</span> <span class="o">+</span> <span class="p">[</span><span class="n">node</span><span class="p">]</span>
+</div>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;qt4&#39;</span><span class="p">)</span>
+<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="apply_qt4"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.apply_qt4">[docs]</a><span class="k">def</span> <span class="nf">apply_qt4</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Add MOC_FLAGS which may be necessary for moc::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.program(features=&#39;qt4&#39;, source=&#39;main.cpp&#39;, target=&#39;app&#39;, use=&#39;QTCORE&#39;)</span>
+
+<span class="sd">	The additional parameters are:</span>
+
+<span class="sd">	:param lang: list of translation files (\*.ts) to process</span>
+<span class="sd">	:type lang: list of :py:class:`waflib.Node.Node` or string without the .ts extension</span>
+<span class="sd">	:param update: whether to process the C++ files to update the \*.ts files (use **waf --translate**)</span>
+<span class="sd">	:type update: bool</span>
+<span class="sd">	:param langname: if given, transform the \*.ts files into a .qrc files to include in the binary file</span>
+<span class="sd">	:type langname: :py:class:`waflib.Node.Node` or string without the .qrc extension</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;lang&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="n">qmtasks</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lang</span><span class="p">):</span>
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+				<span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="s">&#39;.ts&#39;</span><span class="p">)</span>
+			<span class="n">qmtasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;ts2qm&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.qm&#39;</span><span class="p">)))</span>
+
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;update&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">trans_qt4</span><span class="p">:</span>
+			<span class="n">cxxnodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">compiled_tasks</span><span class="p">]</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">qmtasks</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;trans_update&#39;</span><span class="p">,</span> <span class="n">cxxnodes</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;langname&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">qmnodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">qmtasks</span><span class="p">]</span>
+			<span class="n">rcnode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">langname</span>
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rcnode</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+				<span class="n">rcnode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="n">rcnode</span> <span class="o">+</span> <span class="s">&#39;.qrc&#39;</span><span class="p">)</span>
+			<span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;qm2rcc&#39;</span><span class="p">,</span> <span class="n">qmnodes</span><span class="p">,</span> <span class="n">rcnode</span><span class="p">)</span>
+			<span class="n">k</span> <span class="o">=</span> <span class="n">create_rcc_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+	<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;CXXFLAGS&#39;</span><span class="p">]):</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span> <span class="k">continue</span>
+		<span class="n">f</span> <span class="o">=</span> <span class="n">flag</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+		<span class="k">if</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;-D&#39;</span><span class="p">,</span> <span class="s">&#39;-I&#39;</span><span class="p">,</span> <span class="s">&#39;/D&#39;</span><span class="p">,</span> <span class="s">&#39;/I&#39;</span><span class="p">]:</span>
+			<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;MOC_FLAGS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lst</span>
+</div>
+<span class="nd">@extension</span><span class="p">(</span><span class="o">*</span><span class="n">EXT_QT4</span><span class="p">)</span>
+<div class="viewcode-block" id="cxx_hook"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.cxx_hook">[docs]</a><span class="k">def</span> <span class="nf">cxx_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Re-map C++ file extensions to the :py:class:`waflib.Tools.qt4.qxx` task.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_compiled_task</span><span class="p">(</span><span class="s">&#39;qxx&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="rcc"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.rcc">[docs]</a><span class="k">class</span> <span class="nc">rcc</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process *.qrc* files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${QT_RCC} -name ${SRC[0].name} ${SRC[0].abspath()} ${RCC_ST} -o ${TGT}&#39;</span>
+	<span class="n">ext_out</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.h&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="rcc.scan"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.rcc.scan">[docs]</a>	<span class="k">def</span> <span class="nf">scan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Parse the *.qrc* files&quot;&quot;&quot;</span>
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="n">parser</span> <span class="o">=</span> <span class="n">make_parser</span><span class="p">()</span>
+		<span class="n">curHandler</span> <span class="o">=</span> <span class="n">XMLHandler</span><span class="p">()</span>
+		<span class="n">parser</span><span class="o">.</span><span class="n">setContentHandler</span><span class="p">(</span><span class="n">curHandler</span><span class="p">)</span>
+		<span class="n">fi</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+		<span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">fi</span><span class="p">)</span>
+		<span class="n">fi</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+		<span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">curHandler</span><span class="o">.</span><span class="n">files</span><span class="p">:</span>
+			<span class="n">nd</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">nd</span><span class="p">:</span> <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nd</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span> <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+		<span class="k">return</span> <span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="moc"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.moc">[docs]</a><span class="k">class</span> <span class="nc">moc</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create *.moc* files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${QT_MOC} ${MOC_FLAGS} ${SRC} ${MOC_ST} ${TGT}&#39;</span>
+</div>
+<div class="viewcode-block" id="ui4"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.ui4">[docs]</a><span class="k">class</span> <span class="nc">ui4</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process *.ui* files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${QT_UIC} ${SRC} -o ${TGT}&#39;</span>
+	<span class="n">ext_out</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.h&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="ts2qm"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.ts2qm">[docs]</a><span class="k">class</span> <span class="nc">ts2qm</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create *.qm* files from *.ts* files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${QT_LRELEASE} ${QT_LRELEASE_FLAGS} ${SRC} -qm ${TGT}&#39;</span>
+</div>
+<div class="viewcode-block" id="qm2rcc"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.qm2rcc">[docs]</a><span class="k">class</span> <span class="nc">qm2rcc</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Transform *.qm* files into *.rc* files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">color</span> <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+	<span class="n">after</span> <span class="o">=</span> <span class="s">&#39;ts2qm&#39;</span>
+
+	<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Create a qrc file including the inputs&quot;&quot;&quot;</span>
+		<span class="n">txt</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;&lt;file&gt;</span><span class="si">%s</span><span class="s">&lt;/file&gt;&#39;</span> <span class="o">%</span> <span class="n">k</span><span class="o">.</span><span class="n">path_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">])</span>
+		<span class="n">code</span> <span class="o">=</span> <span class="s">&#39;&lt;!DOCTYPE RCC&gt;&lt;RCC version=&quot;1.0&quot;&gt;</span><span class="se">\n</span><span class="s">&lt;qresource&gt;</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s">&lt;/qresource&gt;</span><span class="se">\n</span><span class="s">&lt;/RCC&gt;&#39;</span> <span class="o">%</span> <span class="n">txt</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Besides the configuration options, the environment variable QT4_ROOT may be used</span>
+<span class="sd">	to give the location of the qt4 libraries (absolute path).</span>
+
+<span class="sd">	The detection may use the program *pkg-config* through :py:func:`waflib.Tools.config_c.check_cfg`</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+	<span class="n">opt</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span>
+
+	<span class="n">qtdir</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">opt</span><span class="p">,</span> <span class="s">&#39;qtdir&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+	<span class="n">qtbin</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">opt</span><span class="p">,</span> <span class="s">&#39;qtbin&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+	<span class="n">qtlibs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">opt</span><span class="p">,</span> <span class="s">&#39;qtlibs&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+	<span class="n">useframework</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">opt</span><span class="p">,</span> <span class="s">&#39;use_qt4_osxframework&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+
+	<span class="n">paths</span> <span class="o">=</span> <span class="p">[]</span>
+
+	<span class="c"># the path to qmake has been given explicitely</span>
+	<span class="k">if</span> <span class="n">qtbin</span><span class="p">:</span>
+		<span class="n">paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">qtbin</span><span class="p">]</span>
+
+	<span class="c"># the qt directory has been given - we deduce the qt binary path</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">qtdir</span><span class="p">:</span>
+		<span class="n">qtdir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;QT4_ROOT&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+		<span class="n">qtbin</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtdir</span><span class="p">,</span> <span class="s">&#39;bin&#39;</span><span class="p">)</span>
+		<span class="n">paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">qtbin</span><span class="p">]</span>
+
+	<span class="c"># no qtdir, look in the path and in /usr/local/Trolltech</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">qtdir</span><span class="p">:</span>
+		<span class="n">paths</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;PATH&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">)</span>
+		<span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;/usr/share/qt4/bin/&#39;</span><span class="p">)</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">lst</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s">&#39;/usr/local/Trolltech/&#39;</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">lst</span><span class="p">:</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+
+				<span class="c"># keep the highest version</span>
+				<span class="n">qtdir</span> <span class="o">=</span> <span class="s">&#39;/usr/local/Trolltech/</span><span class="si">%s</span><span class="s">/&#39;</span> <span class="o">%</span> <span class="n">lst</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+				<span class="n">qtbin</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtdir</span><span class="p">,</span> <span class="s">&#39;bin&#39;</span><span class="p">)</span>
+				<span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">qtbin</span><span class="p">)</span>
+
+	<span class="c"># at the end, try to find qmake in the paths given</span>
+	<span class="c"># keep the one with the highest version</span>
+	<span class="n">cand</span> <span class="o">=</span> <span class="bp">None</span>
+	<span class="n">prev_ver</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;4&#39;</span><span class="p">,</span> <span class="s">&#39;0&#39;</span><span class="p">,</span> <span class="s">&#39;0&#39;</span><span class="p">]</span>
+	<span class="k">for</span> <span class="n">qmk</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;qmake-qt4&#39;</span><span class="p">,</span> <span class="s">&#39;qmake4&#39;</span><span class="p">,</span> <span class="s">&#39;qmake&#39;</span><span class="p">]:</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">qmake</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="n">qmk</span><span class="p">,</span> <span class="n">path_list</span><span class="o">=</span><span class="n">paths</span><span class="p">)</span>
+		<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">qmake</span><span class="p">,</span> <span class="s">&#39;-query&#39;</span><span class="p">,</span> <span class="s">&#39;QT_VERSION&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+			<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+				<span class="k">pass</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">version</span><span class="p">:</span>
+					<span class="n">new_ver</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+					<span class="k">if</span> <span class="n">new_ver</span> <span class="o">&gt;</span> <span class="n">prev_ver</span><span class="p">:</span>
+						<span class="n">cand</span> <span class="o">=</span> <span class="n">qmake</span>
+						<span class="n">prev_ver</span> <span class="o">=</span> <span class="n">new_ver</span>
+	<span class="k">if</span> <span class="n">cand</span><span class="p">:</span>
+		<span class="n">qmake</span> <span class="o">=</span> <span class="n">cand</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not find qmake for qt4&#39;</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">QMAKE</span> <span class="o">=</span> <span class="n">qmake</span>
+	<span class="n">qtincludes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">qmake</span><span class="p">,</span> <span class="s">&#39;-query&#39;</span><span class="p">,</span> <span class="s">&#39;QT_INSTALL_HEADERS&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+	<span class="n">qtdir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">qmake</span><span class="p">,</span> <span class="s">&#39;-query&#39;</span><span class="p">,</span> <span class="s">&#39;QT_INSTALL_PREFIX&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span>
+	<span class="n">qtbin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">qmake</span><span class="p">,</span> <span class="s">&#39;-query&#39;</span><span class="p">,</span> <span class="s">&#39;QT_INSTALL_BINS&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">qtlibs</span><span class="p">:</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">qtlibs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">qmake</span><span class="p">,</span> <span class="s">&#39;-query&#39;</span><span class="p">,</span> <span class="s">&#39;QT_INSTALL_LIBS&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+		<span class="k">except</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">:</span>
+			<span class="n">qtlibs</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtdir</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">find_bin</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+		<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">path_list</span><span class="o">=</span><span class="n">paths</span><span class="p">)</span>
+			<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+				<span class="k">pass</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">env</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">=</span><span class="n">ret</span>
+				<span class="k">break</span>
+
+	<span class="n">find_bin</span><span class="p">([</span><span class="s">&#39;uic-qt3&#39;</span><span class="p">,</span> <span class="s">&#39;uic3&#39;</span><span class="p">],</span> <span class="s">&#39;QT_UIC3&#39;</span><span class="p">)</span>
+	<span class="n">find_bin</span><span class="p">([</span><span class="s">&#39;uic-qt4&#39;</span><span class="p">,</span> <span class="s">&#39;uic&#39;</span><span class="p">],</span> <span class="s">&#39;QT_UIC&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;QT_UIC&#39;</span><span class="p">]:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;cannot find the uic compiler for qt4&#39;</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;QT_UIC&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&quot; -version 2&gt;&amp;1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+	<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;your uic compiler is for qt3, add uic for qt4 to your path&#39;</span><span class="p">)</span>
+
+	<span class="n">version</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;Qt User Interface Compiler &#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+	<span class="n">version</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;User Interface Compiler for Qt&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">version</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39; 3.&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for uic version&#39;</span><span class="p">,</span> <span class="s">&#39;(</span><span class="si">%s</span><span class="s">: too old)&#39;</span> <span class="o">%</span> <span class="n">version</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;uic is too old&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for uic version&#39;</span><span class="p">,</span> <span class="s">&#39;(</span><span class="si">%s</span><span class="s">)&#39;</span><span class="o">%</span><span class="n">version</span><span class="p">)</span>
+
+	<span class="n">find_bin</span><span class="p">([</span><span class="s">&#39;moc-qt4&#39;</span><span class="p">,</span> <span class="s">&#39;moc&#39;</span><span class="p">],</span> <span class="s">&#39;QT_MOC&#39;</span><span class="p">)</span>
+	<span class="n">find_bin</span><span class="p">([</span><span class="s">&#39;rcc&#39;</span><span class="p">],</span> <span class="s">&#39;QT_RCC&#39;</span><span class="p">)</span>
+	<span class="n">find_bin</span><span class="p">([</span><span class="s">&#39;lrelease-qt4&#39;</span><span class="p">,</span> <span class="s">&#39;lrelease&#39;</span><span class="p">],</span> <span class="s">&#39;QT_LRELEASE&#39;</span><span class="p">)</span>
+	<span class="n">find_bin</span><span class="p">([</span><span class="s">&#39;lupdate-qt4&#39;</span><span class="p">,</span> <span class="s">&#39;lupdate&#39;</span><span class="p">],</span> <span class="s">&#39;QT_LUPDATE&#39;</span><span class="p">)</span>
+
+	<span class="n">env</span><span class="p">[</span><span class="s">&#39;UIC3_ST&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> -o </span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">env</span><span class="p">[</span><span class="s">&#39;UIC_ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> -o </span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">env</span><span class="p">[</span><span class="s">&#39;MOC_ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;-o&#39;</span>
+	<span class="n">env</span><span class="p">[</span><span class="s">&#39;ui_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;ui_</span><span class="si">%s</span><span class="s">.h&#39;</span>
+	<span class="n">env</span><span class="p">[</span><span class="s">&#39;QT_LRELEASE_FLAGS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-silent&#39;</span><span class="p">]</span>
+
+	<span class="nb">vars</span> <span class="o">=</span> <span class="s">&quot;QtCore QtGui QtUiTools QtNetwork QtOpenGL QtSql QtSvg QtTest QtXml QtWebKit Qt3Support&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+	<span class="n">vars_debug</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">+</span><span class="s">&#39;_debug&#39;</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">]</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;PKG_CONFIG_PATH&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+		<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;PKG_CONFIG_PATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">/pkgconfig:/usr/lib/qt4/lib/pkgconfig:/opt/qt4/lib/pkgconfig:/usr/lib/qt4/lib:/opt/qt4/lib pkg-config --silence-errors&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">qtlibs</span><span class="p">,</span> <span class="n">qtlibs</span><span class="p">)</span>
+
+	<span class="n">pkgconfig</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;pkg-config&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s">&#39;pkg-config&#39;</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">vars_debug</span><span class="o">+</span><span class="nb">vars</span><span class="p">:</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">check_cfg</span><span class="p">(</span><span class="n">package</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="s">&#39;--cflags --libs&#39;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">pkgconfig</span><span class="p">)</span>
+		<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+			<span class="k">pass</span>
+
+	<span class="c"># the libpaths make really long command-lines</span>
+	<span class="c"># remove the qtcore ones from qtgui, etc</span>
+	<span class="k">def</span> <span class="nf">process_lib</span><span class="p">(</span><span class="n">vars_</span><span class="p">,</span> <span class="n">coreval</span><span class="p">):</span>
+		<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">vars_</span><span class="p">:</span>
+			<span class="n">var</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+			<span class="k">if</span> <span class="n">var</span> <span class="o">==</span> <span class="s">&#39;QTCORE&#39;</span><span class="p">:</span>
+				<span class="k">continue</span>
+
+			<span class="n">value</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;LIBPATH_&#39;</span><span class="o">+</span><span class="n">var</span><span class="p">]</span>
+			<span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+				<span class="n">core</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="n">coreval</span><span class="p">]</span>
+				<span class="n">accu</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="k">for</span> <span class="n">lib</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">lib</span> <span class="ow">in</span> <span class="n">core</span><span class="p">:</span>
+						<span class="k">continue</span>
+					<span class="n">accu</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lib</span><span class="p">)</span>
+				<span class="n">env</span><span class="p">[</span><span class="s">&#39;LIBPATH_&#39;</span><span class="o">+</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">accu</span>
+
+	<span class="n">process_lib</span><span class="p">(</span><span class="nb">vars</span><span class="p">,</span> <span class="s">&#39;LIBPATH_QTCORE&#39;</span><span class="p">)</span>
+	<span class="n">process_lib</span><span class="p">(</span><span class="n">vars_debug</span><span class="p">,</span> <span class="s">&#39;LIBPATH_QTCORE_DEBUG&#39;</span><span class="p">)</span>
+
+	<span class="c"># rpath if wanted</span>
+	<span class="k">if</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">want_rpath</span><span class="p">:</span>
+		<span class="k">def</span> <span class="nf">process_rpath</span><span class="p">(</span><span class="n">vars_</span><span class="p">,</span> <span class="n">coreval</span><span class="p">):</span>
+			<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">vars_</span><span class="p">:</span>
+				<span class="n">var</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+				<span class="n">value</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;LIBPATH_&#39;</span><span class="o">+</span><span class="n">var</span><span class="p">]</span>
+				<span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+					<span class="n">core</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="n">coreval</span><span class="p">]</span>
+					<span class="n">accu</span> <span class="o">=</span> <span class="p">[]</span>
+					<span class="k">for</span> <span class="n">lib</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">var</span> <span class="o">!=</span> <span class="s">&#39;QTCORE&#39;</span><span class="p">:</span>
+							<span class="k">if</span> <span class="n">lib</span> <span class="ow">in</span> <span class="n">core</span><span class="p">:</span>
+								<span class="k">continue</span>
+						<span class="n">accu</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;-Wl,--rpath=&#39;</span><span class="o">+</span><span class="n">lib</span><span class="p">)</span>
+					<span class="n">env</span><span class="p">[</span><span class="s">&#39;RPATH_&#39;</span><span class="o">+</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">accu</span>
+		<span class="n">process_rpath</span><span class="p">(</span><span class="nb">vars</span><span class="p">,</span> <span class="s">&#39;LIBPATH_QTCORE&#39;</span><span class="p">)</span>
+		<span class="n">process_rpath</span><span class="p">(</span><span class="n">vars_debug</span><span class="p">,</span> <span class="s">&#39;LIBPATH_QTCORE_DEBUG&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="options"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.options">[docs]</a><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Command-line options</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--want-rpath&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;want_rpath&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;enable the rpath for qt libraries&#39;</span><span class="p">)</span>
+
+	<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--header-ext&#39;</span><span class="p">,</span>
+		<span class="nb">type</span><span class="o">=</span><span class="s">&#39;string&#39;</span><span class="p">,</span>
+		<span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span>
+		<span class="n">help</span><span class="o">=</span><span class="s">&#39;header extension for moc files&#39;</span><span class="p">,</span>
+		<span class="n">dest</span><span class="o">=</span><span class="s">&#39;qt_header_ext&#39;</span><span class="p">)</span>
+
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="s">&#39;qtdir qtbin qtlibs&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+		<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--&#39;</span><span class="o">+</span><span class="n">i</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&#39;string&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&quot;darwin&quot;</span><span class="p">:</span>
+		<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--no-qt4-framework&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_false&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;do not use the framework version of Qt4 in OS X&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;use_qt4_osxframework&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+	<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--translate&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;collect translation strings&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;trans_qt4&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

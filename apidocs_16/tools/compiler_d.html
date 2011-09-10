@@ -1,0 +1,167 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>compiler_d &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="up" title="Waf Tools" href="../tools.html" />
+    <link rel="next" title="dmd" href="dmd.html" />
+    <link rel="prev" title="asm" href="asm.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dmd.html" title="dmd"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="asm.html" title="asm"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Tools.compiler_d">
+<span id="compiler-d"></span><h1>compiler_d<a class="headerlink" href="#module-waflib.Tools.compiler_d" title="Permalink to this headline">¶</a></h1>
+<p>Try to detect a D compiler from the list of supported compilers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
+        <span class="n">opt</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;compiler_d&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">cnf</span><span class="p">):</span>
+        <span class="n">cnf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;compiler_d&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">program</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;main.d&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Only two D compilers are really present at the moment:</p>
+<ul class="simple">
+<li>gdc, the ldc compiler having a very similar command-line interface</li>
+<li>dmd</li>
+</ul>
+<dl class="function">
+<dt id="waflib.Tools.compiler_d.configure">
+<tt class="descclassname">waflib.Tools.compiler_d.</tt><tt class="descname">configure</tt><big>(</big><em>conf</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/compiler_d.html#configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.compiler_d.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to find a suitable D compiler or raise a <a class="reference internal" href="../Errors.html#waflib.Errors.ConfigurationError" title="waflib.Errors.ConfigurationError"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Errors.ConfigurationError</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.compiler_d.options">
+<tt class="descclassname">waflib.Tools.compiler_d.</tt><tt class="descname">options</tt><big>(</big><em>opt</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/compiler_d.html#options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.compiler_d.options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restrict the compiler detection from the command-line:</p>
+<div class="highlight-python"><pre>$ waf configure --check-d-compiler=dmd</pre>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="asm.html"
+                        title="previous chapter">asm</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dmd.html"
+                        title="next chapter">dmd</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tools/compiler_d.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dmd.html" title="dmd"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="asm.html" title="asm"
+             >previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

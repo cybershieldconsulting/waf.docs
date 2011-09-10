@@ -1,0 +1,264 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gnu_dirs &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="up" title="Waf Tools" href="../tools.html" />
+    <link rel="next" title="intltool" href="intltool.html" />
+    <link rel="prev" title="cs" href="cs.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="intltool.html" title="intltool"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="cs.html" title="cs"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Tools.gnu_dirs">
+<span id="gnu-dirs"></span><h1>gnu_dirs<a class="headerlink" href="#module-waflib.Tools.gnu_dirs" title="Permalink to this headline">¶</a></h1>
+<p>Sets various standard variables such as INCLUDEDIR. SBINDIR and others. To use this module just call:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">opt</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;gnu_dirs&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;gnu_dirs&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Add options for the standard GNU directories, this tool will add the options
+found in autotools, and will update the environment with the following
+installation variables:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="53%" />
+<col width="29%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Variable</th>
+<th class="head">Description</th>
+<th class="head">Value</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>PREFIX</td>
+<td>architecture-independent files</td>
+<td>/usr/local</td>
+</tr>
+<tr><td>EXEC_PREFIX</td>
+<td>architecture-dependent files</td>
+<td>PREFIX</td>
+</tr>
+<tr><td>BINDIR</td>
+<td>user executables</td>
+<td>EXEC_PREFIX/bin</td>
+</tr>
+<tr><td>SBINDIR</td>
+<td>user executables</td>
+<td>EXEC_PREFIX/sbin</td>
+</tr>
+<tr><td>LIBEXECDIR</td>
+<td>program executables</td>
+<td>EXEC_PREFIX/libexec</td>
+</tr>
+<tr><td>SYSCONFDIR</td>
+<td>read-only single-machine data</td>
+<td>PREFIX/etc</td>
+</tr>
+<tr><td>SHAREDSTATEDIR</td>
+<td>modifiable architecture-independent data</td>
+<td>PREFIX/com</td>
+</tr>
+<tr><td>LOCALSTATEDIR</td>
+<td>modifiable single-machine data</td>
+<td>PREFIX/var</td>
+</tr>
+<tr><td>LIBDIR</td>
+<td>object code libraries</td>
+<td>EXEC_PREFIX/lib</td>
+</tr>
+<tr><td>INCLUDEDIR</td>
+<td>C header files</td>
+<td>PREFIX/include</td>
+</tr>
+<tr><td>OLDINCLUDEDIR</td>
+<td>C header files for non-gcc</td>
+<td>/usr/include</td>
+</tr>
+<tr><td>DATAROOTDIR</td>
+<td>read-only arch.-independent data root</td>
+<td>PREFIX/share</td>
+</tr>
+<tr><td>DATADIR</td>
+<td>read-only architecture-independent data</td>
+<td>DATAROOTDIR</td>
+</tr>
+<tr><td>INFODIR</td>
+<td>info documentation</td>
+<td>DATAROOTDIR/info</td>
+</tr>
+<tr><td>LOCALEDIR</td>
+<td>locale-dependent data</td>
+<td>DATAROOTDIR/locale</td>
+</tr>
+<tr><td>MANDIR</td>
+<td>man documentation</td>
+<td>DATAROOTDIR/man</td>
+</tr>
+<tr><td>DOCDIR</td>
+<td>documentation root</td>
+<td>DATAROOTDIR/doc/APPNAME</td>
+</tr>
+<tr><td>HTMLDIR</td>
+<td>html documentation</td>
+<td>DOCDIR</td>
+</tr>
+<tr><td>DVIDIR</td>
+<td>dvi documentation</td>
+<td>DOCDIR</td>
+</tr>
+<tr><td>PDFDIR</td>
+<td>pdf documentation</td>
+<td>DOCDIR</td>
+</tr>
+<tr><td>PSDIR</td>
+<td>ps documentation</td>
+<td>DOCDIR</td>
+</tr>
+</tbody>
+</table>
+<dl class="function">
+<dt id="waflib.Tools.gnu_dirs.configure">
+<tt class="descclassname">waflib.Tools.gnu_dirs.</tt><tt class="descname">configure</tt><big>(</big><em>conf</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/gnu_dirs.html#configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.gnu_dirs.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the command-line options to set lots of variables in <em>conf.env</em>. The variables
+BINDIR and LIBDIR will be overwritten.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.gnu_dirs.options">
+<tt class="descclassname">waflib.Tools.gnu_dirs.</tt><tt class="descname">options</tt><big>(</big><em>opt</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/gnu_dirs.html#options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.gnu_dirs.options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add lots of command-line options, for example:</p>
+<div class="highlight-python"><pre>--exec-prefix: EXEC_PREFIX</pre>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="cs.html"
+                        title="previous chapter">cs</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="intltool.html"
+                        title="next chapter">intltool</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tools/gnu_dirs.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="intltool.html" title="intltool"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="cs.html" title="cs"
+             >previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

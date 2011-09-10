@@ -1,0 +1,70 @@
+Index: waf.pdf
+===================================================================
+Kann nicht anzeigen: Dateityp ist als binär angegeben.
+svn:mime-type = image/pdf
+Index: single.html
+===================================================================
+--- single.html	(Revision 10557)
++++ single.html	(Arbeitskopie)
+@@ -1456,8 +1456,8 @@
+ <span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">find_program</span><span style="color: #000000">(</span><span style="color: #009900">'touch'</span><span style="color: #000000">,</span><span style="color: #000000"> var</span><span style="color: #000000">=</span><span style="color: #009900">'TOUCH'</span><span style="color: #000000">)</span><span style="color: #000000"> </span><span style="color: #000000"><img src="./callouts/2.png" alt="2" /></span>
+ 
+ <span style="color: #000080">def</span><span style="color: #000000"> </span><span style="color: #000000">build</span><span style="color: #000000">(</span><span style="color: #000000">bld</span><span style="color: #000000">):</span>
+-<span style="color: #000000">        </span><span style="color: #000080">print</span><span style="color: #000000">(</span><span style="color: #000000">bld</span><span style="color: #000000">.</span><span style="color: #000000">env</span><span style="color: #000000">.</span><span style="color: #000000">FOO</span><span style="color: #000000">)</span><span style="color: #000000"> </span><span style="color: #000000"><img src="./callouts/3.png" alt="3" /></span>
+ <span style="color: #000000">        </span><span style="color: #000080">print</span><span style="color: #000000">(</span><span style="color: #000000">bld</span><span style="color: #000000">.</span><span style="color: #000000">env</span><span style="color: #000000">.</span><span style="color: #000000">TOUCH</span><span style="color: #000000">)</span>
++<span style="color: #000000">        </span><span style="color: #000080">print</span><span style="color: #000000">(</span><span style="color: #000000">bld</span><span style="color: #000000">.</span><span style="color: #000000">env</span><span style="color: #000000">.</span><span style="color: #000000">FOO</span><span style="color: #000000">)</span><span style="color: #000000"> </span><span style="color: #000000"><img src="./callouts/3.png" alt="3" /></span>
+ <span style="color: #000000">        </span><span style="color: #000000">bld</span><span style="color: #000000">(</span><span style="color: #000000">rule</span><span style="color: #000000">=</span><span style="color: #009900">'${TOUCH} ${TGT}'</span><span style="color: #000000">,</span><span style="color: #000000"> target</span><span style="color: #000000">=</span><span style="color: #009900">'foo.txt'</span><span style="color: #000000">)</span><span style="color: #000000"> </span><span style="color: #000000"><img src="./callouts/4.png" alt="4" /></span></tt></pre></div></div>
+ <div class="colist arabic"><table>
+ <tr><td><img src="./callouts/1.png" alt="1" /></td><td>
+@@ -1528,7 +1528,7 @@
+ </tr></table>
+ </div>
+ <h4 id="_configuration_set_usage">3.1.2. Configuration set usage</h4>
+-<div class="paragraph"><p>We will now provide more examples of the configuration set usage. The object <strong>conf.env</strong> provides convenience methods to access its contents:</p></div>
++<div class="paragraph"><p>We will now provide more examples of the configuration set usage. The object <strong>ctx.env</strong> provides convenience methods to access its contents:</p></div>
+ <div class="listingblock">
+ <div class="content"><!-- Generator: GNU source-highlight 3.1.4
+ by Lorenzo Bettini
+@@ -2933,10 +2933,10 @@
+ http://www.lorenzobettini.it
+ http://www.gnu.org/software/src-highlite -->
+ <pre><tt><span style="color: #000080">def</span><span style="color: #000000"> </span><span style="color: #000000">options</span><span style="color: #000000">(</span><span style="color: #000000">ctx</span><span style="color: #000000">):</span>
+-<span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">load</span><span style="color: #000000">(</span><span style="color: #009900">'compiler_cc'</span><span style="color: #000000">)</span>
++<span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">load</span><span style="color: #000000">(</span><span style="color: #009900">'compiler_c'</span><span style="color: #000000">)</span>
+ 
+ <span style="color: #000080">def</span><span style="color: #000000"> </span><span style="color: #000000">configure</span><span style="color: #000000">(</span><span style="color: #000000">ctx</span><span style="color: #000000">):</span>
+-<span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">load</span><span style="color: #000000">(</span><span style="color: #009900">'compiler_cc'</span><span style="color: #000000">)</span>
++<span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">load</span><span style="color: #000000">(</span><span style="color: #009900">'compiler_c'</span><span style="color: #000000">)</span>
+ 
+ <span style="color: #000080">def</span><span style="color: #000000"> </span><span style="color: #000000">setup</span><span style="color: #000000">(</span><span style="color: #000000">ctx</span><span style="color: #000000">):</span>
+ <span style="color: #000000">        n </span><span style="color: #000000">=</span><span style="color: #000000"> ctx</span><span style="color: #000000">.</span><span style="color: #000000">path</span><span style="color: #000000">.</span><span style="color: #000000">make_node</span><span style="color: #000000">(</span><span style="color: #009900">'main.c'</span><span style="color: #000000">)</span>
+@@ -3208,7 +3208,7 @@
+ 
+ <span style="color: #000080">def</span><span style="color: #000000"> </span><span style="color: #000000">build</span><span style="color: #000000">(</span><span style="color: #000000">bld</span><span style="color: #000000">):</span>
+ <span style="color: #000000">        </span><span style="color: #000080">if</span><span style="color: #000000"> </span><span style="color: #000080">not</span><span style="color: #000000"> bld</span><span style="color: #000000">.</span><span style="color: #000000">variant</span><span style="color: #000000">:</span><span style="color: #000000"> </span><span style="color: #000000"><img src="./callouts/3.png" alt="3" /></span>
+-<span style="color: #000000">                bld</span><span style="color: #000000">.</span><span style="color: #000000">fatal</span><span style="color: #000000">(</span><span style="color: #009900">'call "waf debug" or "waf release", and try "waf --help"'</span><span style="color: #000000">)</span>
++<span style="color: #000000">                bld</span><span style="color: #000000">.</span><span style="color: #000000">fatal</span><span style="color: #000000">(</span><span style="color: #009900">'call "waf build_debug" or "waf build_release", and try "waf --help"'</span><span style="color: #000000">)</span>
+ <span style="color: #000000">        bld</span><span style="color: #000000">.</span><span style="color: #000000">program</span><span style="color: #000000">(</span><span style="color: #000000">source</span><span style="color: #000000">=</span><span style="color: #009900">'main.c'</span><span style="color: #000000">,</span><span style="color: #000000"> target</span><span style="color: #000000">=</span><span style="color: #009900">'app'</span><span style="color: #000000">,</span><span style="color: #000000"> includes</span><span style="color: #000000">=</span><span style="color: #009900">'.'</span><span style="color: #000000">)</span><span style="color: #000000"> </span><span style="color: #000000"><img src="./callouts/4.png" alt="4" /></span>
+ 
+ <span style="font-weight: bold"><span style="color: #008080">from</span></span><span style="color: #000000"> waflib</span><span style="color: #000000">.</span><span style="color: #000000">Build </span><span style="font-weight: bold"><span style="color: #008080">import</span></span><span style="color: #000000"> BuildContext</span><span style="color: #000000">,</span><span style="color: #000000"> CleanContext</span><span style="color: #000000">,</span><span style="color: #000000"> </span><span style="color: #000000">\</span>
+@@ -7939,20 +7939,5 @@
+ Last updated 2010-11-24 20:50:47 CET
+ </div>
+ </div>
+-<script type="text/javascript">
+-
+-  var _gaq = _gaq || [];
+-  _gaq.push(['_setAccount', 'UA-19942299-1']);
+-  _gaq.push(['_setDomainName', 'none']);
+-  _gaq.push(['_setAllowLinker', true]);
+-  _gaq.push(['_trackPageview']);
+-
+-  (function() {
+-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+-  })();
+-
+-</script>
+ </body>
+ </html>

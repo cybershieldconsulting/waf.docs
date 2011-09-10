@@ -1,0 +1,824 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.TaskGen &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.TaskGen</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2005-2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Task generators</span>
+
+<span class="sd">The class :py:class:`waflib.TaskGen.task_gen` encapsulates the creation of task objects (low-level code)</span>
+<span class="sd">The instances can have various parameters, but the creation of task nodes (Task.py)</span>
+<span class="sd">is always postponed. To achieve this, various methods are called from the method &quot;apply&quot;</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span><span class="o">,</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Errors</span>
+
+<span class="n">feats</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;remember the methods declaring features&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="task_gen"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.task_gen">[docs]</a><span class="k">class</span> <span class="nc">task_gen</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Instances of this class create :py:class:`waflib.Task.TaskBase` when</span>
+<span class="sd">	calling the method :py:meth:`waflib.TaskGen.task_gen.post` from the main thread.</span>
+<span class="sd">	A few notes:</span>
+
+<span class="sd">	* The methods to call (*self.meths*) can be specified dynamically (removing, adding, ..)</span>
+<span class="sd">	* The &#39;features&#39; are used to add methods to self.meths and then execute them</span>
+<span class="sd">	* The attribute &#39;path&#39; is a node representing the location of the task generator</span>
+<span class="sd">	* The tasks created are added to the attribute *tasks*</span>
+<span class="sd">	* The attribute &#39;idx&#39; is a counter of task generators in the same path</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">mappings</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="n">prec</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="task_gen.__init__"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.task_gen.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		The task generator objects predefine various attributes (source, target) for possible</span>
+<span class="sd">		processing by process_rule (make-like rules) or process_source (extensions, misc methods)</span>
+
+<span class="sd">		The tasks are stored on the attribute &#39;tasks&#39;. They are created by calling methods</span>
+<span class="sd">		listed in self.meths *or* referenced in the attribute features</span>
+<span class="sd">		A topological sort is performed to ease the method re-use.</span>
+
+<span class="sd">		The extra key/value elements passed in kw are set as attributes</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="c"># so we will have to play with directed acyclic graphs</span>
+		<span class="c"># detect cycles, etc</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">meths</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		List of method names to execute (it is usually a good idea to avoid touching this)</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">prec</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Precedence table for sorting the methods in self.meths</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">mappings</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		List of mappings {extension -&gt; function} for processing files by extension</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		List of feature names for bringing new methods in</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		List of tasks created.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;bld&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+			<span class="c"># task generators without a build context :-/</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">ConfigSet</span><span class="o">.</span><span class="n">ConfigSet</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="bp">None</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">bld</span> <span class="o">=</span> <span class="n">kw</span><span class="p">[</span><span class="s">&#39;bld&#39;</span><span class="p">]</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">derive</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">path</span> <span class="c"># emulate chdir when reading scripts</span>
+
+			<span class="c"># provide a unique id</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">idx</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">idx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+			<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">idx</span> <span class="o">=</span> <span class="p">{}</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">idx</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+
+		<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+			<span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="task_gen.__str__"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.task_gen.__str__">[docs]</a>	<span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;for debugging purposes&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="s">&quot;&lt;task_gen </span><span class="si">%r</span><span class="s"> declared in </span><span class="si">%s</span><span class="s">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="task_gen.__repr__"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.task_gen.__repr__">[docs]</a>	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;for debugging purposes&quot;&quot;&quot;</span>
+		<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+			<span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;env&#39;</span><span class="p">,</span> <span class="s">&#39;bld&#39;</span><span class="p">,</span> <span class="s">&#39;compiled_tasks&#39;</span><span class="p">,</span> <span class="s">&#39;tasks&#39;</span><span class="p">]:</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">=</span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">))))</span>
+		<span class="k">return</span> <span class="s">&quot;bld(</span><span class="si">%s</span><span class="s">) in </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lst</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="task_gen.get_name"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.task_gen.get_name">[docs]</a>	<span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		If not set, the name is computed from the target name::</span>
+
+<span class="sd">			def build(bld):</span>
+<span class="sd">				x = bld(name=&#39;foo&#39;)</span>
+<span class="sd">				x.get_name() # foo</span>
+<span class="sd">				y = bld(target=&#39;bar&#39;)</span>
+<span class="sd">				y.get_name() # bar</span>
+
+<span class="sd">		:rtype: string</span>
+<span class="sd">		:return: name of this task generator</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+				<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">]</span>
+				<span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+			<span class="k">return</span> <span class="n">name</span></div>
+	<span class="k">def</span> <span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+
+	<span class="n">name</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_name</span><span class="p">,</span> <span class="n">set_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="task_gen.to_list"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.task_gen.to_list">[docs]</a>	<span class="k">def</span> <span class="nf">to_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Ensure that a parameter is a list</span>
+
+<span class="sd">		:type val: string or list of string</span>
+<span class="sd">		:param val: input to return as a list</span>
+<span class="sd">		:rtype: list</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span> <span class="k">return</span> <span class="n">val</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+		<span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="n">val</span>
+</div>
+<div class="viewcode-block" id="task_gen.post"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.task_gen.post">[docs]</a>	<span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Create task objects. The following operations are performed:</span>
+
+<span class="sd">		#. The body of this method is called only once and sets the attribute ``posted``</span>
+<span class="sd">		#. The attribute ``features`` is used to add more methods in ``self.meths``</span>
+<span class="sd">		#. The methods are sorted by the precedence table ``self.prec`` or `:waflib:attr:waflib.TaskGen.task_gen.prec`</span>
+<span class="sd">		#. The methods are then executed in order</span>
+<span class="sd">		#. The tasks created are added to :py:attr:`waflib.TaskGen.task_gen.tasks`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="c"># we could add a decorator to let the task run once, but then python 2.3 will be difficult to support</span>
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;posted&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="c">#error(&quot;OBJECT ALREADY POSTED&quot; + str( self))</span>
+			<span class="k">return</span> <span class="bp">False</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">posted</span> <span class="o">=</span> <span class="bp">True</span>
+
+		<span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meths</span><span class="p">)</span>
+
+		<span class="c"># add the methods listed in the features</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;*&#39;</span><span class="p">]:</span>
+			<span class="n">st</span> <span class="o">=</span> <span class="n">feats</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">st</span><span class="p">:</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">classes</span><span class="p">:</span>
+					<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;feature </span><span class="si">%r</span><span class="s"> does not exist - bind at least one method to it&#39;</span> <span class="o">%</span> <span class="n">x</span><span class="p">)</span>
+			<span class="n">keys</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">st</span><span class="p">)</span>
+
+		<span class="c"># copy the precedence table</span>
+		<span class="n">prec</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="n">prec_tbl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prec</span> <span class="ow">or</span> <span class="n">task_gen</span><span class="o">.</span><span class="n">prec</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">prec_tbl</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+				<span class="n">prec</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">prec_tbl</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+
+		<span class="c"># elements disconnected</span>
+		<span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">prec</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+				<span class="k">if</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span> <span class="k">break</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+
+		<span class="c"># topological sort</span>
+		<span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">while</span> <span class="n">tmp</span><span class="p">:</span>
+			<span class="n">e</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+			<span class="k">if</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span> <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">nlst</span> <span class="o">=</span> <span class="n">prec</span><span class="p">[</span><span class="n">e</span><span class="p">]</span>
+			<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+				<span class="k">pass</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">del</span> <span class="n">prec</span><span class="p">[</span><span class="n">e</span><span class="p">]</span>
+				<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nlst</span><span class="p">:</span>
+					<span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">prec</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">prec</span><span class="p">[</span><span class="n">y</span><span class="p">]:</span>
+							<span class="k">break</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="n">prec</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;Cycle detected in the method execution </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">prec</span><span class="p">)</span>
+		<span class="n">out</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">meths</span> <span class="o">=</span> <span class="n">out</span>
+
+		<span class="c"># then we run the methods in order</span>
+		<span class="n">Logs</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;task_gen: posting </span><span class="si">%s</span><span class="s"> </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">v</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+			<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%r</span><span class="s"> is not a valid task generator method&#39;</span> <span class="o">%</span> <span class="n">x</span><span class="p">)</span>
+			<span class="n">Logs</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;task_gen: -&gt; </span><span class="si">%s</span><span class="s"> (</span><span class="si">%d</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span>
+			<span class="n">v</span><span class="p">()</span>
+
+		<span class="n">Logs</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;task_gen: posted </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+		<span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="task_gen.get_hook"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.task_gen.get_hook">[docs]</a>	<span class="k">def</span> <span class="nf">get_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		:param node: Input file to process</span>
+<span class="sd">		:type node: :py:class:`waflib.Tools.Node.Node`</span>
+<span class="sd">		:return: A method able to process the input node by looking at the extension</span>
+<span class="sd">		:rtype: function</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span>
+		<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mappings</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+				<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mappings</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+		<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">task_gen</span><span class="o">.</span><span class="n">mappings</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+				<span class="k">return</span> <span class="n">task_gen</span><span class="o">.</span><span class="n">mappings</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+		<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&quot;File </span><span class="si">%r</span><span class="s"> has no mapping in </span><span class="si">%r</span><span class="s"> (did you forget to load a waf tool?)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">task_gen</span><span class="o">.</span><span class="n">mappings</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+</div>
+<div class="viewcode-block" id="task_gen.create_task"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.task_gen.create_task">[docs]</a>	<span class="k">def</span> <span class="nf">create_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">tgt</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Wrapper for creating task objects easily</span>
+
+<span class="sd">		:param name: task class name</span>
+<span class="sd">		:type name: string</span>
+<span class="sd">		:param src: input nodes</span>
+<span class="sd">		:type src: list of :py:class:`waflib.Tools.Node.Node`</span>
+<span class="sd">		:param tgt: output nodes</span>
+<span class="sd">		:type tgt: list of :py:class:`waflib.Tools.Node.Node`</span>
+<span class="sd">		:return: A task object</span>
+<span class="sd">		:rtype: :py:class:`waflib.Task.TaskBase`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">task</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">classes</span><span class="p">[</span><span class="n">name</span><span class="p">](</span><span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">derive</span><span class="p">(),</span> <span class="n">generator</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">src</span><span class="p">:</span>
+			<span class="n">task</span><span class="o">.</span><span class="n">set_inputs</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">tgt</span><span class="p">:</span>
+			<span class="n">task</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">tgt</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">task</span>
+</div>
+<div class="viewcode-block" id="task_gen.clone"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.task_gen.clone">[docs]</a>	<span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Make a copy of a task generator. Once the copy is made, it is necessary to ensure that the</span>
+<span class="sd">		task generator does not create the same output files as the original, or the same files may</span>
+<span class="sd">		be compiled twice.</span>
+
+<span class="sd">		:param env: A configuration set</span>
+<span class="sd">		:type env: :py:class:`waflib.ConfigSet.ConfigSet`</span>
+<span class="sd">		:return: A copy</span>
+<span class="sd">		:rtype: :py:class:`waflib.TaskGen.task_gen`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">newobj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="p">()</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;env&#39;</span><span class="p">,</span> <span class="s">&#39;bld&#39;</span><span class="p">]:</span>
+				<span class="k">continue</span>
+			<span class="k">elif</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;path&#39;</span><span class="p">,</span> <span class="s">&#39;features&#39;</span><span class="p">]:</span>
+				<span class="nb">setattr</span><span class="p">(</span><span class="n">newobj</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="nb">setattr</span><span class="p">(</span><span class="n">newobj</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)))</span>
+
+		<span class="n">newobj</span><span class="o">.</span><span class="n">posted</span> <span class="o">=</span> <span class="bp">False</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="n">newobj</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">all_envs</span><span class="p">[</span><span class="n">env</span><span class="p">]</span><span class="o">.</span><span class="n">derive</span><span class="p">()</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">newobj</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">derive</span><span class="p">()</span>
+
+		<span class="k">return</span> <span class="n">newobj</span>
+</div></div>
+<div class="viewcode-block" id="declare_chain"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.declare_chain">[docs]</a><span class="k">def</span> <span class="nf">declare_chain</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">rule</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">reentrant</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;BLUE&#39;</span><span class="p">,</span>
+	<span class="n">ext_in</span><span class="o">=</span><span class="p">[],</span> <span class="n">ext_out</span><span class="o">=</span><span class="p">[],</span> <span class="n">before</span><span class="o">=</span><span class="p">[],</span> <span class="n">after</span><span class="o">=</span><span class="p">[],</span> <span class="n">decider</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">scan</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create a new mapping and a task class for processing files by extension.</span>
+<span class="sd">	See Tools/flex.py for an example.</span>
+
+<span class="sd">	:param name: name for the task class</span>
+<span class="sd">	:type name: string</span>
+<span class="sd">	:param rule: function to execute or string to be compiled in a function</span>
+<span class="sd">	:type rule: string or function</span>
+<span class="sd">	:param reentrant: re-inject the output file in the process</span>
+<span class="sd">	:type reentrant: bool</span>
+<span class="sd">	:param color: color for the task output</span>
+<span class="sd">	:type color: string</span>
+<span class="sd">	:param ext_in: execute the task only after the files of such extensions are created</span>
+<span class="sd">	:type ext_in: list of string</span>
+<span class="sd">	:param ext_out: execute the task only before files of such extensions are processed</span>
+<span class="sd">	:type ext_out: list of string</span>
+<span class="sd">	:param before: execute instances of this task before classes of the given names</span>
+<span class="sd">	:type before: list of string</span>
+<span class="sd">	:param after: execute instances of this task after classes of the given names</span>
+<span class="sd">	:type after: list of string</span>
+<span class="sd">	:param decider: if present, use it to create the output nodes for the task</span>
+<span class="sd">	:type decider: function</span>
+<span class="sd">	:param scan: scanner function for the task</span>
+<span class="sd">	:type scan: function</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">ext_in</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">ext_in</span><span class="p">)</span>
+	<span class="n">ext_out</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">ext_out</span><span class="p">)</span>
+	<span class="n">cls</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">task_factory</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">rule</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">ext_in</span><span class="o">=</span><span class="n">ext_in</span><span class="p">,</span> <span class="n">ext_out</span><span class="o">=</span><span class="n">ext_out</span><span class="p">,</span> <span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="o">=</span><span class="n">after</span><span class="p">,</span> <span class="n">scan</span><span class="o">=</span><span class="n">scan</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">x_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+		<span class="n">ext</span> <span class="o">=</span> <span class="n">decider</span> <span class="ow">and</span> <span class="n">decider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span> <span class="ow">or</span> <span class="n">cls</span><span class="o">.</span><span class="n">ext_out</span>
+		<span class="k">if</span> <span class="n">ext_in</span><span class="p">:</span>
+			<span class="n">_ext_in</span> <span class="o">=</span> <span class="n">ext_in</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="n">out_source</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ext_in</span><span class="o">=</span><span class="n">_ext_in</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ext</span><span class="p">]</span>
+		<span class="k">if</span> <span class="n">reentrant</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">reentrant</span><span class="p">):</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out_source</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+		<span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">out_source</span><span class="p">)</span>
+
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">ext_in</span><span class="p">:</span>
+		<span class="n">task_gen</span><span class="o">.</span><span class="n">mappings</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_file</span>
+	<span class="k">return</span> <span class="n">x_file</span>
+</div>
+<div class="viewcode-block" id="taskgen_method"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.taskgen_method">[docs]</a><span class="k">def</span> <span class="nf">taskgen_method</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Decorator: register a method as a task generator method.</span>
+<span class="sd">	The function must accept a task generator as first parameter::</span>
+
+<span class="sd">		from waflib.Task import taskgen_method</span>
+<span class="sd">		@taskgen_method</span>
+<span class="sd">		def mymethod(self):</span>
+<span class="sd">			pass</span>
+
+<span class="sd">	:param func: task generator method to add</span>
+<span class="sd">	:type func: function</span>
+<span class="sd">	:rtype: function</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="nb">setattr</span><span class="p">(</span><span class="n">task_gen</span><span class="p">,</span> <span class="n">func</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">func</span>
+</div>
+<div class="viewcode-block" id="feature"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.feature">[docs]</a><span class="k">def</span> <span class="nf">feature</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Decorator: register a task generator method that will be executed when the</span>
+<span class="sd">	object attribute &#39;feature&#39; contains the corresponding key(s)::</span>
+
+<span class="sd">		from waflib.Task import feature</span>
+<span class="sd">		@feature(&#39;myfeature&#39;)</span>
+<span class="sd">		def myfunction(self):</span>
+<span class="sd">			print(&#39;that is my feature!&#39;)</span>
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld(features=&#39;myfeature&#39;)</span>
+
+<span class="sd">	:param k: feature names</span>
+<span class="sd">	:type k: list of string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">deco</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+		<span class="nb">setattr</span><span class="p">(</span><span class="n">task_gen</span><span class="p">,</span> <span class="n">func</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+			<span class="n">feats</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">func</span><span class="o">.</span><span class="n">__name__</span><span class="p">])</span>
+		<span class="k">return</span> <span class="n">func</span>
+	<span class="k">return</span> <span class="n">deco</span>
+</div>
+<div class="viewcode-block" id="before"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.before">[docs]</a><span class="k">def</span> <span class="nf">before</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Decorator: register a task generator method which will be executed</span>
+<span class="sd">	before the functions of given name(s)::</span>
+
+<span class="sd">		from waflib.TaskGen import feature, before</span>
+<span class="sd">		@feature(&#39;myfeature&#39;)</span>
+<span class="sd">		@before(&#39;fun2&#39;)</span>
+<span class="sd">		def fun1(self):</span>
+<span class="sd">			print(&#39;feature 1!&#39;)</span>
+<span class="sd">		@feature(&#39;myfeature&#39;)</span>
+<span class="sd">		def fun2(self):</span>
+<span class="sd">			print(&#39;feature 2!&#39;)</span>
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld(features=&#39;myfeature&#39;)</span>
+
+<span class="sd">	:param k: method names</span>
+<span class="sd">	:type k: list of string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">deco</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+		<span class="nb">setattr</span><span class="p">(</span><span class="n">task_gen</span><span class="p">,</span> <span class="n">func</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">fun_name</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">func</span><span class="o">.</span><span class="n">__name__</span> <span class="ow">in</span> <span class="n">task_gen</span><span class="o">.</span><span class="n">prec</span><span class="p">[</span><span class="n">fun_name</span><span class="p">]:</span>
+				<span class="n">task_gen</span><span class="o">.</span><span class="n">prec</span><span class="p">[</span><span class="n">fun_name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">func</span>
+	<span class="k">return</span> <span class="n">deco</span>
+</div>
+<div class="viewcode-block" id="after"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.after">[docs]</a><span class="k">def</span> <span class="nf">after</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Decorator: register a task generator method which will be executed</span>
+<span class="sd">	after the functions of given name(s)::</span>
+
+<span class="sd">		from waflib.TaskGen import feature, after</span>
+<span class="sd">		@feature(&#39;myfeature&#39;)</span>
+<span class="sd">		@after(&#39;fun2&#39;)</span>
+<span class="sd">		def fun1(self):</span>
+<span class="sd">			print(&#39;feature 1!&#39;)</span>
+<span class="sd">		@feature(&#39;myfeature&#39;)</span>
+<span class="sd">		def fun2(self):</span>
+<span class="sd">			print(&#39;feature 2!&#39;)</span>
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld(features=&#39;myfeature&#39;)</span>
+
+<span class="sd">	:param k: method names</span>
+<span class="sd">	:type k: list of string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">deco</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+		<span class="nb">setattr</span><span class="p">(</span><span class="n">task_gen</span><span class="p">,</span> <span class="n">func</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">fun_name</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">fun_name</span> <span class="ow">in</span> <span class="n">task_gen</span><span class="o">.</span><span class="n">prec</span><span class="p">[</span><span class="n">func</span><span class="o">.</span><span class="n">__name__</span><span class="p">]:</span>
+				<span class="n">task_gen</span><span class="o">.</span><span class="n">prec</span><span class="p">[</span><span class="n">func</span><span class="o">.</span><span class="n">__name__</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fun_name</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">func</span>
+	<span class="k">return</span> <span class="n">deco</span>
+</div>
+<div class="viewcode-block" id="extension"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.extension">[docs]</a><span class="k">def</span> <span class="nf">extension</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Decorator: register a task generator method which will be invoked during</span>
+<span class="sd">	the processing of source files for the extension given::</span>
+
+<span class="sd">		from waflib import Task</span>
+<span class="sd">		class mytask(Task):</span>
+<span class="sd">			run_str = &#39;cp ${SRC} ${TGT}&#39;</span>
+<span class="sd">		@extension(&#39;.moo&#39;)</span>
+<span class="sd">		def create_maa_file(self, node):</span>
+<span class="sd">			self.create_task(&#39;mytask&#39;, node, node.change_ext(&#39;.maa&#39;))</span>
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld(source=&#39;foo.moo&#39;)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">deco</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+		<span class="nb">setattr</span><span class="p">(</span><span class="n">task_gen</span><span class="p">,</span> <span class="n">func</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+			<span class="n">task_gen</span><span class="o">.</span><span class="n">mappings</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span>
+		<span class="k">return</span> <span class="n">func</span>
+	<span class="k">return</span> <span class="n">deco</span>
+
+<span class="c"># ---------------------------------------------------------------</span>
+<span class="c"># The following methods are task generator methods commonly used</span>
+<span class="c"># they are almost examples, the rest of waf core does not depend on them</span>
+</div>
+<span class="nd">@taskgen_method</span>
+<div class="viewcode-block" id="to_nodes"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.to_nodes">[docs]</a><span class="k">def</span> <span class="nf">to_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lst</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Convert the input list into a list of nodes.</span>
+<span class="sd">	It is used by :py:func:`waflib.TaskGen.process_source` and :py:func:`waflib.TaskGen.process_rule`.</span>
+<span class="sd">	It is designed for source files, for folders, see :py:func:`waflib.Tools.ccroot.to_incnodes`:</span>
+
+<span class="sd">	:param lst: input list</span>
+<span class="sd">	:type lst: list of string and nodes</span>
+<span class="sd">	:param path: path from which to search the nodes (by default, :py:attr:`waflib.TaskGen.task_gen.path`)</span>
+<span class="sd">	:type path: :py:class:`waflib.Tools.Node.Node`</span>
+<span class="sd">	:rtype: list of :py:class:`waflib.Tools.Node.Node`</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">path</span> <span class="o">=</span> <span class="n">path</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
+	<span class="n">find</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">find_resource</span>
+
+	<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">__class__</span><span class="p">):</span>
+		<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">lst</span><span class="p">]</span>
+
+	<span class="c"># either a list or a string, convert to a list of nodes</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="n">find</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&quot;source not found: </span><span class="si">%r</span><span class="s"> in </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">path</span><span class="p">))</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="n">x</span>
+		<span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">tmp</span>
+</div>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="process_source"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.process_source">[docs]</a><span class="k">def</span> <span class="nf">process_source</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process each element in the attribute ``source`` by extension.</span>
+
+<span class="sd">	#. The *source* list is converted through :py:meth:`waflib.TaskGen.to_nodes` to a list of :py:class:`waflib.Node.Node` first.</span>
+<span class="sd">	#. File extensions are mapped to methods having the signature: ``def meth(self, node)`` by :py:meth:`waflib.TaskGen.extension`</span>
+<span class="sd">	#. The method is retrieved through :py:meth:`waflib.TaskGen.task_gen.get_hook`</span>
+<span class="sd">	#. When called, the methods may modify self.source to append more source to process</span>
+<span class="sd">	#. The mappings can map an extension or a filename (see the code below)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_nodes</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;source&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+	<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">get_hook</span><span class="p">(</span><span class="n">node</span><span class="p">)(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+</div>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">)</span>
+<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="process_rule"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.process_rule">[docs]</a><span class="k">def</span> <span class="nf">process_rule</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process the attribute ``rule``. When present, :py:meth:`waflib.TaskGen.process_source` is disabled::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld(rule=&#39;cp ${SRC} ${TGT}&#39;, source=&#39;wscript&#39;, target=&#39;bar.txt&#39;)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;rule&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="k">return</span>
+
+	<span class="c"># create the task class</span>
+	<span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">rule</span><span class="p">)</span>
+	<span class="n">cls</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">task_factory</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rule</span><span class="p">,</span>
+		<span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;vars&#39;</span><span class="p">,</span> <span class="p">[]),</span>
+		<span class="n">shell</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;shell&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;color&#39;</span><span class="p">,</span> <span class="s">&#39;BLUE&#39;</span><span class="p">))</span>
+
+	<span class="c"># now create one instance</span>
+	<span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;target&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">]</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+				<span class="n">tsk</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">x</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span> <span class="c"># if a node was given, create the required folders</span>
+				<span class="n">tsk</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;install_path&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="c"># from waf 1.5</span>
+			<span class="c"># although convenient, it does not 1. allow to name the target file and 2. symlinks</span>
+			<span class="c"># TODO remove in waf 1.7</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">install_path</span><span class="p">,</span> <span class="n">tsk</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;source&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="n">tsk</span><span class="o">.</span><span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_nodes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+		<span class="c"># bypass the execution of process_source by setting the source to an empty list</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="p">[]</span>
+
+	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;scan&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="n">cls</span><span class="o">.</span><span class="n">scan</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span>
+
+	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;cwd&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="n">tsk</span><span class="o">.</span><span class="n">cwd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cwd</span>
+
+	<span class="c"># TODO remove on_results in waf 1.7</span>
+	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;update_outputs&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;on_results&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="n">Task</span><span class="o">.</span><span class="n">update_outputs</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;always&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="n">Task</span><span class="o">.</span><span class="n">always_run</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;after&#39;</span><span class="p">,</span> <span class="s">&#39;before&#39;</span><span class="p">,</span> <span class="s">&#39;ext_in&#39;</span><span class="p">,</span> <span class="s">&#39;ext_out&#39;</span><span class="p">]:</span>
+		<span class="nb">setattr</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="p">[]))</span>
+</div>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;seq&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="sequence_order"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.sequence_order">[docs]</a><span class="k">def</span> <span class="nf">sequence_order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Add a strict sequential constraint between the tasks generated by task generators.</span>
+<span class="sd">	It works because task generators are posted in order.</span>
+<span class="sd">	It will not post objects which belong to other folders.</span>
+
+<span class="sd">	Example::</span>
+
+<span class="sd">		bld(features=&#39;javac seq&#39;)</span>
+<span class="sd">		bld(features=&#39;jar seq&#39;)</span>
+
+<span class="sd">	To start a new sequence, set the attribute seq_start, for example::</span>
+
+<span class="sd">		obj = bld(features=&#39;seq&#39;)</span>
+<span class="sd">		obj.seq_start = True</span>
+
+<span class="sd">	Note that the method is executed in last position. This is more an</span>
+<span class="sd">	example than a widely-used solution.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">meths</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">meths</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;sequence_order&#39;</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">meths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;sequence_order&#39;</span><span class="p">)</span>
+		<span class="k">return</span>
+
+	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;seq_start&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="k">return</span>
+
+	<span class="c"># all the tasks previously declared must be run before these</span>
+	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="p">,</span> <span class="s">&#39;prev&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">prev</span><span class="o">.</span><span class="n">post</span><span class="p">()</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">prev</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
+				<span class="n">y</span><span class="o">.</span><span class="n">set_run_after</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="bp">self</span>
+
+</div>
+<span class="n">re_m4</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;@(\w+)@&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+
+<div class="viewcode-block" id="subst_pc"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.subst_pc">[docs]</a><span class="k">class</span> <span class="nc">subst_pc</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create *.pc* files from *.pc.in*. The task is executed whenever an input variable used</span>
+<span class="sd">	in the substitution changes.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="s">&quot;Substitutes variables in a .in file&quot;</span>
+
+		<span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+		<span class="c"># replace all % by %% to prevent errors by % signs</span>
+		<span class="n">code</span> <span class="o">=</span> <span class="n">code</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;%&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%%</span><span class="s">&#39;</span><span class="p">)</span>
+
+		<span class="c"># extract the vars foo into lst and replace @foo@ by %(foo)s</span>
+		<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">def</span> <span class="nf">repl</span><span class="p">(</span><span class="n">match</span><span class="p">):</span>
+			<span class="n">g</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span>
+			<span class="k">if</span> <span class="n">g</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+				<span class="k">return</span> <span class="s">&quot;</span><span class="si">%%</span><span class="s">(</span><span class="si">%s</span><span class="s">)s&quot;</span> <span class="o">%</span> <span class="n">g</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+			<span class="k">return</span> <span class="s">&#39;&#39;</span>
+		<span class="n">code</span> <span class="o">=</span> <span class="n">re_m4</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">repl</span><span class="p">,</span> <span class="n">code</span><span class="p">)</span>
+
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">dct</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+				<span class="n">d</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get_flat</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get_flat</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="n">d</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="p">,</span> <span class="s">&#39;quiet&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+					<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;variable </span><span class="si">%r</span><span class="s"> has no value for </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">))</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">code</span> <span class="o">%</span> <span class="n">d</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">raw_deps</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">()]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dep_vars</span> <span class="o">=</span> <span class="n">lst</span>
+
+		<span class="c"># make sure the signature is updated</span>
+		<span class="k">try</span><span class="p">:</span> <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;cache_sig&#39;</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="k">pass</span>
+
+<div class="viewcode-block" id="subst_pc.sig_vars"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.subst_pc.sig_vars">[docs]</a>	<span class="k">def</span> <span class="nf">sig_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compute a hash (signature) of the variables used in the substitution</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span>
+		<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+		<span class="n">upd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="o">.</span><span class="n">update</span>
+
+		<span class="c"># raw_deps: persistent custom values returned by the scanner</span>
+		<span class="nb">vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">raw_deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">(),</span> <span class="p">[])</span>
+
+		<span class="c"># hash both env vars and task generator attributes</span>
+		<span class="n">act_sig</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">hash_env_vars</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">vars</span><span class="p">)</span>
+		<span class="n">upd</span><span class="p">(</span><span class="n">act_sig</span><span class="p">)</span>
+
+		<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">]</span>
+		<span class="n">upd</span><span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">h_list</span><span class="p">(</span><span class="n">lst</span><span class="p">))</span>
+
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
+</div></div>
+<span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.pc.in&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="add_pcfile"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.add_pcfile">[docs]</a><span class="k">def</span> <span class="nf">add_pcfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process *.pc.in* files to *.pc*. Install the results to ``${PREFIX}/lib/pkgconfig/``</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld(source=&#39;foo.pc.in&#39;, install_path=&#39;${LIBDIR}/pkgconfig/&#39;)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;subst_pc&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.pc&#39;</span><span class="p">,</span> <span class="s">&#39;.pc.in&#39;</span><span class="p">))</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="s">&#39;${PREFIX}/lib/pkgconfig/&#39;</span><span class="p">,</span> <span class="n">tsk</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
+</div>
+<span class="k">class</span> <span class="nc">subst</span><span class="p">(</span><span class="n">subst_pc</span><span class="p">):</span>
+	<span class="k">pass</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;subst&#39;</span><span class="p">)</span>
+<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">,</span> <span class="s">&#39;process_rule&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="process_subst"><a class="viewcode-back" href="../../TaskGen.html#waflib.TaskGen.process_subst">[docs]</a><span class="k">def</span> <span class="nf">process_subst</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Define a transformation that substitutes the contents of *source* files to *target* files::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld(</span>
+<span class="sd">				features=&#39;subst&#39;,</span>
+<span class="sd">				source=&#39;foo.c.in&#39;,</span>
+<span class="sd">				target=&#39;foo.c&#39;,</span>
+<span class="sd">				install_path=&#39;${LIBDIR}/pkgconfig&#39;,</span>
+<span class="sd">				VAR = &#39;val&#39;</span>
+<span class="sd">			)</span>
+
+<span class="sd">	The input files are supposed to contain macros of the form *@VAR@*, where *VAR* is an argument</span>
+<span class="sd">	of the task generator object.</span>
+
+<span class="sd">	This method overrides the processing by :py:meth:`waflib.TaskGen.process_source`.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">src</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_nodes</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;source&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+	<span class="n">tgt</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;target&#39;</span><span class="p">,</span> <span class="p">[])</span>
+	<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tgt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">__class__</span><span class="p">):</span>
+		<span class="n">tgt</span> <span class="o">=</span> <span class="p">[</span><span class="n">tgt</span><span class="p">]</span>
+	<span class="n">tgt</span> <span class="o">=</span> <span class="p">[</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">__class__</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">tgt</span><span class="p">)]</span>
+
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">src</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tgt</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;invalid source or target for </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+
+	<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">tgt</span><span class="p">):</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">x</span> <span class="ow">and</span> <span class="n">y</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;invalid source or target for </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;subst&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+	<span class="n">inst_to</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;install_path&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">inst_to</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">inst_to</span><span class="p">,</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">chmod</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;chmod&#39;</span><span class="p">,</span> <span class="n">Utils</span><span class="o">.</span><span class="n">O644</span><span class="p">))</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="p">[]</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

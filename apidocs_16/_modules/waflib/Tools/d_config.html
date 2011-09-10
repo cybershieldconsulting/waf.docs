@@ -1,0 +1,168 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.d_config &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.d_config</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2010 (ita)</span>
+
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span>
+<span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
+
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="d_platform_flags"><a class="viewcode-back" href="../../../tools/d_config.html#waflib.Tools.d_config.d_platform_flags">[docs]</a><span class="k">def</span> <span class="nf">d_platform_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Set the extensions dll/so for d programs and libraries</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="o">.</span><span class="n">DEST_OS</span><span class="p">:</span>
+		<span class="n">v</span><span class="o">.</span><span class="n">DEST_OS</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">unversioned_sys_platform</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">Utils</span><span class="o">.</span><span class="n">destos_to_binfmt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">DEST_OS</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;pe&#39;</span><span class="p">:</span>
+		<span class="n">v</span><span class="p">[</span><span class="s">&#39;dprogram_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.exe&#39;</span>
+		<span class="n">v</span><span class="p">[</span><span class="s">&#39;dshlib_PATTERN&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.dll&#39;</span>
+		<span class="n">v</span><span class="p">[</span><span class="s">&#39;dstlib_PATTERN&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.a&#39;</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">v</span><span class="p">[</span><span class="s">&#39;dprogram_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span>
+		<span class="n">v</span><span class="p">[</span><span class="s">&#39;dshlib_PATTERN&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.so&#39;</span>
+		<span class="n">v</span><span class="p">[</span><span class="s">&#39;dstlib_PATTERN&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.a&#39;</span>
+</div>
+<span class="n">DLIB</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">version(D_Version2) {</span>
+<span class="s">	import std.stdio;</span>
+<span class="s">	int main() {</span>
+<span class="s">		writefln(&quot;phobos2&quot;);</span>
+<span class="s">		return 0;</span>
+<span class="s">	}</span>
+<span class="s">} else {</span>
+<span class="s">	version(Tango) {</span>
+<span class="s">		import tango.stdc.stdio;</span>
+<span class="s">		int main() {</span>
+<span class="s">			printf(&quot;tango&quot;);</span>
+<span class="s">			return 0;</span>
+<span class="s">		}</span>
+<span class="s">	} else {</span>
+<span class="s">		import std.stdio;</span>
+<span class="s">		int main() {</span>
+<span class="s">			writefln(&quot;phobos1&quot;);</span>
+<span class="s">			return 0;</span>
+<span class="s">		}</span>
+<span class="s">	}</span>
+<span class="s">}</span>
+<span class="s">&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;Detection string for the D standard library&quot;&quot;&quot;</span>
+
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_dlibrary"><a class="viewcode-back" href="../../../tools/d_config.html#waflib.Tools.d_config.check_dlibrary">[docs]</a><span class="k">def</span> <span class="nf">check_dlibrary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Detect the kind of standard library that comes with the compiler, will set conf.env.DLIBRARY to tango, phobos1 or phobos2.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_cc</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;d dprogram&#39;</span><span class="p">,</span> <span class="n">fragment</span><span class="o">=</span><span class="n">DLIB</span><span class="p">,</span> <span class="n">compile_filename</span><span class="o">=</span><span class="s">&#39;test.d&#39;</span><span class="p">,</span> <span class="n">execute</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">define_ret</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">DLIBRARY</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

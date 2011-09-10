@@ -1,0 +1,931 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Build &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="index.html" />
+    <link rel="next" title="ConfigSet" href="ConfigSet.html" />
+    <link rel="prev" title="Feature reference" href="featuremap.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ConfigSet.html" title="ConfigSet"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="featuremap.html" title="Feature reference"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Build">
+<span id="build"></span><h1>Build<a class="headerlink" href="#module-waflib.Build" title="Permalink to this headline">¶</a></h1>
+<p>Classes related to the build phase (build, clean, install, step, etc)</p>
+<p>The inheritance tree is the following:</p>
+<dl class="data">
+<dt id="waflib.Build.CACHE_DIR">
+<tt class="descclassname">waflib.Build.</tt><tt class="descname">CACHE_DIR</tt><a class="headerlink" href="#waflib.Build.CACHE_DIR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Location of the cache files</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Build.CACHE_SUFFIX">
+<tt class="descclassname">waflib.Build.</tt><tt class="descname">CACHE_SUFFIX</tt><a class="headerlink" href="#waflib.Build.CACHE_SUFFIX" title="Permalink to this definition">¶</a></dt>
+<dd><p>Suffix for the cache files</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Build.INSTALL">
+<tt class="descclassname">waflib.Build.</tt><tt class="descname">INSTALL</tt><a class="headerlink" href="#waflib.Build.INSTALL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Positive value &#8216;-&gt;&#8217; install, see <a class="reference internal" href="#waflib.Build.BuildContext.is_install" title="waflib.Build.BuildContext.is_install"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Build.BuildContext.is_install</span></tt></a></p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Build.UNINSTALL">
+<tt class="descclassname">waflib.Build.</tt><tt class="descname">UNINSTALL</tt><a class="headerlink" href="#waflib.Build.UNINSTALL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Negative value &#8216;&lt;-&#8216; uninstall, see <a class="reference internal" href="#waflib.Build.BuildContext.is_install" title="waflib.Build.BuildContext.is_install"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Build.BuildContext.is_install</span></tt></a></p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Build.SAVED_ATTRS">
+<tt class="descclassname">waflib.Build.</tt><tt class="descname">SAVED_ATTRS</tt><a class="headerlink" href="#waflib.Build.SAVED_ATTRS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build class members to save between the runs (root, node_deps, raw_deps, task_sigs)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Build.CFG_FILES">
+<tt class="descclassname">waflib.Build.</tt><tt class="descname">CFG_FILES</tt><a class="headerlink" href="#waflib.Build.CFG_FILES" title="Permalink to this definition">¶</a></dt>
+<dd><p>Files from the build directory to hash before starting the build (<tt class="docutils literal"><span class="pre">config.h</span></tt> written during the configuration)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Build.POST_AT_ONCE">
+<tt class="descclassname">waflib.Build.</tt><tt class="descname">POST_AT_ONCE</tt><a class="headerlink" href="#waflib.Build.POST_AT_ONCE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Post mode: all task generators are posted before the build really starts</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Build.POST_LAZY">
+<tt class="descclassname">waflib.Build.</tt><tt class="descname">POST_LAZY</tt><a class="headerlink" href="#waflib.Build.POST_LAZY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Post mode: post the task generators group after group</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Build.POST_BOTH">
+<tt class="descclassname">waflib.Build.</tt><tt class="descname">POST_BOTH</tt><a class="headerlink" href="#waflib.Build.POST_BOTH" title="Permalink to this definition">¶</a></dt>
+<dd><p>Post mode: post the task generators at once, then re-check them for each group</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Build.BuildContext">
+<em class="property">class </em><tt class="descclassname">waflib.Build.</tt><tt class="descname">BuildContext</tt><big>(</big><em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Context.html#waflib.Context.Context" title="waflib.Context.Context"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Context.Context</span></tt></a></p>
+<p>executes the build</p>
+<dl class="attribute">
+<dt id="waflib.Build.BuildContext.is_install">
+<tt class="descname">is_install</tt><a class="headerlink" href="#waflib.Build.BuildContext.is_install" title="Permalink to this definition">¶</a></dt>
+<dd><p>Non-zero value when installing or uninstalling file</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Build.BuildContext.post_mode">
+<tt class="descname">post_mode</tt><a class="headerlink" href="#waflib.Build.BuildContext.post_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>post the task generators at once, group-by-group, or both</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Build.BuildContext.task_sigs">
+<tt class="descname">task_sigs</tt><a class="headerlink" href="#waflib.Build.BuildContext.task_sigs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Signatures of the tasks (persists between build executions)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Build.BuildContext.node_deps">
+<tt class="descname">node_deps</tt><a class="headerlink" href="#waflib.Build.BuildContext.node_deps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dict of node dependencies found by <a class="reference internal" href="Task.html#waflib.Task.Task.scan" title="waflib.Task.Task.scan"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.Task.scan()</span></tt></a> (persists between build executions)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Build.BuildContext.raw_deps">
+<tt class="descname">raw_deps</tt><a class="headerlink" href="#waflib.Build.BuildContext.raw_deps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dict of custom data returned by <a class="reference internal" href="Task.html#waflib.Task.Task.scan" title="waflib.Task.Task.scan"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.Task.scan()</span></tt></a> (persists between build executions)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Build.BuildContext.deps_man">
+<tt class="descname">deps_man</tt><a class="headerlink" href="#waflib.Build.BuildContext.deps_man" title="Permalink to this definition">¶</a></dt>
+<dd><p>Manual dependencies set by <a class="reference internal" href="#waflib.Build.BuildContext.add_manual_dependency" title="waflib.Build.BuildContext.add_manual_dependency"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.BuildContext.add_manual_dependency()</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Build.BuildContext.current_group">
+<tt class="descname">current_group</tt><a class="headerlink" href="#waflib.Build.BuildContext.current_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current build group</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Build.BuildContext.groups">
+<tt class="descname">groups</tt><a class="headerlink" href="#waflib.Build.BuildContext.groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>List containing lists of task generators</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Build.BuildContext.group_names">
+<tt class="descname">group_names</tt><a class="headerlink" href="#waflib.Build.BuildContext.group_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Map group names to the group lists. See <a class="reference internal" href="#waflib.Build.BuildContext.add_group" title="waflib.Build.BuildContext.add_group"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.BuildContext.add_group()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.get_variant_dir">
+<tt class="descname">get_variant_dir</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.get_variant_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.get_variant_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter for the variant_dir attribute</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Build.BuildContext.variant_dir">
+<tt class="descname">variant_dir</tt><a class="headerlink" href="#waflib.Build.BuildContext.variant_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter for the variant_dir attribute</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.__call__">
+<tt class="descname">__call__</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a task generator and add it to the current build group. The following forms are equivalent:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">tg</span> <span class="o">=</span> <span class="n">bld</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">tg</span> <span class="o">=</span> <span class="n">bld</span><span class="p">()</span>
+        <span class="n">tg</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">tg</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">tg</span> <span class="o">=</span> <span class="n">TaskGen</span><span class="o">.</span><span class="n">task_gen</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">add_to_group</span><span class="p">(</span><span class="n">tg</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>group</strong> (<em>string</em>) &#8211; group name to add the task generator to</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.__copy__">
+<tt class="descname">__copy__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.__copy__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.__copy__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implemented to prevents copies of build contexts (raises an exception)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.install_files">
+<tt class="descname">install_files</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.install_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.install_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actual implementation provided by <a class="reference internal" href="#waflib.Build.InstallContext.install_files" title="waflib.Build.InstallContext.install_files"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.InstallContext.install_files()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.install_as">
+<tt class="descname">install_as</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.install_as"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.install_as" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actual implementation provided by <a class="reference internal" href="#waflib.Build.InstallContext.install_as" title="waflib.Build.InstallContext.install_as"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.InstallContext.install_as()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.symlink_as">
+<tt class="descname">symlink_as</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.symlink_as"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.symlink_as" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actual implementation provided by <a class="reference internal" href="#waflib.Build.InstallContext.symlink_as" title="waflib.Build.InstallContext.symlink_as"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.InstallContext.symlink_as()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.load_envs">
+<tt class="descname">load_envs</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.load_envs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.load_envs" title="Permalink to this definition">¶</a></dt>
+<dd><p>The configuration command creates files of the form <tt class="docutils literal"><span class="pre">build/c4che/NAMEcache.py</span></tt>. This method
+creates a <a class="reference internal" href="ConfigSet.html#waflib.ConfigSet.ConfigSet" title="waflib.ConfigSet.ConfigSet"><tt class="xref py py-class docutils literal"><span class="pre">waflib.ConfigSet.ConfigSet</span></tt></a> instance for each <tt class="docutils literal"><span class="pre">NAME</span></tt> by reading those
+files. The config sets are then stored in the dict <tt class="xref py py-attr docutils literal"><span class="pre">waflib.Build.BuildContext.allenvs</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.init_dirs">
+<tt class="descname">init_dirs</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.init_dirs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.init_dirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the project directory and the build directory by creating the nodes
+<tt class="xref py py-attr docutils literal"><span class="pre">waflib.Build.BuildContext.srcnode</span></tt> and <tt class="xref py py-attr docutils literal"><span class="pre">waflib.Build.BuildContext.bldnode</span></tt>
+corresponding to <tt class="docutils literal"><span class="pre">top_dir</span></tt> and <tt class="docutils literal"><span class="pre">variant_dir</span></tt> respectively. The <tt class="docutils literal"><span class="pre">bldnode</span></tt> directory will be
+created if it does not exist.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.execute">
+<tt class="descname">execute</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restore the data from previous builds and call <a class="reference internal" href="#waflib.Build.BuildContext.execute_build" title="waflib.Build.BuildContext.execute_build"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.BuildContext.execute_build()</span></tt></a>. Overrides from <a class="reference internal" href="Context.html#waflib.Context.Context.execute" title="waflib.Context.Context.execute"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Context.Context.execute()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.execute_build">
+<tt class="descname">execute_build</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.execute_build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.execute_build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the build by:</p>
+<ul class="simple">
+<li>reading the scripts (see <a class="reference internal" href="Context.html#waflib.Context.Context.recurse" title="waflib.Context.Context.recurse"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Context.Context.recurse()</span></tt></a>)</li>
+<li>calling <a class="reference internal" href="#waflib.Build.BuildContext.pre_build" title="waflib.Build.BuildContext.pre_build"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.BuildContext.pre_build()</span></tt></a> to call user build functions</li>
+<li>calling <a class="reference internal" href="#waflib.Build.BuildContext.compile" title="waflib.Build.BuildContext.compile"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.BuildContext.compile()</span></tt></a> to process the tasks</li>
+<li>calling <a class="reference internal" href="#waflib.Build.BuildContext.post_build" title="waflib.Build.BuildContext.post_build"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.BuildContext.post_build()</span></tt></a> to call user build functions</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.restore">
+<tt class="descname">restore</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.restore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.restore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the data from a previous run, sets the attributes listed in <a class="reference internal" href="#waflib.Build.SAVED_ATTRS" title="waflib.Build.SAVED_ATTRS"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Build.SAVED_ATTRS</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.store">
+<tt class="descname">store</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.store"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.store" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store the data for next runs, sets the attributes listed in <a class="reference internal" href="#waflib.Build.SAVED_ATTRS" title="waflib.Build.SAVED_ATTRS"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Build.SAVED_ATTRS</span></tt></a>. Uses a temporary
+file to avoid problems on ctrl+c.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.compile">
+<tt class="descname">compile</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.compile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.compile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the build by creating an instance of <a class="reference internal" href="Runner.html#waflib.Runner.Parallel" title="waflib.Runner.Parallel"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Runner.Parallel</span></tt></a>
+The cache file is not written if the build is up to date (no task executed).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.setup">
+<tt class="descname">setup</tt><big>(</big><em>tool</em>, <em>tooldir=None</em>, <em>funs=None</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import waf tools, used to import those accessed during the configuration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;glib2&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="k">pass</span> <span class="c"># glib2 is imported implicitly</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tool</strong> (<em>list</em>) &#8211; tool list</li>
+<li><strong>tooldir</strong> (<em>list of string</em>) &#8211; optional tool directory (sys.path)</li>
+<li><strong>funs</strong> &#8211; unused variable</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.get_env">
+<tt class="descname">get_env</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.get_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.get_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter for the env property</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.set_env">
+<tt class="descname">set_env</tt><big>(</big><em>val</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.set_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.set_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setter for the env property</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Build.BuildContext.env">
+<tt class="descname">env</tt><a class="headerlink" href="#waflib.Build.BuildContext.env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter for the env property</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.add_manual_dependency">
+<tt class="descname">add_manual_dependency</tt><big>(</big><em>path</em>, <em>value</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.add_manual_dependency"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.add_manual_dependency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a dependency from a node object to a value:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">add_manual_dependency</span><span class="p">(</span>
+                <span class="n">bld</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="s">&#39;wscript&#39;</span><span class="p">),</span>
+                <span class="n">bld</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="s">&#39;/etc/fstab&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> (string or <a class="reference internal" href="Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a>) &#8211; file path</li>
+<li><strong>value</strong> (<a class="reference internal" href="Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a>, string, or function returning a string) &#8211; value to depend on</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.launch_node">
+<tt class="descname">launch_node</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.launch_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.launch_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the launch directory as a <a class="reference internal" href="Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a> object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.hash_env_vars">
+<tt class="descname">hash_env_vars</tt><big>(</big><em>env</em>, <em>vars_lst</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.hash_env_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.hash_env_vars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hash configuration set variables:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">hash_env_vars</span><span class="p">(</span><span class="n">bld</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;CXX&#39;</span><span class="p">,</span> <span class="s">&#39;CC&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>env</strong> (<a class="reference internal" href="ConfigSet.html#waflib.ConfigSet.ConfigSet" title="waflib.ConfigSet.ConfigSet"><tt class="xref py py-class docutils literal"><span class="pre">waflib.ConfigSet.ConfigSet</span></tt></a>) &#8211; Configuration Set</li>
+<li><strong>vars_lst</strong> &#8211; list of variables</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.get_tgen_by_name">
+<tt class="descname">get_tgen_by_name</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.get_tgen_by_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.get_tgen_by_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a task generator from its name or its target name
+the name must be unique:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">tg</span> <span class="o">=</span> <span class="n">bld</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;foo&#39;</span><span class="p">)</span>
+        <span class="n">tg</span> <span class="o">==</span> <span class="n">bld</span><span class="o">.</span><span class="n">get_tgen_by_name</span><span class="p">(</span><span class="s">&#39;foo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.progress_line">
+<tt class="descname">progress_line</tt><big>(</big><em>state</em>, <em>total</em>, <em>col1</em>, <em>col2</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.progress_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.progress_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the progress bar used by <tt class="docutils literal"><span class="pre">waf</span> <span class="pre">-p</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.declare_chain">
+<tt class="descname">declare_chain</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.declare_chain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.declare_chain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for <a class="reference internal" href="TaskGen.html#waflib.TaskGen.declare_chain" title="waflib.TaskGen.declare_chain"><tt class="xref py py-func docutils literal"><span class="pre">waflib.TaskGen.declare_chain()</span></tt></a> provided for convenience</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.pre_build">
+<tt class="descname">pre_build</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.pre_build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.pre_build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute user-defined methods before the build starts, see <a class="reference internal" href="#waflib.Build.BuildContext.add_pre_fun" title="waflib.Build.BuildContext.add_pre_fun"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.BuildContext.add_pre_fun()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.post_build">
+<tt class="descname">post_build</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.post_build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.post_build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes the user-defined methods after the build is successful, see <a class="reference internal" href="#waflib.Build.BuildContext.add_post_fun" title="waflib.Build.BuildContext.add_post_fun"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.BuildContext.add_post_fun()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.add_pre_fun">
+<tt class="descname">add_pre_fun</tt><big>(</big><em>meth</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.add_pre_fun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.add_pre_fun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bind a method to execute after the scripts are read and before the build starts:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">mycallback</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Hello, world!&quot;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">add_pre_fun</span><span class="p">(</span><span class="n">mycallback</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.add_post_fun">
+<tt class="descname">add_post_fun</tt><big>(</big><em>meth</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.add_post_fun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.add_post_fun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bind a method to execute immediately after the build is successful:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">call_ldconfig</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="s">&#39;/sbin/ldconfig&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">bld</span><span class="o">.</span><span class="n">cmd</span> <span class="o">==</span> <span class="s">&#39;install&#39;</span><span class="p">:</span>
+                <span class="n">bld</span><span class="o">.</span><span class="n">add_pre_fun</span><span class="p">(</span><span class="n">call_ldconfig</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.get_group">
+<tt class="descname">get_group</tt><big>(</big><em>x</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.get_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.get_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the group x, or return the current group if x is None</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>x</strong> (<em>string, int or None</em>) &#8211; name or number or None</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.add_to_group">
+<tt class="descname">add_to_group</tt><big>(</big><em>tgen</em>, <em>group=None</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.add_to_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.add_to_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a task or a task generator for the build</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.get_group_name">
+<tt class="descname">get_group_name</tt><big>(</big><em>g</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.get_group_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.get_group_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>name for the group g (utility)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.get_group_idx">
+<tt class="descname">get_group_idx</tt><big>(</big><em>tg</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.get_group_idx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.get_group_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index of the group containing the task generator given as argument:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">tg</span> <span class="o">=</span> <span class="n">bld</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;nada&#39;</span><span class="p">)</span>
+        <span class="mi">0</span> <span class="o">==</span> <span class="n">bld</span><span class="o">.</span><span class="n">get_group_idx</span><span class="p">(</span><span class="n">tg</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tg</strong> (<a class="reference internal" href="TaskGen.html#waflib.TaskGen.task_gen" title="waflib.TaskGen.task_gen"><tt class="xref py py-class docutils literal"><span class="pre">waflib.TaskGen.task_gen</span></tt></a>) &#8211; Task generator object</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.add_group">
+<tt class="descname">add_group</tt><big>(</big><em>name=None</em>, <em>move=True</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.add_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.add_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new group of tasks/task generators. By default the new group becomes the default group for new task generators.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<em>string</em>) &#8211; name for this group</li>
+<li><strong>move</strong> (<em>bool</em>) &#8211; set the group created as default group (True by default)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.set_group">
+<tt class="descname">set_group</tt><big>(</big><em>idx</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.set_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.set_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the current group to be idx: now new task generators will be added to this group by default:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="s">&#39;touch ${TGT}&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;foo.txt&#39;</span><span class="p">)</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">add_group</span><span class="p">()</span> <span class="c"># now the current group is 1</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="s">&#39;touch ${TGT}&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;bar.txt&#39;</span><span class="p">)</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">set_group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c"># now the current group is 0</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="s">&#39;touch ${TGT}&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;truc.txt&#39;</span><span class="p">)</span> <span class="c"># build truc.txt before bar.txt</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>idx</strong> (<em>string or int</em>) &#8211; group name or group index</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.total">
+<tt class="descname">total</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.total"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.total" title="Permalink to this definition">¶</a></dt>
+<dd><p>Approximate task count: this value may be inaccurate if task generators are posted lazily (see <a class="reference internal" href="#waflib.Build.BuildContext.post_mode" title="waflib.Build.BuildContext.post_mode"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Build.BuildContext.post_mode</span></tt></a>).
+The value <tt class="xref py py-attr docutils literal"><span class="pre">waflib.Runner.Parallel.total</span></tt> is updated during the task execution.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.get_targets">
+<tt class="descname">get_targets</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.get_targets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.get_targets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the task generator corresponding to the &#8216;targets&#8217; list, used by <a class="reference internal" href="#waflib.Build.BuildContext.get_build_iterator" title="waflib.Build.BuildContext.get_build_iterator"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.BuildContext.get_build_iterator()</span></tt></a>:</p>
+<div class="highlight-python"><pre>$ waf --targets=myprogram,myshlib</pre>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.post_group">
+<tt class="descname">post_group</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.post_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.post_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Post the task generators from the group indexed by self.cur, used by <a class="reference internal" href="#waflib.Build.BuildContext.get_build_iterator" title="waflib.Build.BuildContext.get_build_iterator"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.BuildContext.get_build_iterator()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.get_tasks_group">
+<tt class="descname">get_tasks_group</tt><big>(</big><em>idx</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.get_tasks_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.get_tasks_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all the tasks for the group of num idx, used by <a class="reference internal" href="#waflib.Build.BuildContext.get_build_iterator" title="waflib.Build.BuildContext.get_build_iterator"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.BuildContext.get_build_iterator()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.BuildContext.get_build_iterator">
+<tt class="descname">get_build_iterator</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.get_build_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.get_build_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a generator object that returns lists of tasks executable in parallel (yield)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">tasks which can be executed immediatly</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">list of <a class="reference internal" href="Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Build.inst">
+<em class="property">class </em><tt class="descclassname">waflib.Build.</tt><tt class="descname">inst</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Build.inst" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
+<dl class="docutils">
+<dt>Special task used for installing files and symlinks, it behaves both like a task</dt>
+<dd>and like a task generator</dd>
+</dl>
+<dl class="method">
+<dt id="waflib.Build.inst.post">
+<tt class="descname">post</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Build.inst.post" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same interface as in <a class="reference internal" href="TaskGen.html#waflib.TaskGen.task_gen.post" title="waflib.TaskGen.task_gen.post"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.TaskGen.task_gen.post()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.inst.runnable_status">
+<tt class="descname">runnable_status</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Build.inst.runnable_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Installation tasks are always executed, so this method returns either <a class="reference internal" href="Task.html#waflib.Task.ASK_LATER" title="waflib.Task.ASK_LATER"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Task.ASK_LATER</span></tt></a> or <a class="reference internal" href="Task.html#waflib.Task.RUN_ME" title="waflib.Task.RUN_ME"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Task.RUN_ME</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.inst.__str__">
+<tt class="descname">__str__</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Build.inst.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an empty string to disable the display</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.inst.get_install_path">
+<tt class="descname">get_install_path</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Build.inst.get_install_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Installation path obtained from <tt class="docutils literal"><span class="pre">self.dest</span></tt> and prefixed by the destdir.
+The variables such as &#8216;${PREFIX}/bin&#8217; are substituted.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.inst.exec_install_files">
+<tt class="descname">exec_install_files</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Build.inst.exec_install_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predefined method for installing files</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.inst.exec_install_as">
+<tt class="descname">exec_install_as</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Build.inst.exec_install_as" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predefined method for installing one file with a given name</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.inst.exec_symlink_as">
+<tt class="descname">exec_symlink_as</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Build.inst.exec_symlink_as" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predefined method for installing a symlink</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Build.InstallContext">
+<em class="property">class </em><tt class="descclassname">waflib.Build.</tt><tt class="descname">InstallContext</tt><big>(</big><em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#InstallContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.InstallContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#waflib.Build.BuildContext" title="waflib.Build.BuildContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Build.BuildContext</span></tt></a></p>
+<p>installs the targets on the system</p>
+<dl class="method">
+<dt id="waflib.Build.InstallContext.do_install">
+<tt class="descname">do_install</tt><big>(</big><em>src</em>, <em>tgt</em>, <em>chmod=420</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#InstallContext.do_install"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.InstallContext.do_install" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy a file from src to tgt with given file permissions. The actual copy is not performed
+if the source and target file have the same size and the same timestamps. When the copy occurs,
+the file is first removed and then copied (prevent stale inodes).</p>
+<p>This method is overridden in <a class="reference internal" href="#waflib.Build.UninstallContext.do_install" title="waflib.Build.UninstallContext.do_install"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.UninstallContext.do_install()</span></tt></a> to remove the file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>src</strong> (<em>string</em>) &#8211; file name as absolute path</li>
+<li><strong>tgt</strong> (<em>string</em>) &#8211; file destination, as absolute path</li>
+<li><strong>chmod</strong> (<em>int</em>) &#8211; installation mode</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.InstallContext.do_link">
+<tt class="descname">do_link</tt><big>(</big><em>src</em>, <em>tgt</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#InstallContext.do_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.InstallContext.do_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a symlink from tgt to src.</p>
+<p>This method is overridden in <a class="reference internal" href="#waflib.Build.UninstallContext.do_link" title="waflib.Build.UninstallContext.do_link"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.UninstallContext.do_link()</span></tt></a> to remove the symlink.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>src</strong> (<em>string</em>) &#8211; file name as absolute path</li>
+<li><strong>tgt</strong> (<em>string</em>) &#8211; file destination, as absolute path</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.InstallContext.run_task_now">
+<tt class="descname">run_task_now</tt><big>(</big><em>tsk</em>, <em>postpone</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#InstallContext.run_task_now"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.InstallContext.run_task_now" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is called by <a class="reference internal" href="#waflib.Build.InstallContext.install_files" title="waflib.Build.InstallContext.install_files"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.InstallContext.install_files()</span></tt></a>,
+<a class="reference internal" href="#waflib.Build.InstallContext.install_as" title="waflib.Build.InstallContext.install_as"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.InstallContext.install_as()</span></tt></a> and <a class="reference internal" href="#waflib.Build.InstallContext.symlink_as" title="waflib.Build.InstallContext.symlink_as"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.InstallContext.symlink_as()</span></tt></a> immediately
+after the installation task is created. Its role is to force the immediate execution if necessary, that is when
+<tt class="docutils literal"><span class="pre">postpone=False</span></tt> was given.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.InstallContext.install_files">
+<tt class="descname">install_files</tt><big>(</big><em>dest</em>, <em>files</em>, <em>env=None</em>, <em>chmod=420</em>, <em>relative_trick=False</em>, <em>cwd=None</em>, <em>add=True</em>, <em>postpone=True</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#InstallContext.install_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.InstallContext.install_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a task to install files on the system:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="s">&#39;${DATADIR}&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="s">&#39;wscript&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dest</strong> (<em>string</em>) &#8211; absolute path of the destination directory</li>
+<li><strong>files</strong> (<em>list of strings or list of nodes</em>) &#8211; input files</li>
+<li><strong>env</strong> (<em>Configuration set</em>) &#8211; configuration set for performing substitutions in dest</li>
+<li><strong>relative_trick</strong> (<em>bool</em>) &#8211; preserve the folder hierarchy when installing whole folders</li>
+<li><strong>cwd</strong> (<a class="reference internal" href="Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a>) &#8211; parent node for searching srcfile, when srcfile is not a <a class="reference internal" href="Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a></li>
+<li><strong>add</strong> (<em>bool</em>) &#8211; add the task created to a build group - set <tt class="xref docutils literal"><span class="pre">False</span></tt> only if the installation task is created after the build has started</li>
+<li><strong>postpone</strong> (<em>bool</em>) &#8211; execute the task immediately to perform the installation</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.InstallContext.install_as">
+<tt class="descname">install_as</tt><big>(</big><em>dest</em>, <em>srcfile</em>, <em>env=None</em>, <em>chmod=420</em>, <em>cwd=None</em>, <em>add=True</em>, <em>postpone=True</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#InstallContext.install_as"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.InstallContext.install_as" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a task to install a file on the system with a different name:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">install_as</span><span class="p">(</span><span class="s">&#39;${PREFIX}/bin&#39;</span><span class="p">,</span> <span class="s">&#39;myapp&#39;</span><span class="p">,</span> <span class="n">chmod</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">O755</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dest</strong> (<em>string</em>) &#8211; absolute path of the destination file</li>
+<li><strong>srcfile</strong> (<em>string or node</em>) &#8211; input file</li>
+<li><strong>cwd</strong> (<a class="reference internal" href="Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a>) &#8211; parent node for searching srcfile, when srcfile is not a <a class="reference internal" href="Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a></li>
+<li><strong>env</strong> (<em>Configuration set</em>) &#8211; configuration set for performing substitutions in dest</li>
+<li><strong>add</strong> (<em>bool</em>) &#8211; add the task created to a build group - set <tt class="xref docutils literal"><span class="pre">False</span></tt> only if the installation task is created after the build has started</li>
+<li><strong>postpone</strong> (<em>bool</em>) &#8211; execute the task immediately to perform the installation</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.InstallContext.symlink_as">
+<tt class="descname">symlink_as</tt><big>(</big><em>dest</em>, <em>src</em>, <em>env=None</em>, <em>cwd=None</em>, <em>add=True</em>, <em>postpone=True</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#InstallContext.symlink_as"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.InstallContext.symlink_as" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a task to install a symlink:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="o">.</span><span class="n">symlink_as</span><span class="p">(</span><span class="s">&#39;${PREFIX}/lib/libfoo.so&#39;</span><span class="p">,</span> <span class="s">&#39;libfoo.so.1.2.3&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dest</strong> (<em>string</em>) &#8211; absolute path of the symlink</li>
+<li><strong>src</strong> (<em>string</em>) &#8211; absolute or relative path of the link</li>
+<li><strong>env</strong> (<em>Configuration set</em>) &#8211; configuration set for performing substitutions in dest</li>
+<li><strong>add</strong> (<em>bool</em>) &#8211; add the task created to a build group - set <tt class="xref docutils literal"><span class="pre">False</span></tt> only if the installation task is created after the build has started</li>
+<li><strong>postpone</strong> (<em>bool</em>) &#8211; execute the task immediately to perform the installation</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Build.UninstallContext">
+<em class="property">class </em><tt class="descclassname">waflib.Build.</tt><tt class="descname">UninstallContext</tt><big>(</big><em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#UninstallContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.UninstallContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#waflib.Build.InstallContext" title="waflib.Build.InstallContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Build.InstallContext</span></tt></a></p>
+<p>removes the targets installed</p>
+<dl class="method">
+<dt id="waflib.Build.UninstallContext.do_install">
+<tt class="descname">do_install</tt><big>(</big><em>src</em>, <em>tgt</em>, <em>chmod=420</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#UninstallContext.do_install"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.UninstallContext.do_install" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#waflib.Build.InstallContext.do_install" title="waflib.Build.InstallContext.do_install"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.InstallContext.do_install()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.UninstallContext.do_link">
+<tt class="descname">do_link</tt><big>(</big><em>src</em>, <em>tgt</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#UninstallContext.do_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.UninstallContext.do_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#waflib.Build.InstallContext.do_link" title="waflib.Build.InstallContext.do_link"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.InstallContext.do_link()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.UninstallContext.execute">
+<tt class="descname">execute</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#UninstallContext.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.UninstallContext.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="Context.html#waflib.Context.Context.execute" title="waflib.Context.Context.execute"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Context.Context.execute()</span></tt></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Build.CleanContext">
+<em class="property">class </em><tt class="descclassname">waflib.Build.</tt><tt class="descname">CleanContext</tt><big>(</big><em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#CleanContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.CleanContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#waflib.Build.BuildContext" title="waflib.Build.BuildContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Build.BuildContext</span></tt></a></p>
+<p>cleans the project</p>
+<dl class="method">
+<dt id="waflib.Build.CleanContext.execute">
+<tt class="descname">execute</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#CleanContext.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.CleanContext.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="Context.html#waflib.Context.Context.execute" title="waflib.Context.Context.execute"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Context.Context.execute()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Build.CleanContext.clean">
+<tt class="descname">clean</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#CleanContext.clean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.CleanContext.clean" title="Permalink to this definition">¶</a></dt>
+<dd><p>clean the data and some files in the build dir .. well, TODO</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Build.ListContext">
+<em class="property">class </em><tt class="descclassname">waflib.Build.</tt><tt class="descname">ListContext</tt><big>(</big><em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#ListContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.ListContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#waflib.Build.BuildContext" title="waflib.Build.BuildContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Build.BuildContext</span></tt></a></p>
+<p>lists the targets to execute</p>
+<dl class="method">
+<dt id="waflib.Build.ListContext.execute">
+<tt class="descname">execute</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#ListContext.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.ListContext.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="Context.html#waflib.Context.Context.execute" title="waflib.Context.Context.execute"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Context.Context.execute()</span></tt></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Build.StepContext">
+<em class="property">class </em><tt class="descclassname">waflib.Build.</tt><tt class="descname">StepContext</tt><big>(</big><em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#StepContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.StepContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#waflib.Build.BuildContext" title="waflib.Build.BuildContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Build.BuildContext</span></tt></a></p>
+<p>executes tasks in a step-by-step fashion, for debugging</p>
+<dl class="method">
+<dt id="waflib.Build.StepContext.compile">
+<tt class="descname">compile</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#StepContext.compile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.StepContext.compile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compile the tasks matching the input/output files given (regular expression matching). Derived from <a class="reference internal" href="#waflib.Build.BuildContext.compile" title="waflib.Build.BuildContext.compile"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.BuildContext.compile()</span></tt></a>:</p>
+<div class="highlight-python"><pre>$ waf step --files=foo.c,bar.c,in:truc.c,out:bar.o
+$ waf step --files=in:foo.cpp.1.o # link task only</pre>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="featuremap.html"
+                        title="previous chapter">Feature reference</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ConfigSet.html"
+                        title="next chapter">ConfigSet</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/Build.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ConfigSet.html" title="ConfigSet"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="featuremap.html" title="Feature reference"
+             >previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

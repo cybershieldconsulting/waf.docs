@@ -1,0 +1,298 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.fc &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.fc</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># DC 2008</span>
+<span class="c"># Thomas Nagy 2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">fortran support</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">TaskGen</span><span class="p">,</span> <span class="n">Logs</span>
+<span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">ccroot</span><span class="p">,</span> <span class="n">fc_config</span><span class="p">,</span> <span class="n">fc_scan</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">extension</span>
+<span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
+
+<span class="n">ccroot</span><span class="o">.</span><span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;fc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;FCFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;DEFINES&#39;</span><span class="p">,</span> <span class="s">&#39;INCLUDES&#39;</span><span class="p">])</span>
+<span class="n">ccroot</span><span class="o">.</span><span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;fcprogram_test&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ccroot</span><span class="o">.</span><span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;fcprogram&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;LIB&#39;</span><span class="p">,</span> <span class="s">&#39;STLIB&#39;</span><span class="p">,</span> <span class="s">&#39;LIBPATH&#39;</span><span class="p">,</span> <span class="s">&#39;STLIBPATH&#39;</span><span class="p">,</span> <span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;RPATH&#39;</span><span class="p">,</span> <span class="s">&#39;LINKDEPS&#39;</span><span class="p">])</span>
+<span class="n">ccroot</span><span class="o">.</span><span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;fcshlib&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;LIB&#39;</span><span class="p">,</span> <span class="s">&#39;STLIB&#39;</span><span class="p">,</span> <span class="s">&#39;LIBPATH&#39;</span><span class="p">,</span> <span class="s">&#39;STLIBPATH&#39;</span><span class="p">,</span> <span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;RPATH&#39;</span><span class="p">,</span> <span class="s">&#39;LINKDEPS&#39;</span><span class="p">])</span>
+<span class="n">ccroot</span><span class="o">.</span><span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;fcstlib&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;ARFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;LINKDEPS&#39;</span><span class="p">])</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;fcprogram&#39;</span><span class="p">,</span> <span class="s">&#39;fcshlib&#39;</span><span class="p">,</span> <span class="s">&#39;fcstlib&#39;</span><span class="p">,</span> <span class="s">&#39;fcprogram_test&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="dummy"><a class="viewcode-back" href="../../../tools/fc.html#waflib.Tools.fc.dummy">[docs]</a><span class="k">def</span> <span class="nf">dummy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="k">pass</span>
+</div>
+<span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.f&#39;</span><span class="p">,</span> <span class="s">&#39;.f90&#39;</span><span class="p">,</span> <span class="s">&#39;.F&#39;</span><span class="p">,</span> <span class="s">&#39;.F90&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="fc_hook"><a class="viewcode-back" href="../../../tools/fc.html#waflib.Tools.fc.fc_hook">[docs]</a><span class="k">def</span> <span class="nf">fc_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+	<span class="s">&quot;Bind the c file extension to the creation of a :py:class:`waflib.Tools.fc.fc` instance&quot;</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_compiled_task</span><span class="p">(</span><span class="s">&#39;fc&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="get_fortran_tasks"><a class="viewcode-back" href="../../../tools/fc.html#waflib.Tools.fc.get_fortran_tasks">[docs]</a><span class="k">def</span> <span class="nf">get_fortran_tasks</span><span class="p">(</span><span class="n">tsk</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Obtain all other fortran tasks from the same build group. Those tasks must not have</span>
+<span class="sd">	the attribute &#39;nomod&#39; or &#39;mod_fortran_done&#39;</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">bld</span> <span class="o">=</span> <span class="n">tsk</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span>
+	<span class="n">tasks</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">get_tasks_group</span><span class="p">(</span><span class="n">bld</span><span class="o">.</span><span class="n">get_group_idx</span><span class="p">(</span><span class="n">tsk</span><span class="o">.</span><span class="n">generator</span><span class="p">))</span>
+	<span class="k">return</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tasks</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">fc</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s">&#39;nomod&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s">&#39;mod_fortran_done&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)]</span>
+</div>
+<div class="viewcode-block" id="fc"><a class="viewcode-back" href="../../../tools/fc.html#waflib.Tools.fc.fc">[docs]</a><span class="k">class</span> <span class="nc">fc</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	The fortran tasks can only run when all fortran tasks in the current group are ready to be executed</span>
+<span class="sd">	This may cause a deadlock if another fortran task is waiting for something that cannot happen (circular dependency)</span>
+<span class="sd">	in this case, set the &#39;nomod=True&#39; on those tasks instances to break the loop</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">color</span> <span class="o">=</span> <span class="s">&#39;GREEN&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${FC} ${FCFLAGS} ${FCINCPATH_ST:INCPATHS} ${FCDEFINES_ST:DEFINES} ${_FCMODOUTFLAGS} ${FC_TGT_F}${TGT[0].abspath()} ${FC_SRC_F}${SRC[0].abspath()}&#39;</span>
+	<span class="nb">vars</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;FORTRANMODPATHFLAG&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="fc.scan"><a class="viewcode-back" href="../../../tools/fc.html#waflib.Tools.fc.fc.scan">[docs]</a>	<span class="k">def</span> <span class="nf">scan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;scanner for fortran dependencies&quot;&quot;&quot;</span>
+		<span class="n">tmp</span> <span class="o">=</span> <span class="n">fc_scan</span><span class="o">.</span><span class="n">fortran_parser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">includes_nodes</span><span class="p">)</span>
+		<span class="n">tmp</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">tmp</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+		<span class="k">if</span> <span class="n">Logs</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+			<span class="n">Logs</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;deps: deps for </span><span class="si">%r</span><span class="s">: </span><span class="si">%r</span><span class="s">; unresolved </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">tmp</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">tmp</span><span class="o">.</span><span class="n">names</span><span class="p">))</span>
+		<span class="k">return</span> <span class="p">(</span><span class="n">tmp</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">tmp</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="fc.runnable_status"><a class="viewcode-back" href="../../../tools/fc.html#waflib.Tools.fc.fc.runnable_status">[docs]</a>	<span class="k">def</span> <span class="nf">runnable_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Set the mod file outputs and the dependencies on the mod files over all the fortran tasks</span>
+<span class="sd">		executed by the main thread so there are no concurrency issues</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;mod_fortran_done&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">fc</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">runnable_status</span><span class="p">()</span>
+
+		<span class="c"># now, if we reach this part it is because this fortran task is the first in the list</span>
+		<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span>
+
+		<span class="c"># obtain the fortran tasks</span>
+		<span class="n">lst</span> <span class="o">=</span> <span class="n">get_fortran_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+		<span class="c"># disable this method for other tasks</span>
+		<span class="k">for</span> <span class="n">tsk</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+			<span class="n">tsk</span><span class="o">.</span><span class="n">mod_fortran_done</span> <span class="o">=</span> <span class="bp">True</span>
+
+		<span class="c"># wait for all the .f tasks to be ready for execution</span>
+		<span class="c"># and ensure that the scanners are called at least once</span>
+		<span class="k">for</span> <span class="n">tsk</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+			<span class="n">ret</span> <span class="o">=</span> <span class="n">tsk</span><span class="o">.</span><span class="n">runnable_status</span><span class="p">()</span>
+			<span class="k">if</span> <span class="n">ret</span> <span class="o">==</span> <span class="n">Task</span><span class="o">.</span><span class="n">ASK_LATER</span><span class="p">:</span>
+				<span class="c"># we have to wait for one of the other fortran tasks to be ready</span>
+				<span class="c"># this may deadlock if there are dependencies between the fortran tasks</span>
+				<span class="c"># but this should not happen (we are setting them here!)</span>
+				<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+					<span class="n">x</span><span class="o">.</span><span class="n">mod_fortran_done</span> <span class="o">=</span> <span class="bp">None</span>
+
+				<span class="c"># TODO sort the list of tasks in bld.producer.outstanding to put all fortran tasks at the end</span>
+				<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">ASK_LATER</span>
+
+		<span class="n">ins</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+		<span class="n">outs</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+
+		<span class="c"># the .mod files to create</span>
+		<span class="k">for</span> <span class="n">tsk</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+			<span class="n">key</span> <span class="o">=</span> <span class="n">tsk</span><span class="o">.</span><span class="n">uid</span><span class="p">()</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">bld</span><span class="o">.</span><span class="n">raw_deps</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+				<span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;MOD@&#39;</span><span class="p">):</span>
+					<span class="c"># .mod filenames are lowercase.</span>
+					<span class="n">name</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;MOD@&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">+</span> <span class="s">&#39;.mod&#39;</span>
+					<span class="n">node</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">srcnode</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+					<span class="n">tsk</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+					<span class="n">outs</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="n">node</span><span class="p">)]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tsk</span><span class="p">)</span>
+
+		<span class="c"># the .mod files to use</span>
+		<span class="k">for</span> <span class="n">tsk</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+			<span class="n">key</span> <span class="o">=</span> <span class="n">tsk</span><span class="o">.</span><span class="n">uid</span><span class="p">()</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">bld</span><span class="o">.</span><span class="n">raw_deps</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+				<span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;USE@&#39;</span><span class="p">):</span>
+					<span class="c"># .mod filenames are lowercase.</span>
+					<span class="n">name</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;USE@&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">+</span> <span class="s">&#39;.mod&#39;</span>
+					<span class="n">node</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">srcnode</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+					<span class="k">if</span> <span class="n">node</span> <span class="ow">and</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tsk</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+						<span class="k">if</span> <span class="ow">not</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bld</span><span class="o">.</span><span class="n">node_deps</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+							<span class="n">bld</span><span class="o">.</span><span class="n">node_deps</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+						<span class="n">ins</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="n">node</span><span class="p">)]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tsk</span><span class="p">)</span>
+
+		<span class="c"># if the intersection matches, set the order</span>
+		<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ins</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+			<span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ins</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+				<span class="n">a</span><span class="o">.</span><span class="n">run_after</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">outs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+
+				<span class="c"># the scanner cannot output nodes, so we have to set them</span>
+				<span class="c"># ourselves as task.dep_nodes (additional input nodes)</span>
+				<span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outs</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+					<span class="n">tmp</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
+				<span class="n">a</span><span class="o">.</span><span class="n">dep_nodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+				<span class="c"># FIXME sort does not have a key on python 2.3</span>
+				<span class="n">a</span><span class="o">.</span><span class="n">dep_nodes</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+
+		<span class="c"># the task objects have changed: clear the signature cache</span>
+		<span class="k">for</span> <span class="n">tsk</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="nb">delattr</span><span class="p">(</span><span class="n">tsk</span><span class="p">,</span> <span class="s">&#39;cache_sig&#39;</span><span class="p">)</span>
+			<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+				<span class="k">pass</span>
+
+		<span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">fc</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">runnable_status</span><span class="p">()</span>
+</div></div>
+<div class="viewcode-block" id="fcprogram"><a class="viewcode-back" href="../../../tools/fc.html#waflib.Tools.fc.fcprogram">[docs]</a><span class="k">class</span> <span class="nc">fcprogram</span><span class="p">(</span><span class="n">ccroot</span><span class="o">.</span><span class="n">link_task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Link fortran programs&quot;&quot;&quot;</span>
+	<span class="n">color</span> <span class="o">=</span> <span class="s">&#39;YELLOW&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${FC} ${FCLNK_SRC_F}${SRC} ${FCLNK_TGT_F}${TGT} ${FCSTLIB_MARKER} ${FCSTLIBPATH_ST:STLIBPATH} ${FCSTLIB_ST:STLIB} ${FCSHLIB_MARKER} ${FCLIBPATH_ST:LIBPATH} ${FCLIB_ST:LIB} ${LINKFLAGS}&#39;</span>
+	<span class="n">inst_to</span> <span class="o">=</span> <span class="s">&#39;${BINDIR}&#39;</span>
+</div>
+<div class="viewcode-block" id="fcshlib"><a class="viewcode-back" href="../../../tools/fc.html#waflib.Tools.fc.fcshlib">[docs]</a><span class="k">class</span> <span class="nc">fcshlib</span><span class="p">(</span><span class="n">fcprogram</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Link fortran libraries&quot;&quot;&quot;</span>
+	<span class="n">inst_to</span> <span class="o">=</span> <span class="s">&#39;${LIBDIR}&#39;</span>
+</div>
+<div class="viewcode-block" id="fcprogram_test"><a class="viewcode-back" href="../../../tools/fc.html#waflib.Tools.fc.fcprogram_test">[docs]</a><span class="k">class</span> <span class="nc">fcprogram_test</span><span class="p">(</span><span class="n">fcprogram</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Custom link task to obtain the compiler outputs for fortran configuration tests&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="fcprogram_test.runnable_status"><a class="viewcode-back" href="../../../tools/fc.html#waflib.Tools.fc.fcprogram_test.runnable_status">[docs]</a>	<span class="k">def</span> <span class="nf">runnable_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;This task is always executed&quot;&quot;&quot;</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">fcprogram_test</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">runnable_status</span><span class="p">()</span>
+		<span class="k">if</span> <span class="n">ret</span> <span class="o">==</span> <span class="n">Task</span><span class="o">.</span><span class="n">SKIP_ME</span><span class="p">:</span>
+			<span class="n">ret</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">RUN_ME</span>
+		<span class="k">return</span> <span class="n">ret</span>
+</div>
+<div class="viewcode-block" id="fcprogram_test.exec_command"><a class="viewcode-back" href="../../../tools/fc.html#waflib.Tools.fc.fcprogram_test.exec_command">[docs]</a>	<span class="k">def</span> <span class="nf">exec_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Store the compiler std our/err onto the build context, to bld.out + bld.err&quot;&quot;&quot;</span>
+		<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span>
+
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;shell&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;stdout&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kw</span><span class="p">[</span><span class="s">&#39;stderr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;cwd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">variant_dir</span>
+		<span class="n">bld</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">err</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+		<span class="n">bld</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&#39;command: </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">cmd</span><span class="p">)</span>
+
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;output&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="p">(</span><span class="n">bld</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="n">bld</span><span class="o">.</span><span class="n">err</span><span class="p">)</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+			<span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+		<span class="k">if</span> <span class="n">bld</span><span class="o">.</span><span class="n">out</span><span class="p">:</span>
+			<span class="n">bld</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&quot;out: </span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">bld</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">bld</span><span class="o">.</span><span class="n">err</span><span class="p">:</span>
+			<span class="n">bld</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&quot;err: </span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">bld</span><span class="o">.</span><span class="n">err</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="fcstlib"><a class="viewcode-back" href="../../../tools/fc.html#waflib.Tools.fc.fcstlib">[docs]</a><span class="k">class</span> <span class="nc">fcstlib</span><span class="p">(</span><span class="n">ccroot</span><span class="o">.</span><span class="n">stlink_task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Link fortran static libraries (uses ar by default)&quot;&quot;&quot;</span>
+	<span class="k">pass</span> <span class="c"># do not remove the pass statement</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

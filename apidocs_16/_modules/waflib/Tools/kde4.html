@@ -1,0 +1,201 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.kde4 &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.kde4</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2006-2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Support for the KDE4 libraries and msgfmt</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">TaskGen</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Utils</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;msgfmt&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="apply_msgfmt"><a class="viewcode-back" href="../../../tools/kde4.html#waflib.Tools.kde4.apply_msgfmt">[docs]</a><span class="k">def</span> <span class="nf">apply_msgfmt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process all languages to create .mo files and to install them::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld(features=&#39;msgfmt&#39;, langs=&#39;es de fr&#39;, appname=&#39;myapp&#39;, install_path=&#39;${KDE4_LOCALE_INSTALL_DIR}&#39;)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">langs</span><span class="p">):</span>
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">lang</span><span class="o">+</span><span class="s">&#39;.po&#39;</span><span class="p">)</span>
+		<span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;msgfmt&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.mo&#39;</span><span class="p">))</span>
+
+		<span class="n">langname</span> <span class="o">=</span> <span class="n">lang</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+		<span class="n">langname</span> <span class="o">=</span> <span class="n">langname</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+		<span class="n">inst</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;install_path&#39;</span><span class="p">,</span> <span class="s">&#39;${KDE4_LOCALE_INSTALL_DIR}&#39;</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_as</span><span class="p">(</span>
+			<span class="n">inst</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">langname</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="s">&#39;LC_MESSAGES&#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;appname&#39;</span><span class="p">,</span> <span class="s">&#39;set_your_appname&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;.mo&#39;</span><span class="p">,</span>
+			<span class="n">task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+			<span class="n">chmod</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;chmod&#39;</span><span class="p">,</span> <span class="n">Utils</span><span class="o">.</span><span class="n">O644</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="msgfmt"><a class="viewcode-back" href="../../../tools/kde4.html#waflib.Tools.kde4.msgfmt">[docs]</a><span class="k">class</span> <span class="nc">msgfmt</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Transform .po files into .mo files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${MSGFMT} ${SRC} -o ${TGT}&#39;</span>
+</div>
+<div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/kde4.html#waflib.Tools.kde4.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Detect kde4-config and set various variables for the *use* system::</span>
+
+<span class="sd">		def options(opt):</span>
+<span class="sd">			opt.load(&#39;compiler_cxx kde4&#39;)</span>
+<span class="sd">		def configure(conf):</span>
+<span class="sd">			conf.load(&#39;compiler_cxx kde4&#39;)</span>
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.program(source=&#39;main.c&#39;, target=&#39;app&#39;, use=&#39;KDECORE KIO KHTML&#39;)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">kdeconfig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;kde4-config&#39;</span><span class="p">)</span>
+	<span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> --prefix&#39;</span> <span class="o">%</span> <span class="n">kdeconfig</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+	<span class="n">fname</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/share/apps/cmake/modules/KDELibsDependencies.cmake&#39;</span> <span class="o">%</span> <span class="n">prefix</span>
+	<span class="k">try</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+	<span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+		<span class="n">fname</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/share/kde4/apps/cmake/modules/KDELibsDependencies.cmake&#39;</span> <span class="o">%</span> <span class="n">prefix</span>
+		<span class="k">try</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not open </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">txt</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">readf</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not read </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span>
+
+	<span class="n">txt</span> <span class="o">=</span> <span class="n">txt</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\\\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+	<span class="n">fu</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;#(.*)</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+	<span class="n">txt</span> <span class="o">=</span> <span class="n">fu</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
+
+	<span class="n">setregexp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;([sS][eE][tT]\s*\()\s*([^\s]+)\s+</span><span class="se">\&quot;</span><span class="s">([^&quot;]+)</span><span class="se">\&quot;</span><span class="s">\)&#39;</span><span class="p">)</span>
+	<span class="n">found</span> <span class="o">=</span> <span class="n">setregexp</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+
+	<span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
+		<span class="c">#print key, val</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+	<span class="c"># well well, i could just write an interpreter for cmake files</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;LIB_KDECORE&#39;</span><span class="p">]</span><span class="o">=</span> <span class="p">[</span><span class="s">&#39;kdecore&#39;</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;LIB_KDEUI&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;kdeui&#39;</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;LIB_KIO&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="p">[</span><span class="s">&#39;kio&#39;</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;LIB_KHTML&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;khtml&#39;</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;LIB_KPARTS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;kparts&#39;</span><span class="p">]</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;LIBPATH_KDECORE&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;KDE4_LIB_INSTALL_DIR&#39;</span><span class="p">]]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;INCLUDES_KDECORE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;KDE4_INCLUDE_INSTALL_DIR&#39;</span><span class="p">]]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;INCLUDES_KDECORE&#39;</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;KDE4_INCLUDE_INSTALL_DIR&#39;</span><span class="p">]</span><span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="s">&#39;KDE&#39;</span><span class="p">])</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;msgfmt&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;MSGFMT&#39;</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

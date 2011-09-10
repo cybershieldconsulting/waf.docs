@@ -1,0 +1,301 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>asm &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="up" title="Waf Tools" href="../tools.html" />
+    <link rel="next" title="compiler_d" href="compiler_d.html" />
+    <link rel="prev" title="nasm" href="nasm.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="compiler_d.html" title="compiler_d"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nasm.html" title="nasm"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Tools.asm">
+<span id="asm"></span><h1>asm<a class="headerlink" href="#module-waflib.Tools.asm" title="Permalink to this headline">¶</a></h1>
+<p>Assembly support, used by tools such as gas and nasm</p>
+<p>To declare targets using assembly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;gcc gas&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span>
+                <span class="n">features</span><span class="o">=</span><span class="s">&#39;c cstlib asm&#39;</span><span class="p">,</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="s">&#39;test.S&#39;</span><span class="p">,</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="s">&#39;asmtest&#39;</span><span class="p">)</span>
+
+        <span class="n">bld</span><span class="p">(</span>
+                <span class="n">features</span><span class="o">=</span><span class="s">&#39;asm asmprogram&#39;</span><span class="p">,</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="s">&#39;test.S&#39;</span><span class="p">,</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="s">&#39;asmtest&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Support for pure asm programs and libraries should also work:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;nasm&#39;</span><span class="p">)</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;ld&#39;</span><span class="p">,</span> <span class="s">&#39;ASLINK&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span>
+                <span class="n">features</span><span class="o">=</span><span class="s">&#39;asm asmprogram&#39;</span><span class="p">,</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="s">&#39;test.S&#39;</span><span class="p">,</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="s">&#39;asmtest&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="waflib.Tools.asm.asm">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.asm.</tt><tt class="descname">asm</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/asm.html#asm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.asm.asm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
+<p>Compile asm files by gas/nasm/yasm/...</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.asm.asm_hook">
+<tt class="descclassname">waflib.Tools.asm.</tt><tt class="descname">asm_hook</tt><big>(</big><em>self</em>, <em>node</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/asm.html#asm_hook"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.asm.asm_hook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bind the asm extension to the asm task</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>node</strong> (<a class="reference internal" href="../Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a>) &#8211; input file</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.asm.asmprogram">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.asm.</tt><tt class="descname">asmprogram</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/asm.html#asmprogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.asm.asmprogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ccroot.html#waflib.Tools.ccroot.link_task" title="waflib.Tools.ccroot.link_task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.ccroot.link_task</span></tt></a></p>
+<p>Link object files into a c program</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.asm.asmshlib">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.asm.</tt><tt class="descname">asmshlib</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/asm.html#asmshlib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.asm.asmshlib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#waflib.Tools.asm.asmprogram" title="waflib.Tools.asm.asmprogram"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.asm.asmprogram</span></tt></a></p>
+<p>Link object files into a c shared library</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.asm.asmstlib">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.asm.</tt><tt class="descname">asmstlib</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/asm.html#asmstlib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.asm.asmstlib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ccroot.html#waflib.Tools.ccroot.stlink_task" title="waflib.Tools.ccroot.stlink_task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.ccroot.stlink_task</span></tt></a></p>
+<p>Link object files into a c static library</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.asm.extension">
+<tt class="descclassname">waflib.Tools.asm.</tt><tt class="descname">extension</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.asm.extension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method which will be invoked during
+the processing of source files for the extension given:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span>
+<span class="k">class</span> <span class="nc">mytask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+        <span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;cp ${SRC} ${TGT}&#39;</span>
+<span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.moo&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">create_maa_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;mytask&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.maa&#39;</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;foo.moo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.asm.feature">
+<tt class="descclassname">waflib.Tools.asm.</tt><tt class="descname">feature</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.asm.feature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method that will be executed when the
+object attribute &#8216;feature&#8217; contains the corresponding key(s):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.Task</span> <span class="kn">import</span> <span class="n">feature</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">myfunction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;that is my feature!&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>k</strong> (<em>list of string</em>) &#8211; feature names</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.asm.stlink_task">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.asm.</tt><tt class="descname">stlink_task</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.asm.stlink_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ccroot.html#waflib.Tools.ccroot.link_task" title="waflib.Tools.ccroot.link_task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.ccroot.link_task</span></tt></a></p>
+<p>Base for static link tasks, which use <em>ar</em> most of the time.
+The target is always removed before being written.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.asm.link_task">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.asm.</tt><tt class="descname">link_task</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.asm.link_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
+<p>Base class for all link tasks. A task generator is supposed to have at most one link task bound in the attribute <em>link_task</em>. See <a class="reference internal" href="ccroot.html#waflib.Tools.ccroot.apply_link" title="waflib.Tools.ccroot.apply_link"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Tools.ccroot.apply_link()</span></tt></a>.</p>
+<p class="graphviz">
+<img src="../_images/inheritance-1c95574a48e0bc7ee14399eb2e24190fe94292a4.png" alt="Inheritance diagram of waflib.Tools.ccroot.stlink_task, waflib.Tools.c.cprogram, waflib.Tools.c.cshlib, waflib.Tools.cxx.cxxstlib, waflib.Tools.cxx.cxxprogram, waflib.Tools.cxx.cxxshlib, waflib.Tools.d.dprogram, waflib.Tools.d.dshlib, waflib.Tools.d.dstlib, waflib.Tools.ccroot.fake_shlib, waflib.Tools.ccroot.fake_stlib, waflib.Tools.asm.asmprogram, waflib.Tools.asm.asmshlib, waflib.Tools.asm.asmstlib" usemap="#inheritance733d6de23e" class="inheritance"/>
+<map id="inheritance733d6de23e" name="inheritance733d6de23e">
+<area shape="rect" id="node1" href="ccroot.html#waflib.Tools.ccroot.stlink_task" title="waflib.Tools.ccroot.stlink_task" alt="" coords="487,69,613,87"/>
+<area shape="rect" id="node7" href="d.html#waflib.Tools.d.dstlib" title="waflib.Tools.d.dstlib" alt="" coords="661,3,747,21"/>
+<area shape="rect" id="node9" href="#waflib.Tools.asm.asmstlib" title="waflib.Tools.asm.asmstlib" alt="" coords="649,36,759,54"/>
+<area shape="rect" id="node20" href="ccroot.html#waflib.Tools.ccroot.fake_stlib" title="waflib.Tools.ccroot.fake_stlib" alt="" coords="644,69,765,87"/>
+<area shape="rect" id="node25" href="cxx.html#waflib.Tools.cxx.cxxstlib" title="waflib.Tools.cxx.cxxstlib" alt="" coords="652,101,757,120"/>
+<area shape="rect" id="node2" href="ccroot.html#waflib.Tools.ccroot.link_task" title="waflib.Tools.ccroot.link_task" alt="" coords="337,183,456,201"/>
+<area shape="rect" id="node13" href="cxx.html#waflib.Tools.cxx.cxxprogram" title="waflib.Tools.cxx.cxxprogram" alt="" coords="490,134,609,152"/>
+<area shape="rect" id="node16" href="d.html#waflib.Tools.d.dprogram" title="waflib.Tools.d.dprogram" alt="" coords="499,167,601,185"/>
+<area shape="rect" id="node22" href="ccroot.html#waflib.Tools.ccroot.fake_shlib" title="waflib.Tools.ccroot.fake_shlib" alt="" coords="488,200,611,218"/>
+<area shape="rect" id="node28" href="c.html#waflib.Tools.c.cprogram" title="waflib.Tools.c.cprogram" alt="" coords="499,233,601,251"/>
+<area shape="rect" id="node31" href="#waflib.Tools.asm.asmprogram" title="waflib.Tools.asm.asmprogram" alt="" coords="488,265,612,283"/>
+<area shape="rect" id="node4" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task" alt="" coords="230,183,305,201"/>
+<area shape="rect" id="node5" href="../Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase" alt="" coords="104,183,198,201"/>
+<area shape="rect" id="node11" href="../Task.html#waflib.Task.evil" title="waflib.Task.evil" alt="" coords="3,183,72,201"/>
+<area shape="rect" id="node12" href="cxx.html#waflib.Tools.cxx.cxxshlib" title="waflib.Tools.cxx.cxxshlib" alt="" coords="651,134,758,152"/>
+<area shape="rect" id="node15" href="d.html#waflib.Tools.d.dshlib" title="waflib.Tools.d.dshlib" alt="" coords="660,167,748,185"/>
+<area shape="rect" id="node27" href="c.html#waflib.Tools.c.cshlib" title="waflib.Tools.c.cshlib" alt="" coords="660,233,748,251"/>
+<area shape="rect" id="node30" href="#waflib.Tools.asm.asmshlib" title="waflib.Tools.asm.asmshlib" alt="" coords="648,265,760,283"/>
+</map>
+</p>
+<dl class="method">
+<dt id="waflib.Tools.asm.link_task.add_target">
+<tt class="descname">add_target</tt><big>(</big><em>target</em><big>)</big><a class="headerlink" href="#waflib.Tools.asm.link_task.add_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process the <em>target</em> attribute to add the platform-specific prefix/suffix such as <em>.so</em> or <em>.exe</em>.
+The settings are retrieved from <tt class="docutils literal"><span class="pre">env.clsname_PATTERN</span></tt></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="nasm.html"
+                        title="previous chapter">nasm</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="compiler_d.html"
+                        title="next chapter">compiler_d</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tools/asm.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="compiler_d.html" title="compiler_d"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nasm.html" title="nasm"
+             >previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

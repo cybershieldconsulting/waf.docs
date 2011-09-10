@@ -1,0 +1,402 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Runner &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="index.html" />
+    <link rel="next" title="Scripting" href="Scripting.html" />
+    <link rel="prev" title="Options" href="Options.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Scripting.html" title="Scripting"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Options.html" title="Options"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Runner">
+<span id="runner"></span><h1>Runner<a class="headerlink" href="#module-waflib.Runner" title="Permalink to this headline">¶</a></h1>
+<p>Runner.py: Task scheduling and execution</p>
+<dl class="data">
+<dt id="waflib.Runner.GAP">
+<tt class="descclassname">waflib.Runner.</tt><tt class="descname">GAP</tt><a class="headerlink" href="#waflib.Runner.GAP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wait for free tasks if there are at least <tt class="docutils literal"><span class="pre">GAP</span> <span class="pre">*</span> <span class="pre">njobs</span></tt> in queue</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Runner.TaskConsumer">
+<em class="property">class </em><tt class="descclassname">waflib.Runner.</tt><tt class="descname">TaskConsumer</tt><a class="reference internal" href="_modules/waflib/Runner.html#TaskConsumer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.TaskConsumer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></tt></p>
+<p>Task consumers belong to a pool of workers</p>
+<p>They wait for tasks in the queue and then use <tt class="docutils literal"><span class="pre">task.process(...)</span></tt></p>
+<dl class="attribute">
+<dt id="waflib.Runner.TaskConsumer.ready">
+<tt class="descname">ready</tt><a class="headerlink" href="#waflib.Runner.TaskConsumer.ready" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain <a class="reference internal" href="Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a> instances from this queue.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Runner.TaskConsumer.run">
+<tt class="descname">run</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Runner.html#TaskConsumer.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.TaskConsumer.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loop over the tasks to execute</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Runner.TaskConsumer.loop">
+<tt class="descname">loop</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Runner.html#TaskConsumer.loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.TaskConsumer.loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain tasks from <a class="reference internal" href="#waflib.Runner.TaskConsumer.ready" title="waflib.Runner.TaskConsumer.ready"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Runner.TaskConsumer.ready</span></tt></a> and call
+<a class="reference internal" href="Task.html#waflib.Task.TaskBase.process" title="waflib.Task.TaskBase.process"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.TaskBase.process()</span></tt></a>. If the object is a function, execute it.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Runner.pool">
+<tt class="descclassname">waflib.Runner.</tt><tt class="descname">pool</tt><a class="headerlink" href="#waflib.Runner.pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pool of task consumer objects</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Runner.get_pool">
+<tt class="descclassname">waflib.Runner.</tt><tt class="descname">get_pool</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Runner.html#get_pool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.get_pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain a task consumer from <a class="reference internal" href="#waflib.Runner.pool" title="waflib.Runner.pool"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Runner.pool</span></tt></a>.
+Do not forget to put it back by using <a class="reference internal" href="#waflib.Runner.put_pool" title="waflib.Runner.put_pool"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Runner.put_pool()</span></tt></a>
+and reset properly (original waiting queue).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#waflib.Runner.TaskConsumer" title="waflib.Runner.TaskConsumer"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Runner.TaskConsumer</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Runner.put_pool">
+<tt class="descclassname">waflib.Runner.</tt><tt class="descname">put_pool</tt><big>(</big><em>x</em><big>)</big><a class="reference internal" href="_modules/waflib/Runner.html#put_pool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.put_pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a task consumer to the thread pool <a class="reference internal" href="#waflib.Runner.pool" title="waflib.Runner.pool"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Runner.pool</span></tt></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>x</strong> (<a class="reference internal" href="#waflib.Runner.TaskConsumer" title="waflib.Runner.TaskConsumer"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Runner.TaskConsumer</span></tt></a>) &#8211; task consumer object</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Runner.Parallel">
+<em class="property">class </em><tt class="descclassname">waflib.Runner.</tt><tt class="descname">Parallel</tt><big>(</big><em>bld</em>, <em>j=2</em><big>)</big><a class="reference internal" href="_modules/waflib/Runner.html#Parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.Parallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Schedule the tasks obtained from the build context for execution.</p>
+<dl class="method">
+<dt id="waflib.Runner.Parallel.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>bld</em>, <em>j=2</em><big>)</big><a class="reference internal" href="_modules/waflib/Runner.html#Parallel.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.Parallel.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The initialization requires a build context reference
+for computing the total number of jobs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Runner.Parallel.numjobs">
+<tt class="descname">numjobs</tt><a class="headerlink" href="#waflib.Runner.Parallel.numjobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of consumers in the pool</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Runner.Parallel.bld">
+<tt class="descname">bld</tt><a class="headerlink" href="#waflib.Runner.Parallel.bld" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instance of <a class="reference internal" href="Build.html#waflib.Build.BuildContext" title="waflib.Build.BuildContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Build.BuildContext</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Runner.Parallel.outstanding">
+<tt class="descname">outstanding</tt><a class="headerlink" href="#waflib.Runner.Parallel.outstanding" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of <a class="reference internal" href="Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a> that may be ready to be executed</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Runner.Parallel.frozen">
+<tt class="descname">frozen</tt><a class="headerlink" href="#waflib.Runner.Parallel.frozen" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of <a class="reference internal" href="Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a> that cannot be executed immediately</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Runner.Parallel.out">
+<tt class="descname">out</tt><a class="headerlink" href="#waflib.Runner.Parallel.out" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of <a class="reference internal" href="Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a> returned by the task consumers</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Runner.Parallel.count">
+<tt class="descname">count</tt><a class="headerlink" href="#waflib.Runner.Parallel.count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Amount of tasks that may be processed by <a class="reference internal" href="#waflib.Runner.TaskConsumer" title="waflib.Runner.TaskConsumer"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Runner.TaskConsumer</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Runner.Parallel.processed">
+<tt class="descname">processed</tt><a class="headerlink" href="#waflib.Runner.Parallel.processed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Amount of tasks processed</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Runner.Parallel.stop">
+<tt class="descname">stop</tt><a class="headerlink" href="#waflib.Runner.Parallel.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Error flag to stop the build</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Runner.Parallel.error">
+<tt class="descname">error</tt><a class="headerlink" href="#waflib.Runner.Parallel.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tasks that could not be executed</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Runner.Parallel.biter">
+<tt class="descname">biter</tt><a class="headerlink" href="#waflib.Runner.Parallel.biter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Task iterator which must give groups of parallelizable tasks when calling <tt class="docutils literal"><span class="pre">next()</span></tt></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Runner.Parallel.dirty">
+<tt class="descname">dirty</tt><a class="headerlink" href="#waflib.Runner.Parallel.dirty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag to indicate that tasks have been executed, and that the build cache must be saved (call <a class="reference internal" href="Build.html#waflib.Build.BuildContext.store" title="waflib.Build.BuildContext.store"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Build.BuildContext.store()</span></tt></a>)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Runner.Parallel.get_next_task">
+<tt class="descname">get_next_task</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Runner.html#Parallel.get_next_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.Parallel.get_next_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain the next task to execute.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Runner.Parallel.postpone">
+<tt class="descname">postpone</tt><big>(</big><em>tsk</em><big>)</big><a class="reference internal" href="_modules/waflib/Runner.html#Parallel.postpone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.Parallel.postpone" title="Permalink to this definition">¶</a></dt>
+<dd><p>A task cannot be executed at this point, put it in the list <a class="reference internal" href="#waflib.Runner.Parallel.frozen" title="waflib.Runner.Parallel.frozen"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Runner.Parallel.frozen</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tsk</strong> (<a class="reference internal" href="Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a>) &#8211; task</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Runner.Parallel.refill_task_list">
+<tt class="descname">refill_task_list</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Runner.html#Parallel.refill_task_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.Parallel.refill_task_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put the next group of tasks to execute in <a class="reference internal" href="#waflib.Runner.Parallel.outstanding" title="waflib.Runner.Parallel.outstanding"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Runner.Parallel.outstanding</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Runner.Parallel.add_more_tasks">
+<tt class="descname">add_more_tasks</tt><big>(</big><em>tsk</em><big>)</big><a class="reference internal" href="_modules/waflib/Runner.html#Parallel.add_more_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.Parallel.add_more_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tasks may be added dynamically during the build by binding them to the task <tt class="xref py py-attr docutils literal"><span class="pre">waflib.Task.TaskBase.more_tasks</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tsk</strong> (<a class="reference internal" href="Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a>) &#8211; task</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Runner.Parallel.get_out">
+<tt class="descname">get_out</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Runner.html#Parallel.get_out"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.Parallel.get_out" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain one task returned from the task consumers, and update the task count. Add more tasks if necessary through
+<a class="reference internal" href="#waflib.Runner.Parallel.add_more_tasks" title="waflib.Runner.Parallel.add_more_tasks"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Runner.Parallel.add_more_tasks</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Runner.Parallel.error_handler">
+<tt class="descname">error_handler</tt><big>(</big><em>tsk</em><big>)</big><a class="reference internal" href="_modules/waflib/Runner.html#Parallel.error_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.Parallel.error_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a task cannot be executed. The flag <a class="reference internal" href="#waflib.Runner.Parallel.stop" title="waflib.Runner.Parallel.stop"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Runner.Parallel.stop</span></tt></a> is set, unless
+the build is executed with:</p>
+<div class="highlight-python"><pre>$ waf build -k</pre>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tsk</strong> (<a class="reference internal" href="Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a>) &#8211; task</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Runner.Parallel.add_task">
+<tt class="descname">add_task</tt><big>(</big><em>tsk</em><big>)</big><a class="reference internal" href="_modules/waflib/Runner.html#Parallel.add_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.Parallel.add_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pass a task to a consumer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tsk</strong> (<a class="reference internal" href="Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a>) &#8211; task</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Runner.Parallel.start">
+<tt class="descname">start</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Runner.html#Parallel.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Runner.Parallel.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give tasks to <a class="reference internal" href="#waflib.Runner.TaskConsumer" title="waflib.Runner.TaskConsumer"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Runner.TaskConsumer</span></tt></a> instances until the build finishes or the <tt class="docutils literal"><span class="pre">stop</span></tt> flag is set.
+If only one job is used, then execute the tasks one by one, without consumers.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Options.html"
+                        title="previous chapter">Options</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Scripting.html"
+                        title="next chapter">Scripting</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/Runner.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Scripting.html" title="Scripting"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Options.html" title="Options"
+             >previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,262 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.ruby &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.ruby</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># daniel.svensson at purplescout.se 2008</span>
+<span class="c"># Thomas Nagy 2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Support for Ruby extensions. A C/C++ compiler is required::</span>
+
+<span class="sd">	def options(opt):</span>
+<span class="sd">		opt.load(&#39;compiler_c ruby&#39;)</span>
+<span class="sd">	def configure(conf):</span>
+<span class="sd">		conf.load(&#39;compiler_c ruby&#39;)</span>
+<span class="sd">		conf.check_ruby_version((1,8,0))</span>
+<span class="sd">		conf.check_ruby_ext_devel()</span>
+<span class="sd">	def build(bld):</span>
+<span class="sd">		bld(</span>
+<span class="sd">			features = &#39;c cshlib rubyext&#39;,</span>
+<span class="sd">			source = &#39;rb_mytest.c&#39;,</span>
+<span class="sd">			target = &#39;mytest_ext&#39;,</span>
+<span class="sd">			install_path = &#39;${ARCHDIR_RUBY}&#39;)</span>
+<span class="sd">		bld.install_files(&#39;${LIBDIR_RUBY}&#39;, &#39;Mytest.rb&#39;)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Utils</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">before</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after</span>
+<span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;rubyext&#39;</span><span class="p">)</span>
+<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;apply_incpaths&#39;</span><span class="p">,</span> <span class="s">&#39;apply_lib_vars&#39;</span><span class="p">,</span> <span class="s">&#39;apply_bundle&#39;</span><span class="p">,</span> <span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="init_rubyext"><a class="viewcode-back" href="../../../tools/ruby.html#waflib.Tools.ruby.init_rubyext">[docs]</a><span class="k">def</span> <span class="nf">init_rubyext</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Add required variables for ruby extensions</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">install_path</span> <span class="o">=</span> <span class="s">&#39;${ARCHDIR_RUBY}&#39;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;uselib&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">))</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;RUBY&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;RUBY&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;RUBYEXT&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;RUBYEXT&#39;</span><span class="p">)</span>
+</div>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;rubyext&#39;</span><span class="p">)</span>
+<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">,</span> <span class="s">&#39;propagate_uselib&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="apply_ruby_so_name"><a class="viewcode-back" href="../../../tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name">[docs]</a><span class="k">def</span> <span class="nf">apply_ruby_so_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Strip the *lib* prefix from ruby extensions</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;cshlib_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;cxxshlib_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;rubyext_PATTERN&#39;</span><span class="p">]</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_ruby_version"><a class="viewcode-back" href="../../../tools/ruby.html#waflib.Tools.ruby.check_ruby_version">[docs]</a><span class="k">def</span> <span class="nf">check_ruby_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minver</span><span class="o">=</span><span class="p">()):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Checks if ruby is installed.</span>
+<span class="sd">	If installed the variable RUBY will be set in environment.</span>
+<span class="sd">	The ruby binary can be overridden by ``--with-ruby-binary`` command-line option.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">if</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">rubybinary</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">RUBY</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">rubybinary</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;ruby&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;RUBY&#39;</span><span class="p">)</span>
+
+	<span class="n">ruby</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">RUBY</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">ruby</span><span class="p">,</span> <span class="s">&#39;-e&#39;</span><span class="p">,</span> <span class="s">&#39;puts defined?(VERSION) ? VERSION : RUBY_VERSION&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+	<span class="k">except</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not determine ruby version&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">RUBY_VERSION</span> <span class="o">=</span> <span class="n">version</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">ver</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)))</span>
+	<span class="k">except</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;unsupported ruby version </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">version</span><span class="p">)</span>
+
+	<span class="n">cver</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="k">if</span> <span class="n">minver</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">ver</span> <span class="o">&lt;</span> <span class="n">minver</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;ruby is too old </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">ver</span><span class="p">)</span>
+		<span class="n">cver</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">minver</span><span class="p">])</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;ruby&#39;</span><span class="p">,</span> <span class="n">cver</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_ruby_ext_devel"><a class="viewcode-back" href="../../../tools/ruby.html#waflib.Tools.ruby.check_ruby_ext_devel">[docs]</a><span class="k">def</span> <span class="nf">check_ruby_ext_devel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Check if a ruby extension can be created</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">RUBY</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;ruby detection is required first&#39;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CC_NAME</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CXX_NAME</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;load a c/c++ compiler first&#39;</span><span class="p">)</span>
+
+	<span class="n">version</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">RUBY_VERSION</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)))</span>
+
+	<span class="k">def</span> <span class="nf">read_out</span><span class="p">(</span><span class="n">cmd</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">RUBY</span><span class="p">,</span> <span class="s">&#39;-rrbconfig&#39;</span><span class="p">,</span> <span class="s">&#39;-e&#39;</span><span class="p">,</span> <span class="n">cmd</span><span class="p">]))</span>
+
+	<span class="k">def</span> <span class="nf">read_config</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">read_out</span><span class="p">(</span><span class="s">&#39;puts Config::CONFIG[</span><span class="si">%r</span><span class="s">]&#39;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
+
+	<span class="n">ruby</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;RUBY&#39;</span><span class="p">]</span>
+	<span class="n">archdir</span> <span class="o">=</span> <span class="n">read_config</span><span class="p">(</span><span class="s">&#39;archdir&#39;</span><span class="p">)</span>
+	<span class="n">cpppath</span> <span class="o">=</span> <span class="n">archdir</span>
+
+	<span class="k">if</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+		<span class="n">ruby_hdrdir</span> <span class="o">=</span> <span class="n">read_config</span><span class="p">(</span><span class="s">&#39;rubyhdrdir&#39;</span><span class="p">)</span>
+		<span class="n">cpppath</span> <span class="o">+=</span> <span class="n">ruby_hdrdir</span>
+		<span class="n">cpppath</span> <span class="o">+=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ruby_hdrdir</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">read_config</span><span class="p">(</span><span class="s">&#39;arch&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])]</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">header_name</span><span class="o">=</span><span class="s">&#39;ruby.h&#39;</span><span class="p">,</span> <span class="n">includes</span><span class="o">=</span><span class="n">cpppath</span><span class="p">,</span> <span class="n">errmsg</span><span class="o">=</span><span class="s">&#39;could not find ruby header file&#39;</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LIBPATH_RUBYEXT</span> <span class="o">=</span> <span class="n">read_config</span><span class="p">(</span><span class="s">&#39;libdir&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LIBPATH_RUBYEXT</span> <span class="o">+=</span> <span class="n">archdir</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">INCLUDES_RUBYEXT</span> <span class="o">=</span> <span class="n">cpppath</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CFLAGS_RUBYEXT</span> <span class="o">=</span> <span class="n">read_config</span><span class="p">(</span><span class="s">&#39;CCDLFLAGS&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">rubyext_PATTERN</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">+</span> <span class="n">read_config</span><span class="p">(</span><span class="s">&#39;DLEXT&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+	<span class="c"># ok this is really stupid, but the command and flags are combined.</span>
+	<span class="c"># so we try to find the first argument...</span>
+	<span class="n">flags</span> <span class="o">=</span> <span class="n">read_config</span><span class="p">(</span><span class="s">&#39;LDSHARED&#39;</span><span class="p">)</span>
+	<span class="k">while</span> <span class="n">flags</span> <span class="ow">and</span> <span class="n">flags</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;-&#39;</span><span class="p">:</span>
+		<span class="n">flags</span> <span class="o">=</span> <span class="n">flags</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+	<span class="c"># we also want to strip out the deprecated ppc flags</span>
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">flags</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot;ppc&quot;</span><span class="p">:</span>
+		<span class="n">flags</span> <span class="o">=</span> <span class="n">flags</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LINKFLAGS_RUBYEXT</span> <span class="o">=</span> <span class="n">flags</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LINKFLAGS_RUBYEXT</span> <span class="o">+=</span> <span class="n">read_config</span><span class="p">(</span><span class="s">&#39;LIBS&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LINKFLAGS_RUBYEXT</span> <span class="o">+=</span> <span class="n">read_config</span><span class="p">(</span><span class="s">&#39;LIBRUBYARG_SHARED&#39;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">rubyarchdir</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">ARCHDIR_RUBY</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">rubyarchdir</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">ARCHDIR_RUBY</span> <span class="o">=</span> <span class="n">read_config</span><span class="p">(</span><span class="s">&#39;sitearchdir&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+	<span class="k">if</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">rubylibdir</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LIBDIR_RUBY</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">rubylibdir</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LIBDIR_RUBY</span> <span class="o">=</span> <span class="n">read_config</span><span class="p">(</span><span class="s">&#39;sitelibdir&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="options"><a class="viewcode-back" href="../../../tools/ruby.html#waflib.Tools.ruby.options">[docs]</a><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Add the ``--with-ruby-archdir``, ``--with-ruby-libdir`` and ``--with-ruby-binary`` options</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--with-ruby-archdir&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&#39;string&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;rubyarchdir&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;Specify directory where to install arch specific files&#39;</span><span class="p">)</span>
+	<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--with-ruby-libdir&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&#39;string&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;rubylibdir&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;Specify alternate ruby library path&#39;</span><span class="p">)</span>
+	<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--with-ruby-binary&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&#39;string&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;rubybinary&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;Specify alternate ruby binary&#39;</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

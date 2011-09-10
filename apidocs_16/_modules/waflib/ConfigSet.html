@@ -1,0 +1,439 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.ConfigSet &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.ConfigSet</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2005-2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">ConfigSet: a special dict</span>
+
+<span class="sd">The values put in :py:class:`ConfigSet` must be lists</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">copy</span><span class="o">,</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Utils</span>
+<span class="n">re_imp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^(#)*?([^#=]*?)\ =\ (.*?)$&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ConfigSet"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet">[docs]</a><span class="k">class</span> <span class="nc">ConfigSet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	A dict that honor serialization and parent relationships. The serialization format</span>
+<span class="sd">	is human-readable (python-like) and performed by using eval() and repr().</span>
+<span class="sd">	For high performance prefer pickle. Do not store functions as they are not serializable.</span>
+
+<span class="sd">	The values can be accessed by attributes or by keys::</span>
+
+<span class="sd">		from waflib.ConfigSet import ConfigSet</span>
+<span class="sd">		env = ConfigSet()</span>
+<span class="sd">		env.FOO = &#39;test&#39;</span>
+<span class="sd">		env[&#39;FOO&#39;] = &#39;test&#39;</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;table&#39;</span><span class="p">,</span> <span class="s">&#39;parent&#39;</span><span class="p">)</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Internal dict holding the object values</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="c">#self.parent = None</span>
+
+		<span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ConfigSet.__contains__"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.__contains__">[docs]</a>	<span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Enable the *in* syntax::</span>
+
+<span class="sd">			if &#39;foo&#39; in env:</span>
+<span class="sd">				print env[&#39;foo&#39;]</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">:</span> <span class="k">return</span> <span class="bp">True</span>
+		<span class="k">try</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">__contains__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="k">return</span> <span class="bp">False</span> <span class="c"># parent may not exist</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.__str__"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.__str__">[docs]</a>	<span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Text representation of the ConfigSet (for debugging purposes)&quot;&quot;&quot;</span>
+		<span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+		<span class="n">cur</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="k">while</span> <span class="n">cur</span><span class="p">:</span>
+			<span class="n">keys</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cur</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+			<span class="n">cur</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s">&#39;parent&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+		<span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+		<span class="n">keys</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+		<span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&quot;</span><span class="si">%r</span><span class="s"> </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__getitem__</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.__getitem__"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.__getitem__">[docs]</a>	<span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Dictionary interface: get value from key::</span>
+
+<span class="sd">			def configure(conf):</span>
+<span class="sd">				conf.env[&#39;foo&#39;] = {}</span>
+<span class="sd">				print(env[&#39;foo&#39;])</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+				<span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="n">x</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+					<span class="k">return</span> <span class="n">x</span>
+				<span class="bp">self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="k">return</span> <span class="p">[]</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.__setitem__"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.__setitem__">[docs]</a>	<span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Dictionary interface: get value from key</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.__delitem__"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.__delitem__">[docs]</a>	<span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Dictionary interface: get value from key</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.__getattr__"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.__getattr__">[docs]</a>	<span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Attribute access provided for convenience. The following forms are equivalent::</span>
+
+<span class="sd">			def configure(conf):</span>
+<span class="sd">				conf.env.value</span>
+<span class="sd">				conf.env[&#39;value&#39;]</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__slots__</span><span class="p">:</span>
+			<span class="k">return</span> <span class="nb">object</span><span class="o">.</span><span class="n">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.__setattr__"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.__setattr__">[docs]</a>	<span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Attribute access provided for convenience. The following forms are equivalent::</span>
+
+<span class="sd">			def configure(conf):</span>
+<span class="sd">				conf.env.value = x</span>
+<span class="sd">				env[&#39;value&#39;] = x</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__slots__</span><span class="p">:</span>
+			<span class="nb">object</span><span class="o">.</span><span class="n">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.__delattr__"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.__delattr__">[docs]</a>	<span class="k">def</span> <span class="nf">__delattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Attribute access provided for convenience. The following forms are equivalent::</span>
+
+<span class="sd">			def configure(conf):</span>
+<span class="sd">				del env.value</span>
+<span class="sd">				del env[&#39;value&#39;]</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__slots__</span><span class="p">:</span>
+			<span class="nb">object</span><span class="o">.</span><span class="n">__delattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">del</span> <span class="bp">self</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.derive"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.derive">[docs]</a>	<span class="k">def</span> <span class="nf">derive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Returns a new ConfigSet deriving from self. The copy returned</span>
+<span class="sd">		will be a shallow copy::</span>
+
+<span class="sd">			from waflib.ConfigSet import ConfigSet</span>
+<span class="sd">			env = ConfigSet()</span>
+<span class="sd">			env.append_value(&#39;CFLAGS&#39;, [&#39;-O2&#39;])</span>
+<span class="sd">			child = env.derive()</span>
+<span class="sd">			child.CFLAGS.append(&#39;test&#39;) # warning! this will modify &#39;env&#39;</span>
+<span class="sd">			child.CFLAGS = [&#39;-O3&#39;] # new list, ok</span>
+<span class="sd">			child.append_value(&#39;CFLAGS&#39;, [&#39;-O3&#39;]) # ok</span>
+
+<span class="sd">		Use :py:func:`ConfigSet.detach` to detach the child from the parent.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">newenv</span> <span class="o">=</span> <span class="n">ConfigSet</span><span class="p">()</span>
+		<span class="n">newenv</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="k">return</span> <span class="n">newenv</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.detach"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.detach">[docs]</a>	<span class="k">def</span> <span class="nf">detach</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Detach self from its parent (if existing)</span>
+
+<span class="sd">		Modifying the parent :py:class:`ConfigSet` will not change the current object</span>
+<span class="sd">		Modifying this :py:class:`ConfigSet` will not modify the parent one.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">tbl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_merged_dict</span><span class="p">()</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;parent&#39;</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">keys</span> <span class="o">=</span> <span class="n">tbl</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+				<span class="n">tbl</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">tbl</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="n">tbl</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.get_flat"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.get_flat">[docs]</a>	<span class="k">def</span> <span class="nf">get_flat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a value as a string. If the input is a list, the value returned is space-separated.</span>
+
+<span class="sd">		:param key: key to use</span>
+<span class="sd">		:type key: string</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span> <span class="k">return</span> <span class="n">s</span>
+		<span class="k">return</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ConfigSet._get_list_value_for_modification"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet._get_list_value_for_modification">[docs]</a>	<span class="k">def</span> <span class="nf">_get_list_value_for_modification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return a list value for further modification.</span>
+
+<span class="sd">		The list may be modified inplace and there is no need to do this afterwards::</span>
+
+<span class="sd">			self.table[var] = value</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+			<span class="k">try</span><span class="p">:</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+			<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="n">value</span> <span class="o">=</span> <span class="p">[]</span>
+			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+				<span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[:]</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+				<span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+		<span class="k">return</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.append_value"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.append_value">[docs]</a>	<span class="k">def</span> <span class="nf">append_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Appends a value to the specified config key::</span>
+
+<span class="sd">			def build(bld):</span>
+<span class="sd">				bld.env.append_unique(&#39;CFLAGS&#39;, [&#39;-O2&#39;])</span>
+
+<span class="sd">		The value must be a list or a tuple</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">current_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list_value_for_modification</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span> <span class="c"># if there were string everywhere we could optimize this</span>
+			<span class="n">val</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span><span class="p">]</span>
+		<span class="n">current_value</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.prepend_value"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.prepend_value">[docs]</a>	<span class="k">def</span> <span class="nf">prepend_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Prepends a value to the specified item::</span>
+
+<span class="sd">			def configure(conf):</span>
+<span class="sd">				conf.env.prepend_value(&#39;CFLAGS&#39;, [&#39;-O2&#39;])</span>
+
+<span class="sd">		The value must be a list or a tuple</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="n">val</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span>  <span class="n">val</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list_value_for_modification</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.append_unique"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.append_unique">[docs]</a>	<span class="k">def</span> <span class="nf">append_unique</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Append a value to the specified item only if it&#39;s not already present::</span>
+
+<span class="sd">			def build(bld):</span>
+<span class="sd">				bld.env.append_value(&#39;CFLAGS&#39;, [&#39;-O2&#39;, &#39;-g&#39;])</span>
+
+<span class="sd">		Note that there is no prepend_unique</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="n">val</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span><span class="p">]</span>
+		<span class="n">current_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list_value_for_modification</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">val</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">current_value</span><span class="p">:</span>
+				<span class="n">current_value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.get_merged_dict"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.get_merged_dict">[docs]</a>	<span class="k">def</span> <span class="nf">get_merged_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Compute the merged dictionary from the fusion of self and all its parent</span>
+
+<span class="sd">		:rtype: a ConfigSet object</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">table_list</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+			<span class="n">table_list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">table</span><span class="p">)</span>
+			<span class="k">try</span><span class="p">:</span> <span class="n">env</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">parent</span>
+			<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="k">break</span>
+		<span class="n">merged_table</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">table_list</span><span class="p">:</span>
+			<span class="n">merged_table</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">merged_table</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.store"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.store">[docs]</a>	<span class="k">def</span> <span class="nf">store</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Write the :py:class:`ConfigSet` data into a file. See :py:meth:`ConfigSet.load` for reading such files.</span>
+
+<span class="sd">		:param filename: file to use</span>
+<span class="sd">		:type filename: string</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">f</span> <span class="o">=</span> <span class="bp">None</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+			<span class="n">merged_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_merged_dict</span><span class="p">()</span>
+			<span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">merged_table</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+			<span class="n">keys</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+			<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s">&#39;undo_stack&#39;</span><span class="p">:</span>
+					<span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> = </span><span class="si">%r</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">merged_table</span><span class="p">[</span><span class="n">k</span><span class="p">]))</span>
+		<span class="k">finally</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">f</span><span class="p">:</span>
+				<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.load"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.load">[docs]</a>	<span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Retrieve the :py:class:`ConfigSet` data from a file. See :py:meth:`ConfigSet.store` for writing such files</span>
+
+<span class="sd">		:param filename: file to use</span>
+<span class="sd">		:type filename: string</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">tbl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span>
+		<span class="n">code</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">readf</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">re_imp</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
+			<span class="n">g</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span>
+			<span class="n">tbl</span><span class="p">[</span><span class="n">g</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">g</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+		<span class="n">Logs</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;env: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.update"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.update">[docs]</a>	<span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Dictionary interface: replace values from another dict</span>
+
+<span class="sd">		:param d: object to use the value from</span>
+<span class="sd">		:type d: dict-like object</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+			<span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.stash"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.stash">[docs]</a>	<span class="k">def</span> <span class="nf">stash</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Store the object state, to provide a kind of transaction support::</span>
+
+<span class="sd">			env = ConfigSet()</span>
+<span class="sd">			env.stash()</span>
+<span class="sd">			try:</span>
+<span class="sd">				env.append_value(&#39;CFLAGS&#39;, &#39;-O3&#39;)</span>
+<span class="sd">				call_some_method(env)</span>
+<span class="sd">			finally:</span>
+<span class="sd">				env.revert()</span>
+
+<span class="sd">		The history is kept in a stack, and is lost during the serialization by :py:meth:`ConfigSet.store`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">undo_stack</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">undo_stack</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.revert"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.revert">[docs]</a>	<span class="k">def</span> <span class="nf">revert</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Reverts the object to a previous state. See :py:meth:`ConfigSet.stash`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">undo_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</pre></div></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,365 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>fc_scan &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="up" title="Waf Tools" href="../tools.html" />
+    <link rel="next" title="bison" href="bison.html" />
+    <link rel="prev" title="fc_config" href="fc_config.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="bison.html" title="bison"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="fc_config.html" title="fc_config"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Tools.fc_scan">
+<span id="fc-scan"></span><h1>fc_scan<a class="headerlink" href="#module-waflib.Tools.fc_scan" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="waflib.Tools.fc_scan.fortran_parser">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.fc_scan.</tt><tt class="descname">fortran_parser</tt><big>(</big><em>incpaths</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/fc_scan.html#fortran_parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.fc_scan.fortran_parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>This parser will return:</p>
+<ul class="simple">
+<li>the nodes corresponding to the module names that will be produced</li>
+<li>the nodes corresponding to the include files used</li>
+<li>the module names used by the fortran file</li>
+</ul>
+<dl class="attribute">
+<dt id="waflib.Tools.fc_scan.fortran_parser.seen">
+<tt class="descname">seen</tt><a class="headerlink" href="#waflib.Tools.fc_scan.fortran_parser.seen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Files already parsed</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Tools.fc_scan.fortran_parser.nodes">
+<tt class="descname">nodes</tt><a class="headerlink" href="#waflib.Tools.fc_scan.fortran_parser.nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of <a class="reference internal" href="../Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a> representing the dependencies to return</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Tools.fc_scan.fortran_parser.names">
+<tt class="descname">names</tt><a class="headerlink" href="#waflib.Tools.fc_scan.fortran_parser.names" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of module names to return</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Tools.fc_scan.fortran_parser.incpaths">
+<tt class="descname">incpaths</tt><a class="headerlink" href="#waflib.Tools.fc_scan.fortran_parser.incpaths" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of <a class="reference internal" href="../Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a> representing the include paths</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.fc_scan.fortran_parser.find_deps">
+<tt class="descname">find_deps</tt><big>(</big><em>node</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/fc_scan.html#fortran_parser.find_deps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.fc_scan.fortran_parser.find_deps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a fortran file to read the dependencies used and provided</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>node</strong> (<a class="reference internal" href="../Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a>) &#8211; fortran file to read</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">lists representing the includes, the modules used, and the modules created by a fortran file</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple of list of strings</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.fc_scan.fortran_parser.start">
+<tt class="descname">start</tt><big>(</big><em>node</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/fc_scan.html#fortran_parser.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.fc_scan.fortran_parser.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the parsing. Use the stack self.waiting to hold the nodes to iterate on</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>node</strong> (<a class="reference internal" href="../Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a>) &#8211; fortran file</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.fc_scan.fortran_parser.iter">
+<tt class="descname">iter</tt><big>(</big><em>node</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/fc_scan.html#fortran_parser.iter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.fc_scan.fortran_parser.iter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a single file in the search for dependencies, extract the files used
+the modules used, and the modules provided.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.fc_scan.fortran_parser.tryfind_header">
+<tt class="descname">tryfind_header</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/fc_scan.html#fortran_parser.tryfind_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.fc_scan.fortran_parser.tryfind_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to find an include and add it the nodes to process</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>string</em>) &#8211; file name</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.fc_scan.conf">
+<tt class="descclassname">waflib.Tools.fc_scan.</tt><tt class="descname">conf</tt><big>(</big><em>f</em><big>)</big><a class="headerlink" href="#waflib.Tools.fc_scan.conf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: attach new configuration functions to <a class="reference internal" href="../Build.html#waflib.Build.BuildContext" title="waflib.Build.BuildContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Build.BuildContext</span></tt></a> and
+<a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a>. The methods bound will accept a parameter
+named &#8216;mandatory&#8217; to disable the configuration errors:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;abc&#39;</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>f</strong> (<em>function</em>) &#8211; method to bind</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.fc_scan.feature">
+<tt class="descclassname">waflib.Tools.fc_scan.</tt><tt class="descname">feature</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.fc_scan.feature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method that will be executed when the
+object attribute &#8216;feature&#8217; contains the corresponding key(s):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.Task</span> <span class="kn">import</span> <span class="n">feature</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">myfunction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;that is my feature!&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>k</strong> (<em>list of string</em>) &#8211; feature names</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.fc_scan.before_method">
+<tt class="descclassname">waflib.Tools.fc_scan.</tt><tt class="descname">before_method</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.fc_scan.before_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method which will be executed
+before the functions of given name(s):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;fun2&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fun1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;feature 1!&#39;</span><span class="p">)</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fun2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;feature 2!&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>k</strong> (<em>list of string</em>) &#8211; method names</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.fc_scan.after_method">
+<tt class="descclassname">waflib.Tools.fc_scan.</tt><tt class="descname">after_method</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.fc_scan.after_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method which will be executed
+after the functions of given name(s):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;fun2&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fun1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;feature 1!&#39;</span><span class="p">)</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fun2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;feature 2!&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>k</strong> (<em>list of string</em>) &#8211; method names</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.fc_scan.extension">
+<tt class="descclassname">waflib.Tools.fc_scan.</tt><tt class="descname">extension</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.fc_scan.extension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method which will be invoked during
+the processing of source files for the extension given:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span>
+<span class="k">class</span> <span class="nc">mytask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+        <span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;cp ${SRC} ${TGT}&#39;</span>
+<span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.moo&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">create_maa_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;mytask&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.maa&#39;</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;foo.moo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="fc_config.html"
+                        title="previous chapter">fc_config</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="bison.html"
+                        title="next chapter">bison</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tools/fc_scan.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="bison.html" title="bison"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="fc_config.html" title="fc_config"
+             >previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

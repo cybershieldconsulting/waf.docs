@@ -1,0 +1,439 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.vala &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.vala</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Ali Sabil, 2007</span>
+<span class="c"># Radosław Szkodziński, 2010</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">At this point, vala is still unstable, so do not expect</span>
+<span class="sd">this tool to be too stable either (apis, etc)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os.path</span><span class="o">,</span> <span class="nn">shutil</span><span class="o">,</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Context</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Runner</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">extension</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">before</span>
+<span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
+
+<div class="viewcode-block" id="valac_task"><a class="viewcode-back" href="../../../tools/vala.html#waflib.Tools.vala.valac_task">[docs]</a><span class="k">class</span> <span class="nc">valac_task</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Task to compile vala files.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="nb">vars</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;VALAC&quot;</span><span class="p">,</span> <span class="s">&quot;VALAC_VERSION&quot;</span><span class="p">,</span> <span class="s">&quot;VALAFLAGS&quot;</span><span class="p">]</span>
+	<span class="n">ext_out</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.h&#39;</span><span class="p">]</span>
+
+	<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+
+		<span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;VALAC&#39;</span><span class="p">],</span> <span class="s">&#39;-C&#39;</span><span class="p">,</span> <span class="s">&#39;--quiet&#39;</span><span class="p">]</span>
+		<span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;VALAFLAGS&#39;</span><span class="p">]))</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">threading</span><span class="p">:</span>
+			<span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;--thread&#39;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">profile</span><span class="p">:</span>
+			<span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;--profile=</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_glib</span><span class="p">:</span>
+			<span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;--target-glib=</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_glib</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_lib</span><span class="p">:</span>
+			<span class="n">output_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">bld_dir</span><span class="p">()</span>
+			<span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;--library=&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.h&#39;</span><span class="p">):</span>
+					<span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;--header=&#39;</span> <span class="o">+</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gir</span><span class="p">:</span>
+				<span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;--gir=</span><span class="si">%s</span><span class="s">.gir&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">gir</span><span class="p">)</span>
+
+		<span class="k">for</span> <span class="n">vapi_dir</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vapi_dirs</span><span class="p">:</span>
+			<span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;--vapidir=</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">vapi_dir</span><span class="p">)</span>
+
+		<span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">packages</span><span class="p">:</span>
+			<span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;--pkg=</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">package</span><span class="p">)</span>
+
+		<span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">packages_private</span><span class="p">:</span>
+			<span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;--pkg=</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">package</span><span class="p">)</span>
+
+		<span class="k">for</span> <span class="n">define</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vala_defines</span><span class="p">:</span>
+			<span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;--define=</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">define</span><span class="p">)</span>
+
+		<span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">])</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+
+		<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">ret</span>
+
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="p">):</span>
+				<span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">packages</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;deps_node&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">deps_node</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">packages</span><span class="p">))</span>
+
+		<span class="k">return</span> <span class="n">ret</span>
+</div>
+<span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.vala&#39;</span><span class="p">,</span> <span class="s">&#39;.gs&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="vala_file"><a class="viewcode-back" href="../../../tools/vala.html#waflib.Tools.vala.vala_file">[docs]</a><span class="k">def</span> <span class="nf">vala_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Compile a vala file and bind the task to *self.valatask*. If an existing vala task is already set, add the node</span>
+<span class="sd">	to its inputs. The typical example is::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.program(</span>
+<span class="sd">				packages      = &#39;gtk+-2.0&#39;,</span>
+<span class="sd">				target        = &#39;vala-gtk-example&#39;,</span>
+<span class="sd">				uselib        = &#39;GTK GLIB&#39;,</span>
+<span class="sd">				source        = &#39;vala-gtk-example.vala foo.vala&#39;,</span>
+<span class="sd">				vala_defines  = [&#39;DEBUG&#39;]</span>
+<span class="sd">				# the following arguments are for libraries</span>
+<span class="sd">				#gir          = &#39;hello-1.0&#39;,</span>
+<span class="sd">				#gir_path     = &#39;/tmp&#39;,</span>
+<span class="sd">				#vapi_path = &#39;/tmp&#39;,</span>
+<span class="sd">				#pkg_name = &#39;hello&#39;</span>
+<span class="sd">			)</span>
+
+
+<span class="sd">	:param node: vala file</span>
+<span class="sd">	:type node: :py:class:`waflib.Node.Node`</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c"># TODO: the vala task should use self.generator.attribute instead of copying attributes from self to the task</span>
+	<span class="n">valatask</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;valatask&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+	<span class="c"># there is only one vala task and it compiles all vala files .. :-/</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">valatask</span><span class="p">:</span>
+		<span class="k">def</span> <span class="nf">_get_api_version</span><span class="p">():</span>
+			<span class="n">api_version</span> <span class="o">=</span> <span class="nb">getattr</span> <span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="p">,</span> <span class="s">&#39;API_VERSION&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">api_version</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+				<span class="n">version</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="o">.</span><span class="n">VERSION</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)</span>
+				<span class="k">if</span> <span class="n">version</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot;0&quot;</span><span class="p">:</span>
+					<span class="n">api_version</span> <span class="o">=</span> <span class="s">&quot;0.&quot;</span> <span class="o">+</span> <span class="n">version</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">api_version</span> <span class="o">=</span> <span class="n">version</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s">&quot;.0&quot;</span>
+			<span class="k">return</span> <span class="n">api_version</span>
+
+		<span class="n">valatask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;valac&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">valatask</span> <span class="o">=</span> <span class="n">valatask</span> <span class="c"># this assumes one vala task by task generator</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">includes</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;includes&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;uselib&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+		<span class="n">valatask</span><span class="o">.</span><span class="n">packages</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">valatask</span><span class="o">.</span><span class="n">packages_private</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;packages_private&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+		<span class="n">valatask</span><span class="o">.</span><span class="n">vapi_dirs</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">valatask</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span>
+		<span class="n">valatask</span><span class="o">.</span><span class="n">threading</span> <span class="o">=</span> <span class="bp">False</span>
+		<span class="n">valatask</span><span class="o">.</span><span class="n">install_path</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;install_path&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+		<span class="n">valatask</span><span class="o">.</span><span class="n">profile</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;profile&#39;</span><span class="p">,</span> <span class="s">&#39;gobject&#39;</span><span class="p">)</span>
+		<span class="n">valatask</span><span class="o">.</span><span class="n">vala_defines</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;vala_defines&#39;</span><span class="p">,</span> <span class="p">[])</span>
+		<span class="n">valatask</span><span class="o">.</span><span class="n">target_glib</span> <span class="o">=</span> <span class="bp">None</span>
+		<span class="n">valatask</span><span class="o">.</span><span class="n">gir</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;gir&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+		<span class="n">valatask</span><span class="o">.</span><span class="n">gir_path</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;gir_path&#39;</span><span class="p">,</span> <span class="s">&#39;${DATAROOTDIR}/gir-1.0&#39;</span><span class="p">)</span>
+		<span class="n">valatask</span><span class="o">.</span><span class="n">vapi_path</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;vapi_path&#39;</span><span class="p">,</span> <span class="s">&#39;${DATAROOTDIR}/vala/vapi&#39;</span><span class="p">)</span>
+		<span class="n">valatask</span><span class="o">.</span><span class="n">pkg_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;pkg_name&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PACKAGE&#39;</span><span class="p">])</span>
+		<span class="n">valatask</span><span class="o">.</span><span class="n">header_path</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;header_path&#39;</span><span class="p">,</span> <span class="s">&#39;${INCLUDEDIR}/</span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">valatask</span><span class="o">.</span><span class="n">pkg_name</span><span class="p">,</span> <span class="n">_get_api_version</span><span class="p">()))</span>
+
+		<span class="n">valatask</span><span class="o">.</span><span class="n">is_lib</span> <span class="o">=</span> <span class="bp">False</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;cprogram&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">:</span>
+			<span class="n">valatask</span><span class="o">.</span><span class="n">is_lib</span> <span class="o">=</span> <span class="bp">True</span>
+
+		<span class="n">packages</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;packages&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+		<span class="n">vapi_dirs</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;vapi_dirs&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+		<span class="n">includes</span> <span class="o">=</span>  <span class="p">[]</span>
+
+		<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;use&#39;</span><span class="p">):</span>
+			<span class="n">local_packages</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">use</span><span class="p">)[:]</span> <span class="c"># make sure to have a copy</span>
+			<span class="n">seen</span> <span class="o">=</span> <span class="p">[]</span>
+			<span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">local_packages</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+				<span class="n">package</span> <span class="o">=</span> <span class="n">local_packages</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+				<span class="k">if</span> <span class="n">package</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+					<span class="k">continue</span>
+				<span class="n">seen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
+
+				<span class="c"># check if the package exists</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="n">package_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">get_tgen_by_name</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
+				<span class="k">except</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">:</span>
+					<span class="k">continue</span>
+				<span class="n">package_name</span> <span class="o">=</span> <span class="n">package_obj</span><span class="o">.</span><span class="n">target</span>
+				<span class="n">package_node</span> <span class="o">=</span> <span class="n">package_obj</span><span class="o">.</span><span class="n">path</span>
+				<span class="n">package_dir</span> <span class="o">=</span> <span class="n">package_node</span><span class="o">.</span><span class="n">path_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+				<span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">package_obj</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
+					<span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">package_name</span> <span class="o">+</span> <span class="s">&quot;.vapi&quot;</span><span class="p">:</span>
+							<span class="n">valatask</span><span class="o">.</span><span class="n">set_run_after</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+							<span class="k">if</span> <span class="n">package_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">packages</span><span class="p">:</span>
+								<span class="n">packages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">package_name</span><span class="p">)</span>
+							<span class="k">if</span> <span class="n">package_dir</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vapi_dirs</span><span class="p">:</span>
+								<span class="n">vapi_dirs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">package_dir</span><span class="p">)</span>
+							<span class="k">if</span> <span class="n">package_dir</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
+								<span class="n">includes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">package_dir</span><span class="p">)</span>
+
+				<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">package_obj</span><span class="p">,</span> <span class="s">&#39;use&#39;</span><span class="p">):</span>
+					<span class="n">lst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">package_obj</span><span class="o">.</span><span class="n">use</span><span class="p">)</span>
+					<span class="n">lst</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+					<span class="n">local_packages</span> <span class="o">=</span> <span class="p">[</span><span class="n">pkg</span> <span class="k">for</span> <span class="n">pkg</span> <span class="ow">in</span> <span class="n">lst</span> <span class="k">if</span> <span class="n">pkg</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">]</span> <span class="o">+</span> <span class="n">local_packages</span>
+
+		<span class="n">valatask</span><span class="o">.</span><span class="n">packages</span> <span class="o">=</span> <span class="n">packages</span>
+		<span class="k">for</span> <span class="n">vapi_dir</span> <span class="ow">in</span> <span class="n">vapi_dirs</span><span class="p">:</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">valatask</span><span class="o">.</span><span class="n">vapi_dirs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_dir</span><span class="p">(</span><span class="n">vapi_dir</span><span class="p">)</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+				<span class="n">valatask</span><span class="o">.</span><span class="n">vapi_dirs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_dir</span><span class="p">(</span><span class="n">vapi_dir</span><span class="p">)</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+			<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+				<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Unable to locate Vala API directory: &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">vapi_dir</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">includes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">srcnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">includes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+		<span class="k">for</span> <span class="n">include</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">includes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_dir</span><span class="p">(</span><span class="n">include</span><span class="p">)</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">includes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_dir</span><span class="p">(</span><span class="n">include</span><span class="p">)</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+			<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+				<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Unable to locate include directory: &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">include</span><span class="p">)</span>
+
+
+		<span class="k">if</span> <span class="n">valatask</span><span class="o">.</span><span class="n">profile</span> <span class="o">==</span> <span class="s">&#39;gobject&#39;</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;target_glib&#39;</span><span class="p">):</span>
+				<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;target_glib on vala tasks is not supported --vala-target-glib=MAJOR.MINOR from the vala tool options&#39;</span><span class="p">)</span>
+
+			<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="s">&#39;vala_target_glib&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+				<span class="n">valatask</span><span class="o">.</span><span class="n">target_glib</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">vala_target_glib</span>
+
+			<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;GOBJECT&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;GOBJECT&#39;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;threading&#39;</span><span class="p">):</span>
+			<span class="k">if</span> <span class="n">valatask</span><span class="o">.</span><span class="n">profile</span> <span class="o">==</span> <span class="s">&#39;gobject&#39;</span><span class="p">:</span>
+				<span class="n">valatask</span><span class="o">.</span><span class="n">threading</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">threading</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;GTHREAD&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;GTHREAD&#39;</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="c">#Vala doesn&#39;t have threading support for dova nor posix</span>
+				<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Profile </span><span class="si">%s</span><span class="s"> does not have threading support&quot;</span> <span class="o">%</span> <span class="n">valatask</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="n">valatask</span><span class="o">.</span><span class="n">is_lib</span><span class="p">:</span>
+			<span class="n">valatask</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">.h&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">))</span>
+			<span class="n">valatask</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">.vapi&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">))</span>
+
+			<span class="k">if</span> <span class="n">valatask</span><span class="o">.</span><span class="n">gir</span><span class="p">:</span>
+				<span class="n">valatask</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">.gir&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">gir</span><span class="p">))</span>
+
+			<span class="k">if</span> <span class="n">valatask</span><span class="o">.</span><span class="n">packages</span><span class="p">:</span>
+				<span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">.deps&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+				<span class="n">valatask</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+				<span class="n">valatask</span><span class="o">.</span><span class="n">deps_node</span> <span class="o">=</span> <span class="n">d</span>
+
+	<span class="n">valatask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+	<span class="n">c_node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.c&#39;</span><span class="p">)</span>
+
+	<span class="n">valatask</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c_node</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c_node</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">valatask</span><span class="o">.</span><span class="n">is_lib</span><span class="p">:</span>
+		<span class="n">headers_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">valatask</span><span class="o">.</span><span class="n">outputs</span> <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">suffix</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;.h&quot;</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">install_vheader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">valatask</span><span class="o">.</span><span class="n">header_path</span><span class="p">,</span> <span class="n">headers_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+
+		<span class="n">vapi_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">valatask</span><span class="o">.</span><span class="n">outputs</span> <span class="k">if</span> <span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">suffix</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;.vapi&quot;</span><span class="p">,</span> <span class="s">&quot;.deps&quot;</span><span class="p">))]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">install_vapi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">valatask</span><span class="o">.</span><span class="n">vapi_path</span><span class="p">,</span> <span class="n">vapi_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+
+		<span class="n">gir_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">valatask</span><span class="o">.</span><span class="n">outputs</span> <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">suffix</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;.gir&quot;</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">install_gir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">valatask</span><span class="o">.</span><span class="n">gir_path</span><span class="p">,</span> <span class="n">gir_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+</div>
+<span class="n">valac_task</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">update_outputs</span><span class="p">(</span><span class="n">valac_task</span><span class="p">)</span> <span class="c"># no decorators for python2 classes</span>
+
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="find_valac"><a class="viewcode-back" href="../../../tools/vala.html#waflib.Tools.vala.find_valac">[docs]</a><span class="k">def</span> <span class="nf">find_valac</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">valac_name</span><span class="p">,</span> <span class="n">min_version</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Find the valac program, and execute it to store the version</span>
+<span class="sd">	number in *conf.env.VALAC_VERSION*</span>
+
+<span class="sd">	:param valac_name: program name</span>
+<span class="sd">	:type valac_name: string or list of string</span>
+<span class="sd">	:param min_version: minimum version acceptable</span>
+<span class="sd">	:type min_version: tuple of int</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">valac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="n">valac_name</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;VALAC&#39;</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">valac</span> <span class="o">+</span> <span class="s">&#39; --version&#39;</span><span class="p">)</span>
+	<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+		<span class="n">valac_version</span> <span class="o">=</span> <span class="bp">None</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">ver</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">r&#39;\d+.\d+.\d+&#39;</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+		<span class="n">valac_version</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ver</span><span class="p">])</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for </span><span class="si">%s</span><span class="s"> version &gt;= </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">valac_name</span><span class="p">,</span> <span class="n">min_version</span><span class="p">),</span>
+	         <span class="n">valac_version</span><span class="p">,</span> <span class="n">valac_version</span> <span class="ow">and</span> <span class="n">valac_version</span> <span class="o">&gt;=</span> <span class="n">min_version</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">valac</span> <span class="ow">and</span> <span class="n">valac_version</span> <span class="o">&lt;</span> <span class="n">min_version</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> version </span><span class="si">%r</span><span class="s"> is too old, need &gt;= </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">valac_name</span><span class="p">,</span> <span class="n">valac_version</span><span class="p">,</span> <span class="n">min_version</span><span class="p">))</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;VALAC_VERSION&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">valac_version</span>
+	<span class="k">return</span> <span class="n">valac</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_vala"><a class="viewcode-back" href="../../../tools/vala.html#waflib.Tools.vala.check_vala">[docs]</a><span class="k">def</span> <span class="nf">check_vala</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_version</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">branch</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Check if vala compiler from a given branch exists of at least a given</span>
+<span class="sd">	version.</span>
+
+<span class="sd">	:param min_version: minimum version acceptable (0.8.0)</span>
+<span class="sd">	:type min_version: tuple</span>
+<span class="sd">	:param branch: first part of the version number, in case a snapshot is used (0, 8)</span>
+<span class="sd">	:type branch: tuple of int</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">branch</span><span class="p">:</span>
+		<span class="n">branch</span> <span class="o">=</span> <span class="n">min_version</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">find_valac</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;valac-</span><span class="si">%d</span><span class="s">.</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">branch</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">branch</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">min_version</span><span class="p">)</span>
+	<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+		<span class="n">find_valac</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;valac&#39;</span><span class="p">,</span> <span class="n">min_version</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_vala_deps"><a class="viewcode-back" href="../../../tools/vala.html#waflib.Tools.vala.check_vala_deps">[docs]</a><span class="k">def</span> <span class="nf">check_vala_deps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Load the gobject and gthread packages if they are missing.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;HAVE_GOBJECT&#39;</span><span class="p">]:</span>
+		<span class="n">pkg_args</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;package&#39;</span><span class="p">:</span>      <span class="s">&#39;gobject-2.0&#39;</span><span class="p">,</span>
+		            <span class="s">&#39;uselib_store&#39;</span><span class="p">:</span> <span class="s">&#39;GOBJECT&#39;</span><span class="p">,</span>
+		            <span class="s">&#39;args&#39;</span><span class="p">:</span>         <span class="s">&#39;--cflags --libs&#39;</span><span class="p">}</span>
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="s">&#39;vala_target_glib&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">pkg_args</span><span class="p">[</span><span class="s">&#39;atleast_version&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">vala_target_glib</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">check_cfg</span><span class="p">(</span><span class="o">**</span><span class="n">pkg_args</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;HAVE_GTHREAD&#39;</span><span class="p">]:</span>
+		<span class="n">pkg_args</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;package&#39;</span><span class="p">:</span>      <span class="s">&#39;gthread-2.0&#39;</span><span class="p">,</span>
+		            <span class="s">&#39;uselib_store&#39;</span><span class="p">:</span> <span class="s">&#39;GTHREAD&#39;</span><span class="p">,</span>
+		            <span class="s">&#39;args&#39;</span><span class="p">:</span>         <span class="s">&#39;--cflags --libs&#39;</span><span class="p">}</span>
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="s">&#39;vala_target_glib&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">pkg_args</span><span class="p">[</span><span class="s">&#39;atleast_version&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">vala_target_glib</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">check_cfg</span><span class="p">(</span><span class="o">**</span><span class="n">pkg_args</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/vala.html#waflib.Tools.vala.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Use the following to enforce minimum vala version::</span>
+
+<span class="sd">		def configure(conf):</span>
+<span class="sd">			conf.load(&#39;vala&#39;, funs=&#39;&#39;)</span>
+<span class="sd">			conf.check_vala(min_version=(0,10,0))</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;gnu_dirs&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">check_vala_deps</span><span class="p">()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">check_vala</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="options"><a class="viewcode-back" href="../../../tools/vala.html#waflib.Tools.vala.options">[docs]</a><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Load the :py:mod:`waflib.Tools.gnu_dirs` tool and add the ``--vala-target-glib`` command-line option</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">opt</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;gnu_dirs&#39;</span><span class="p">)</span>
+	<span class="n">valaopts</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">add_option_group</span><span class="p">(</span><span class="s">&#39;Vala Compiler Options&#39;</span><span class="p">)</span>
+	<span class="n">valaopts</span><span class="o">.</span><span class="n">add_option</span> <span class="p">(</span><span class="s">&#39;--vala-target-glib&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+		<span class="n">dest</span><span class="o">=</span><span class="s">&#39;vala_target_glib&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;MAJOR.MINOR&#39;</span><span class="p">,</span>
+		<span class="n">help</span><span class="o">=</span><span class="s">&#39;Target version of glib for Vala GObject code generation&#39;</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

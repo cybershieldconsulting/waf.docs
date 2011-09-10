@@ -1,0 +1,177 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.compiler_fc &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.compiler_fc</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">imp</span><span class="o">,</span> <span class="nn">types</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Configure</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">fc</span>
+
+<span class="n">fc_compiler</span> <span class="o">=</span> <span class="p">{</span>
+	<span class="s">&#39;win32&#39;</span>  <span class="p">:</span> <span class="p">[</span><span class="s">&#39;gfortran&#39;</span><span class="p">,</span><span class="s">&#39;ifort&#39;</span><span class="p">],</span>
+	<span class="s">&#39;darwin&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="s">&#39;gfortran&#39;</span><span class="p">,</span> <span class="s">&#39;g95&#39;</span><span class="p">,</span> <span class="s">&#39;ifort&#39;</span><span class="p">],</span>
+	<span class="s">&#39;linux&#39;</span>  <span class="p">:</span> <span class="p">[</span><span class="s">&#39;gfortran&#39;</span><span class="p">,</span> <span class="s">&#39;g95&#39;</span><span class="p">,</span> <span class="s">&#39;ifort&#39;</span><span class="p">],</span>
+	<span class="s">&#39;java&#39;</span>   <span class="p">:</span> <span class="p">[</span><span class="s">&#39;gfortran&#39;</span><span class="p">,</span> <span class="s">&#39;g95&#39;</span><span class="p">,</span> <span class="s">&#39;ifort&#39;</span><span class="p">],</span>
+	<span class="s">&#39;default&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;gfortran&#39;</span><span class="p">]</span>
+<span class="p">}</span>
+
+<span class="k">def</span> <span class="nf">__list_possible_compiler</span><span class="p">(</span><span class="n">platform</span><span class="p">):</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">fc_compiler</span><span class="p">[</span><span class="n">platform</span><span class="p">]</span>
+	<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">fc_compiler</span><span class="p">[</span><span class="s">&quot;default&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/compiler_fc.html#waflib.Tools.compiler_fc.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Try to find a suitable C compiler or raise a :py:class:`waflib.Errors.ConfigurationError`.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">try</span><span class="p">:</span> <span class="n">test_for_compiler</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">check_fc</span>
+	<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&quot;Add options(opt): opt.load(&#39;compiler_fc&#39;)&quot;</span><span class="p">)</span>
+	<span class="n">orig</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+	<span class="k">for</span> <span class="n">compiler</span> <span class="ow">in</span> <span class="n">test_for_compiler</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">start_msg</span><span class="p">(</span><span class="s">&#39;Checking for </span><span class="si">%r</span><span class="s"> (fortran compiler)&#39;</span> <span class="o">%</span> <span class="n">compiler</span><span class="p">)</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">orig</span><span class="o">.</span><span class="n">derive</span><span class="p">()</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">compiler</span><span class="p">)</span>
+		<span class="k">except</span> <span class="n">conf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+			<span class="n">Logs</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;compiler_fortran: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;FC&#39;</span><span class="p">]:</span>
+				<span class="n">orig</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get_merged_dict</span><span class="p">()</span>
+				<span class="n">conf</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">orig</span>
+				<span class="n">conf</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+				<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">COMPILER_FORTRAN</span> <span class="o">=</span> <span class="n">compiler</span>
+				<span class="k">break</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not configure a fortran compiler!&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="options"><a class="viewcode-back" href="../../../tools/compiler_fc.html#waflib.Tools.compiler_fc.options">[docs]</a><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Restrict the compiler detection from the command-line::</span>
+
+<span class="sd">		$ waf configure --check-fortran-compiler=ifort</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">build_platform</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">unversioned_sys_platform</span><span class="p">()</span>
+	<span class="n">detected_platform</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">platform</span>
+	<span class="n">possible_compiler_list</span> <span class="o">=</span> <span class="n">__list_possible_compiler</span><span class="p">(</span><span class="n">detected_platform</span><span class="p">)</span>
+	<span class="n">test_for_compiler</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">possible_compiler_list</span><span class="p">)</span>
+	<span class="n">fortran_compiler_opts</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">add_option_group</span><span class="p">(</span><span class="s">&quot;Fortran Compiler Options&quot;</span><span class="p">)</span>
+	<span class="n">fortran_compiler_opts</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--check-fortran-compiler&#39;</span><span class="p">,</span>
+			<span class="n">default</span><span class="o">=</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">test_for_compiler</span><span class="p">,</span>
+			<span class="n">help</span><span class="o">=</span><span class="s">&#39;On this platform (</span><span class="si">%s</span><span class="s">) the following Fortran Compiler will be checked by default: &quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">detected_platform</span><span class="p">,</span> <span class="n">test_for_compiler</span><span class="p">),</span>
+		<span class="n">dest</span><span class="o">=</span><span class="s">&quot;check_fc&quot;</span><span class="p">)</span>
+
+	<span class="k">for</span> <span class="n">compiler</span> <span class="ow">in</span> <span class="n">test_for_compiler</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+		<span class="n">opt</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">compiler</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

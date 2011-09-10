@@ -1,0 +1,171 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lua &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="up" title="Waf Tools" href="../tools.html" />
+    <link rel="next" title="Waf tutorial" href="../tutorial.html" />
+    <link rel="prev" title="intltool" href="intltool.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../tutorial.html" title="Waf tutorial"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="intltool.html" title="intltool"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Tools.lua">
+<span id="lua"></span><h1>lua<a class="headerlink" href="#module-waflib.Tools.lua" title="Permalink to this headline">¶</a></h1>
+<p>Lua support.</p>
+<p>Compile <em>.lua</em> files into <em>.luac</em>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;lua&#39;</span><span class="p">)</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LUADIR</span> <span class="o">=</span> <span class="s">&#39;/usr/local/share/myapp/scripts/&#39;</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;foo.lua&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="function">
+<dt id="waflib.Tools.lua.configure">
+<tt class="descclassname">waflib.Tools.lua.</tt><tt class="descname">configure</tt><big>(</big><em>conf</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/lua.html#configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.lua.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detect the luac compiler and set <em>conf.env.LUAC</em></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.lua.extension">
+<tt class="descclassname">waflib.Tools.lua.</tt><tt class="descname">extension</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.lua.extension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method which will be invoked during
+the processing of source files for the extension given:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span>
+<span class="k">class</span> <span class="nc">mytask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+        <span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;cp ${SRC} ${TGT}&#39;</span>
+<span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.moo&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">create_maa_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;mytask&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.maa&#39;</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;foo.moo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="intltool.html"
+                        title="previous chapter">intltool</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../tutorial.html"
+                        title="next chapter">Waf tutorial</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tools/lua.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../tutorial.html" title="Waf tutorial"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="intltool.html" title="intltool"
+             >previous</a> |</li>
+        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

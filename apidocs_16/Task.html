@@ -1,0 +1,906 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Task &mdash; Waf v1.6.4 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.6.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Waf v1.6.4 documentation" href="index.html" />
+    <link rel="next" title="TaskGen" href="TaskGen.html" />
+    <link rel="prev" title="Scripting" href="Scripting.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="TaskGen.html" title="TaskGen"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Scripting.html" title="Scripting"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Task">
+<span id="task"></span><h1>Task<a class="headerlink" href="#module-waflib.Task" title="Permalink to this headline">¶</a></h1>
+<p>Tasks represent atomic operations such as processes.</p>
+<dl class="data">
+<dt id="waflib.Task.NOT_RUN">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">NOT_RUN</tt><a class="headerlink" href="#waflib.Task.NOT_RUN" title="Permalink to this definition">¶</a></dt>
+<dd><p>The task was not executed yet</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Task.MISSING">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">MISSING</tt><a class="headerlink" href="#waflib.Task.MISSING" title="Permalink to this definition">¶</a></dt>
+<dd><p>The task has been executed but the files have not been created</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Task.CRASHED">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">CRASHED</tt><a class="headerlink" href="#waflib.Task.CRASHED" title="Permalink to this definition">¶</a></dt>
+<dd><p>The task execution returned a non-zero exit status</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Task.EXCEPTION">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">EXCEPTION</tt><a class="headerlink" href="#waflib.Task.EXCEPTION" title="Permalink to this definition">¶</a></dt>
+<dd><p>An exception occured in the task execution</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Task.SKIPPED">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">SKIPPED</tt><a class="headerlink" href="#waflib.Task.SKIPPED" title="Permalink to this definition">¶</a></dt>
+<dd><p>The task did not have to be executed</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Task.SUCCESS">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">SUCCESS</tt><a class="headerlink" href="#waflib.Task.SUCCESS" title="Permalink to this definition">¶</a></dt>
+<dd><p>The task was successfully executed</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Task.ASK_LATER">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">ASK_LATER</tt><a class="headerlink" href="#waflib.Task.ASK_LATER" title="Permalink to this definition">¶</a></dt>
+<dd><p>The task is not ready to be executed</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Task.SKIP_ME">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">SKIP_ME</tt><a class="headerlink" href="#waflib.Task.SKIP_ME" title="Permalink to this definition">¶</a></dt>
+<dd><p>The task does not need to be executed</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Task.RUN_ME">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">RUN_ME</tt><a class="headerlink" href="#waflib.Task.RUN_ME" title="Permalink to this definition">¶</a></dt>
+<dd><p>The task must be executed</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Task.cache_outputs">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">cache_outputs</tt><big>(</big><em>cls</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#cache_outputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.cache_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Task class decorator applied to all task classes by default unless they define the attribute &#8216;nocache&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span>
+<span class="k">class</span> <span class="nc">foo</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+        <span class="n">nocache</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<p>If bld.cache_global is defined and if the task instances produces output nodes,
+the files will be copied into a folder in the cache directory</p>
+<p>The files may also be retrieved from that folder, if it exists</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Task.classes">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">classes</tt><a class="headerlink" href="#waflib.Task.classes" title="Permalink to this definition">¶</a></dt>
+<dd><p>class tasks created by user scripts or Waf tools are kept in this dict name -&gt; class object</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Task.store_task_type">
+<em class="property">class </em><tt class="descclassname">waflib.Task.</tt><tt class="descname">store_task_type</tt><big>(</big><em>name</em>, <em>bases</em>, <em>dict</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#store_task_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.store_task_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">type</span></tt></p>
+<p>Metaclass: store the task types into <a class="reference internal" href="#waflib.Task.classes" title="waflib.Task.classes"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Task.classes</span></tt></a>.
+The attribute &#8216;run_str&#8217; will be processed to compute a method &#8216;run&#8217; on the task class
+The decorator <a class="reference internal" href="#waflib.Task.cache_outputs" title="waflib.Task.cache_outputs"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Task.cache_outputs()</span></tt></a> is also applied to the class</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Task.evil">
+<em class="property">class </em><tt class="descclassname">waflib.Task.</tt><tt class="descname">evil</tt><a class="headerlink" href="#waflib.Task.evil" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Base class provided to avoid writing a metaclass, so the code can run in python 2.6 and 3.x unmodified</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Task.TaskBase">
+<em class="property">class </em><tt class="descclassname">waflib.Task.</tt><tt class="descname">TaskBase</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#waflib.Task.evil" title="waflib.Task.evil"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.evil</span></tt></a></p>
+<p>Base class for all Waf tasks, which should be seen as an interface.
+For illustration purposes, instances of this class will execute the attribute
+&#8216;fun&#8217; in <a class="reference internal" href="#waflib.Task.TaskBase.run" title="waflib.Task.TaskBase.run"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.TaskBase.run()</span></tt></a>. When in doubt, create
+subclasses of <a class="reference internal" href="#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a> instead.</p>
+<p>Subclasses should override these methods:</p>
+<ol class="arabic simple">
+<li>__str__: string to display to the user</li>
+<li>runnable_status: ask the task if it should be run, skipped, or if we have to ask later</li>
+<li>run: let threads execute the task</li>
+<li>post_run: let threads update the data regarding the task (cache)</li>
+</ol>
+<dl class="attribute">
+<dt id="waflib.Task.TaskBase.color">
+<tt class="descname">color</tt><a class="headerlink" href="#waflib.Task.TaskBase.color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Color for the console display, see <tt class="xref py py-const docutils literal"><span class="pre">waflib.Logs.colors_lst</span></tt></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Task.TaskBase.ext_in">
+<tt class="descname">ext_in</tt><a class="headerlink" href="#waflib.Task.TaskBase.ext_in" title="Permalink to this definition">¶</a></dt>
+<dd><p>File extensions that objects of this task class might use</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Task.TaskBase.ext_out">
+<tt class="descname">ext_out</tt><a class="headerlink" href="#waflib.Task.TaskBase.ext_out" title="Permalink to this definition">¶</a></dt>
+<dd><p>File extensions that objects of this task class might create</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Task.TaskBase.before">
+<tt class="descname">before</tt><a class="headerlink" href="#waflib.Task.TaskBase.before" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of task class names to execute before instances of this class</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Task.TaskBase.after">
+<tt class="descname">after</tt><a class="headerlink" href="#waflib.Task.TaskBase.after" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of task class names to execute after instances of this class</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Task.TaskBase.hcode">
+<tt class="descname">hcode</tt><a class="headerlink" href="#waflib.Task.TaskBase.hcode" title="Permalink to this definition">¶</a></dt>
+<dd><p>String representing an additional hash for the class representation</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The base task class requires a task generator, which will be itself if missing</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.__repr__">
+<tt class="descname">__repr__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>for debugging purposes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.__str__">
+<tt class="descname">__str__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>string to display to the user</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.__hash__">
+<tt class="descname">__hash__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Very fast hashing scheme but not persistent (replace/implement in subclasses and see <a class="reference internal" href="#waflib.Task.Task.uid" title="waflib.Task.Task.uid"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.Task.uid()</span></tt></a>)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.exec_command">
+<tt class="descname">exec_command</tt><big>(</big><em>cmd</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.exec_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.exec_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for <a class="reference internal" href="Context.html#waflib.Context.Context.exec_command" title="waflib.Context.Context.exec_command"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Context.Context.exec_command()</span></tt></a> which sets a current working directory to <tt class="docutils literal"><span class="pre">build.variant_dir</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">the return code</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.runnable_status">
+<tt class="descname">runnable_status</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.runnable_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.runnable_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>State of the task</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">a task state in <a class="reference internal" href="#waflib.Task.RUN_ME" title="waflib.Task.RUN_ME"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Task.RUN_ME</span></tt></a>, <a class="reference internal" href="#waflib.Task.SKIP_ME" title="waflib.Task.SKIP_ME"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Task.SKIP_ME</span></tt></a> or <a class="reference internal" href="#waflib.Task.ASK_LATER" title="waflib.Task.ASK_LATER"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Task.ASK_LATER</span></tt></a>.</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.process">
+<tt class="descname">process</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assume that the task has had a new attribute <tt class="docutils literal"><span class="pre">master</span></tt> which is an instance of <a class="reference internal" href="Runner.html#waflib.Runner.Parallel" title="waflib.Runner.Parallel"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Runner.Parallel</span></tt></a>.
+Execute the task and then put it back in the queue <a class="reference internal" href="Runner.html#waflib.Runner.Parallel.out" title="waflib.Runner.Parallel.out"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Runner.Parallel.out</span></tt></a> (may be replaced by subclassing).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.run">
+<tt class="descname">run</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the task (executed by threads). Override in subclasses.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.post_run">
+<tt class="descname">post_run</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.post_run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.post_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the cache files (executed by threads). Override in subclasses.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.log_display">
+<tt class="descname">log_display</tt><big>(</big><em>bld</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.log_display"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.log_display" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the execution status on the context logger</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.display">
+<tt class="descname">display</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.display"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.display" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an execution status for the console, the progress bar, or the IDE output.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.attr">
+<tt class="descname">attr</tt><big>(</big><em>att</em>, <em>default=None</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.attr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.attr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve an attribute from the instance or from the class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>att</strong> (<em>string</em>) &#8211; variable name</li>
+<li><strong>default</strong> &#8211; default value</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.hash_constraints">
+<tt class="descname">hash_constraints</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.hash_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.hash_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identify a task type for all the constraints relevant for the scheduler: precedence, file production</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">a hash value</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.format_error">
+<tt class="descname">format_error</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.format_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.format_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Error message to display to the user when a build fails</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.TaskBase.colon">
+<tt class="descname">colon</tt><big>(</big><em>var1</em>, <em>var2</em><big>)</big><a class="headerlink" href="#waflib.Task.TaskBase.colon" title="Permalink to this definition">¶</a></dt>
+<dd><p>private function for the moment</p>
+<p>used for scriptlet expressions such as ${FOO_ST:FOO}, for example, if
+env.FOO_ST = [&#8216;-a&#8217;, &#8216;-b&#8217;]
+env.FOO    = [&#8216;1&#8217;, &#8216;2&#8217;]
+then the result will be [&#8216;-a&#8217;, &#8216;-b&#8217;, &#8216;1&#8217;, &#8216;-a&#8217;, &#8216;-b&#8217;, &#8216;2&#8217;]</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Task.Task">
+<em class="property">class </em><tt class="descclassname">waflib.Task.</tt><tt class="descname">Task</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a></p>
+<p>This class deals with the filesystem (<a class="reference internal" href="Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a>). The method <a class="reference internal" href="#waflib.Task.Task.runnable_status" title="waflib.Task.Task.runnable_status"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task.runnable_status</span></tt></a>
+uses a hash value (from <a class="reference internal" href="#waflib.Task.Task.signature" title="waflib.Task.Task.signature"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task.signature</span></tt></a>) which is persistent from build to build. When the value changes,
+the task has to be executed. The method <a class="reference internal" href="#waflib.Task.Task.post_run" title="waflib.Task.Task.post_run"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task.post_run</span></tt></a> will assign the task signature to the output
+nodes (if present).</p>
+<dl class="attribute">
+<dt id="waflib.Task.Task.vars">
+<tt class="descname">vars</tt><a class="headerlink" href="#waflib.Task.Task.vars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variables to depend on (class attribute used for <a class="reference internal" href="#waflib.Task.Task.sig_vars" title="waflib.Task.Task.sig_vars"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.Task.sig_vars()</span></tt></a>)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Task.Task.shell">
+<tt class="descname">shell</tt><a class="headerlink" href="#waflib.Task.Task.shell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the command with the shell (class attribute)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Task.Task.env">
+<tt class="descname">env</tt><a class="headerlink" href="#waflib.Task.Task.env" title="Permalink to this definition">¶</a></dt>
+<dd><p>ConfigSet object (make sure to provide one)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Task.Task.inputs">
+<tt class="descname">inputs</tt><a class="headerlink" href="#waflib.Task.Task.inputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of input nodes, which represent the files used by the task instance</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Task.Task.outputs">
+<tt class="descname">outputs</tt><a class="headerlink" href="#waflib.Task.Task.outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of output nodes, which represent the files created by the task instance</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Task.Task.dep_nodes">
+<tt class="descname">dep_nodes</tt><a class="headerlink" href="#waflib.Task.Task.dep_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of additional nodes to depend on</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Task.Task.run_after">
+<tt class="descname">run_after</tt><a class="headerlink" href="#waflib.Task.Task.run_after" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set of tasks that must be executed before this one</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.__str__">
+<tt class="descname">__str__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>string to display to the user</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.__repr__">
+<tt class="descname">__repr__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>for debugging purposes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.run">
+<tt class="descname">run</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Task.Task.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the task (executed by threads). Override in subclasses.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.uid">
+<tt class="descname">uid</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.uid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.uid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an identifier used to determine if tasks are up-to-date. Since the
+identifier will be stored between executions, it must be:</p>
+<blockquote>
+<ul class="simple">
+<li>unique: no two tasks return the same value (for a given build context)</li>
+<li>the same for a given task instance</li>
+</ul>
+</blockquote>
+<p>By default, the node paths, the class name, and the function are used
+as inputs to compute a hash.</p>
+<p>The pointer to the object (python built-in &#8216;id&#8217;) will change between build executions,
+and must be avoided in such hashes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">hash value</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.set_inputs">
+<tt class="descname">set_inputs</tt><big>(</big><em>inp</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.set_inputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.set_inputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append the nodes to the <em>inputs</em></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>inp</strong> (<em>node or list of nodes</em>) &#8211; input nodes</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.set_outputs">
+<tt class="descname">set_outputs</tt><big>(</big><em>out</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.set_outputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.set_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append the nodes to the <em>outputs</em></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>out</strong> (<em>node or list of nodes</em>) &#8211; output nodes</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.set_run_after">
+<tt class="descname">set_run_after</tt><big>(</big><em>task</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.set_run_after"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.set_run_after" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run this task only after <em>task</em>. Affect <tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.runnable_status()</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>task</strong> (<a class="reference internal" href="#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a>) &#8211; task</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.signature">
+<tt class="descname">signature</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.signature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.signature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Task signatures are stored between build executions, they are use to track the changes
+made to the input nodes (not to the outputs!). The signature hashes data from various sources:</p>
+<ul class="simple">
+<li>explicit dependencies: files listed in the inputs (list of node objects) <a class="reference internal" href="#waflib.Task.Task.sig_explicit_deps" title="waflib.Task.Task.sig_explicit_deps"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.Task.sig_explicit_deps()</span></tt></a></li>
+<li>implicit dependencies: list of nodes returned by scanner methods (when present) <a class="reference internal" href="#waflib.Task.Task.sig_implicit_deps" title="waflib.Task.Task.sig_implicit_deps"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.Task.sig_implicit_deps()</span></tt></a></li>
+<li>hashed data: variables/values read from task.__class__.vars/task.env <a class="reference internal" href="#waflib.Task.Task.sig_vars" title="waflib.Task.Task.sig_vars"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.Task.sig_vars()</span></tt></a></li>
+</ul>
+<p>If the signature is expected to give a different result, clear the cache kept in <tt class="docutils literal"><span class="pre">self.cache_sig</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span>
+<span class="k">class</span> <span class="nc">cls</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="n">sig</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">signature</span><span class="p">()</span>
+                <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;cache_sig&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">signature</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.runnable_status">
+<tt class="descname">runnable_status</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.runnable_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.runnable_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override <a class="reference internal" href="#waflib.Task.TaskBase.runnable_status" title="waflib.Task.TaskBase.runnable_status"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.TaskBase.runnable_status()</span></tt></a> to determine if the task is ready
+to be run (<a class="reference internal" href="#waflib.Task.Task.run_after" title="waflib.Task.Task.run_after"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Task.Task.run_after</span></tt></a>)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.post_run">
+<tt class="descname">post_run</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.post_run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.post_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the cache files (executed by threads). Override in subclasses.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.sig_explicit_deps">
+<tt class="descname">sig_explicit_deps</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.sig_explicit_deps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.sig_explicit_deps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used by <a class="reference internal" href="#waflib.Task.Task.signature" title="waflib.Task.Task.signature"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.Task.signature()</span></tt></a>, hash <a class="reference internal" href="#waflib.Task.Task.inputs" title="waflib.Task.Task.inputs"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Task.Task.inputs</span></tt></a>
+and <a class="reference internal" href="#waflib.Task.Task.dep_nodes" title="waflib.Task.Task.dep_nodes"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Task.Task.dep_nodes</span></tt></a> signatures.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">hash value</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.sig_vars">
+<tt class="descname">sig_vars</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.sig_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.sig_vars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used by <a class="reference internal" href="#waflib.Task.Task.signature" title="waflib.Task.Task.signature"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.Task.signature()</span></tt></a>, hash <a class="reference internal" href="#waflib.Task.Task.env" title="waflib.Task.Task.env"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Task.Task.env</span></tt></a> variables/values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">hash value</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="waflib.Task.Task.scan">
+<tt class="descname">scan</tt><a class="headerlink" href="#waflib.Task.Task.scan" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method, when provided, returns a tuple containing:</p>
+<ul class="simple">
+<li>a list of nodes corresponding to real files</li>
+<li>a list of names for files not found in path_lst</li>
+</ul>
+<p>For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.Task</span> <span class="kn">import</span> <span class="n">Task</span>
+<span class="k">class</span> <span class="nc">mytask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">scan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">((),</span> <span class="p">())</span>
+</pre></div>
+</div>
+<p>The first and second lists are stored in <a class="reference internal" href="Build.html#waflib.Build.BuildContext.node_deps" title="waflib.Build.BuildContext.node_deps"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Build.BuildContext.node_deps</span></tt></a> and
+<a class="reference internal" href="Build.html#waflib.Build.BuildContext.raw_deps" title="waflib.Build.BuildContext.raw_deps"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Build.BuildContext.raw_deps</span></tt></a> respectively.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.sig_implicit_deps">
+<tt class="descname">sig_implicit_deps</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.sig_implicit_deps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.sig_implicit_deps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used by <a class="reference internal" href="#waflib.Task.Task.signature" title="waflib.Task.Task.signature"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.Task.signature()</span></tt></a> hashes node signatures obtained by scanning for dependencies (<a class="reference internal" href="#waflib.Task.Task.scan" title="waflib.Task.Task.scan"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.Task.scan()</span></tt></a>).</p>
+<p>The exception <a class="reference internal" href="Errors.html#waflib.Errors.TaskRescan" title="waflib.Errors.TaskRescan"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Errors.TaskRescan</span></tt></a> is thrown
+when a file has changed. When this occurs, <a class="reference internal" href="#waflib.Task.Task.signature" title="waflib.Task.Task.signature"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.Task.signature()</span></tt></a> is called
+once again, and this method will be executed once again, this time calling <a class="reference internal" href="#waflib.Task.Task.scan" title="waflib.Task.Task.scan"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.Task.scan()</span></tt></a>
+for searching the dependencies.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">hash value</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.compute_sig_implicit_deps">
+<tt class="descname">compute_sig_implicit_deps</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.compute_sig_implicit_deps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.compute_sig_implicit_deps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used by <a class="reference internal" href="#waflib.Task.Task.sig_implicit_deps" title="waflib.Task.Task.sig_implicit_deps"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.Task.sig_implicit_deps()</span></tt></a> for computing the actual hash of the
+<a class="reference internal" href="Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a> returned by the scanner.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">hash value</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.are_implicit_nodes_ready">
+<tt class="descname">are_implicit_nodes_ready</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.are_implicit_nodes_ready"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.are_implicit_nodes_ready" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each node returned by the scanner, see if there is a task behind it, and force the build order</p>
+<p>The performance impact on null builds is nearly invisible (1.66s-&gt;1.86s), but this is due to
+agressive caching (1.86s-&gt;28s)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.can_retrieve_cache">
+<tt class="descname">can_retrieve_cache</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.can_retrieve_cache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.can_retrieve_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used by <a class="reference internal" href="#waflib.Task.cache_outputs" title="waflib.Task.cache_outputs"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.cache_outputs()</span></tt></a></p>
+<p>Retrieve build nodes from the cache
+update the file timestamps to help cleaning the least used entries from the cache
+additionally, set an attribute &#8216;cached&#8217; to avoid re-creating the same cache files</p>
+<p>Suppose there are files in <cite>cache/dir1/file1</cite> and <cite>cache/dir2/file2</cite>:</p>
+<ol class="arabic simple">
+<li>read the timestamp of dir1</li>
+<li>try to copy the files</li>
+<li>look at the timestamp again, if it has changed, the data may have been corrupt (cache update by another process)</li>
+<li>should an exception occur, ignore the data</li>
+</ol>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Task.Task.put_files_cache">
+<tt class="descname">put_files_cache</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#Task.put_files_cache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.Task.put_files_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used by <a class="reference internal" href="#waflib.Task.cache_outputs" title="waflib.Task.cache_outputs"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Task.cache_outputs()</span></tt></a> to store the build files in the cache</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Task.is_before">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">is_before</tt><big>(</big><em>t1</em>, <em>t2</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#is_before"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.is_before" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a non-zero value if task t1 is to be executed before task t2:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">t1</span><span class="o">.</span><span class="n">ext_out</span> <span class="o">=</span> <span class="s">&#39;.h&#39;</span>
+<span class="n">t2</span><span class="o">.</span><span class="n">ext_in</span> <span class="o">=</span> <span class="s">&#39;.h&#39;</span>
+<span class="n">t2</span><span class="o">.</span><span class="n">after</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;t1&#39;</span><span class="p">]</span>
+<span class="n">t1</span><span class="o">.</span><span class="n">before</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;t2&#39;</span><span class="p">]</span>
+<span class="n">waflib</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">is_before</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">)</span> <span class="c"># True</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>t1</strong> (<a class="reference internal" href="#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a>) &#8211; task</li>
+<li><strong>t2</strong> (<a class="reference internal" href="#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a>) &#8211; task</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Task.set_file_constraints">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">set_file_constraints</tt><big>(</big><em>tasks</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#set_file_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.set_file_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds tasks to the task &#8216;run_after&#8217; attribute based on the task inputs and outputs</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tasks</strong> (list of <a class="reference internal" href="#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a>) &#8211; tasks</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Task.set_precedence_constraints">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">set_precedence_constraints</tt><big>(</big><em>tasks</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#set_precedence_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.set_precedence_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add tasks to the task &#8216;run_after&#8217; attribute based on the after/before/ext_out/ext_in attributes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tasks</strong> (list of <a class="reference internal" href="#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a>) &#8211; tasks</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Task.funex">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">funex</tt><big>(</big><em>c</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#funex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.funex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compile a function by &#8216;exec&#8217;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>c</strong> (<em>string</em>) &#8211; function to compile</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the function &#8216;f&#8217; declared in the input string</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">function</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Task.compile_fun_shell">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">compile_fun_shell</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#compile_fun_shell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.compile_fun_shell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a compiled function to execute a process with the shell
+WARNING: this method may disappear anytime, so use compile_fun instead</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Task.compile_fun_noshell">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">compile_fun_noshell</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#compile_fun_noshell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.compile_fun_noshell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a compiled function to execute a process without the shell
+WARNING: this method may disappear anytime, so use compile_fun instead</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Task.compile_fun">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">compile_fun</tt><big>(</big><em>line</em>, <em>shell=False</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#compile_fun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.compile_fun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a string expression such as &#8220;${CC} ${SRC} -o ${TGT}&#8221; and return a pair containing:</p>
+<ul class="simple">
+<li>the function created (compiled) for use as <a class="reference internal" href="#waflib.Task.TaskBase.run" title="waflib.Task.TaskBase.run"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Task.TaskBase.run()</span></tt></a></li>
+<li>the list of variables that imply a dependency from self.env</li>
+</ul>
+<p>for example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.Task</span> <span class="kn">import</span> <span class="n">compile_fun</span>
+<span class="n">compile_fun</span><span class="p">(</span><span class="s">&#39;cxx&#39;</span><span class="p">,</span> <span class="s">&#39;${CXX} -o ${TGT[0]} ${SRC} -I ${SRC[0].parent.bldpath()}&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;wscript&#39;</span><span class="p">,</span> <span class="n">rule</span><span class="o">=</span><span class="s">&#39;echo &quot;foo\${SRC[0].name}</span><span class="se">\b</span><span class="s">ar&quot;&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The env variables (CXX, ..) on the task must not hold dicts (order)
+The reserved keywords <em>TGT</em> and <em>SRC</em> represent the task input and output nodes</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Task.task_factory">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">task_factory</tt><big>(</big><em>name</em>, <em>func=None</em>, <em>vars=None</em>, <em>color='GREEN'</em>, <em>ext_in=</em><span class="optional">[</span><span class="optional">]</span>, <em>ext_out=</em><span class="optional">[</span><span class="optional">]</span>, <em>before=</em><span class="optional">[</span><span class="optional">]</span>, <em>after=</em><span class="optional">[</span><span class="optional">]</span>, <em>shell=False</em>, <em>scan=None</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#task_factory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.task_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a new task subclass with the function <tt class="docutils literal"><span class="pre">run</span></tt> compiled from the line given.
+Provided for compatibility with waf 1.4-1.5, when we did not use metaclasses to register new objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>func</strong> (<em>string or function</em>) &#8211; method run</li>
+<li><strong>vars</strong> (<em>list of string</em>) &#8211; list of variables to hash</li>
+<li><strong>color</strong> (<em>string</em>) &#8211; color to use</li>
+<li><strong>shell</strong> (<em>bool</em>) &#8211; when <em>func</em> is a string, enable/disable the use of the shell</li>
+<li><strong>scan</strong> (<em>function</em>) &#8211; method scan</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Task.always_run">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">always_run</tt><big>(</big><em>cls</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#always_run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.always_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Task class decorator</p>
+<p>Set all task instances of this class to be executed whenever a build is started
+The task signature is calculated, but the result of the comparation between
+task signatures is bypassed</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Task.update_outputs">
+<tt class="descclassname">waflib.Task.</tt><tt class="descname">update_outputs</tt><big>(</big><em>cls</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#update_outputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.update_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Task class decorator</p>
+<p>If you want to create files in the source directory. For example, to keep <em>foo.txt</em> in the source
+directory, create it first and declare:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="s">&#39;cp ${SRC} ${TGT}&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;wscript&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;foo.txt&#39;</span><span class="p">,</span> <span class="n">update_outputs</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Scripting.html"
+                        title="previous chapter">Scripting</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="TaskGen.html"
+                        title="next chapter">TaskGen</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/Task.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="TaskGen.html" title="TaskGen"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Scripting.html" title="Scripting"
+             >previous</a> |</li>
+        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19942299-1']);
+  _gaq.push(['_setDomainName', 'none']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>
