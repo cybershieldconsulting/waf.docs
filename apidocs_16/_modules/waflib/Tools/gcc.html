@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.gcc &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.gcc &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -81,13 +81,13 @@
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
 
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CC_SRC_F&#39;</span><span class="p">]</span>            <span class="o">=</span> <span class="s">&#39;&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CC_TGT_F&#39;</span><span class="p">]</span>            <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;-o&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]</span> <span class="c"># shell hack for -MD</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CC_SRC_F&#39;</span><span class="p">]</span>            <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CC_TGT_F&#39;</span><span class="p">]</span>            <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;-o&#39;</span><span class="p">]</span>
 
 	<span class="c"># linker</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;LINK_CC&#39;</span><span class="p">]:</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;LINK_CC&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;CC&#39;</span><span class="p">]</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CCLNK_SRC_F&#39;</span><span class="p">]</span>         <span class="o">=</span> <span class="s">&#39;&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CCLNK_TGT_F&#39;</span><span class="p">]</span>         <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-o&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]</span> <span class="c"># shell hack for -MD</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CCLNK_SRC_F&#39;</span><span class="p">]</span>         <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CCLNK_TGT_F&#39;</span><span class="p">]</span>         <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-o&#39;</span><span class="p">]</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CPPPATH_ST&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="s">&#39;-I</span><span class="si">%s</span><span class="s">&#39;</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DEFINES_ST&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="s">&#39;-D</span><span class="si">%s</span><span class="s">&#39;</span>
 
@@ -105,7 +105,7 @@
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cprogram_PATTERN&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span>
 
 	<span class="c"># shared librar</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CFLAGS_cshlib&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fPIC&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CFLAGS_cshlib&#39;</span><span class="p">]</span>       <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fPIC&#39;</span><span class="p">]</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cshlib&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-shared&#39;</span><span class="p">]</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cshlib_PATTERN&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.so&#39;</span>
 
@@ -115,7 +115,7 @@
 
 	<span class="c"># osx stuff</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_MACBUNDLE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-bundle&#39;</span><span class="p">,</span> <span class="s">&#39;-undefined&#39;</span><span class="p">,</span> <span class="s">&#39;dynamic_lookup&#39;</span><span class="p">]</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CFLAGS_MACBUNDLE&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fPIC&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CFLAGS_MACBUNDLE&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fPIC&#39;</span><span class="p">]</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;macbundle_PATTERN&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.bundle&#39;</span>
 </div>
 <span class="nd">@conf</span>
@@ -128,7 +128,7 @@
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;implib_PATTERN&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.dll.a&#39;</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;IMPLIB_ST&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;-Wl,--out-implib,</span><span class="si">%s</span><span class="s">&#39;</span>
 
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CFLAGS_cshlib&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CFLAGS_cshlib&#39;</span><span class="p">]</span>       <span class="o">=</span> <span class="p">[]</span>
 
 	<span class="n">v</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CFLAGS_cshlib&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-DDLL_EXPORT&#39;</span><span class="p">])</span> <span class="c"># TODO adding nonstandard defines like this DLL_EXPORT is not a good idea</span>
 
@@ -150,27 +150,33 @@
 <div class="viewcode-block" id="gcc_modifier_darwin"><a class="viewcode-back" href="../../../tools/gcc.html#waflib.Tools.gcc.gcc_modifier_darwin">[docs]</a><span class="k">def</span> <span class="nf">gcc_modifier_darwin</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Configuration flags for executing gcc on MacOS&quot;&quot;&quot;</span>
 	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CFLAGS_cshlib&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fPIC&#39;</span><span class="p">,</span> <span class="s">&#39;-compatibility_version&#39;</span><span class="p">,</span> <span class="s">&#39;1&#39;</span><span class="p">,</span> <span class="s">&#39;-current_version&#39;</span><span class="p">,</span> <span class="s">&#39;1&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CFLAGS_cshlib&#39;</span><span class="p">]</span>       <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fPIC&#39;</span><span class="p">,</span> <span class="s">&#39;-compatibility_version&#39;</span><span class="p">,</span> <span class="s">&#39;1&#39;</span><span class="p">,</span> <span class="s">&#39;-current_version&#39;</span><span class="p">,</span> <span class="s">&#39;1&#39;</span><span class="p">]</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cshlib&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-dynamiclib&#39;</span><span class="p">]</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cshlib_PATTERN&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.dylib&#39;</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FRAMEWORKPATH_ST&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;-F</span><span class="si">%s</span><span class="s">&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FRAMEWORK_ST&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;-framework </span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FRAMEWORK_ST&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-framework&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;ARCH_ST&#39;</span><span class="p">]</span>             <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-arch&#39;</span><span class="p">]</span>
 
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cstlib&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="p">[]</span>
 
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SHLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;STLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SONAME_ST&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SHLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;STLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SONAME_ST&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="p">[]</span>
 </div>
 <span class="nd">@conf</span>
 <div class="viewcode-block" id="gcc_modifier_aix"><a class="viewcode-back" href="../../../tools/gcc.html#waflib.Tools.gcc.gcc_modifier_aix">[docs]</a><span class="k">def</span> <span class="nf">gcc_modifier_aix</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Configuration flags for executing gcc on AIX&quot;&quot;&quot;</span>
 	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cprogram&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-Wl,-brtl&#39;</span><span class="p">]</span>
-
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cshlib&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-shared&#39;</span><span class="p">,</span><span class="s">&#39;-Wl,-brtl,-bexpfull&#39;</span><span class="p">]</span>
-
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SHLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SHLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="p">[]</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="gcc_modifier_hpux"><a class="viewcode-back" href="../../../tools/gcc.html#waflib.Tools.gcc.gcc_modifier_hpux">[docs]</a><span class="k">def</span> <span class="nf">gcc_modifier_hpux</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SHLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CFLAGS_cshlib&#39;</span><span class="p">]</span>       <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fPIC&#39;</span><span class="p">,</span><span class="s">&#39;-DPIC&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cshlib_PATTERN&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.sl&#39;</span>
 </div>
 <span class="nd">@conf</span>
 <div class="viewcode-block" id="gcc_modifier_platform"><a class="viewcode-back" href="../../../tools/gcc.html#waflib.Tools.gcc.gcc_modifier_platform">[docs]</a><span class="k">def</span> <span class="nf">gcc_modifier_platform</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
@@ -178,23 +184,22 @@
 	<span class="c"># * set configurations specific for a platform.</span>
 	<span class="c"># * the destination platform is detected automatically by looking at the macros the compiler predefines,</span>
 	<span class="c">#   and if it&#39;s not recognised, it fallbacks to sys.platform.</span>
-	<span class="n">gcc_modifier_func</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;gcc_modifier_&#39;</span> <span class="o">+</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">DEST_OS</span><span class="p">)</span>
+	<span class="n">gcc_modifier_func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="s">&#39;gcc_modifier_&#39;</span> <span class="o">+</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">DEST_OS</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
 	<span class="k">if</span> <span class="n">gcc_modifier_func</span><span class="p">:</span>
-			<span class="n">gcc_modifier_func</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+			<span class="n">gcc_modifier_func</span><span class="p">()</span>
 </div>
-<span class="n">configure</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
-<span class="s">find_gcc</span>
-<span class="s">find_ar</span>
-<span class="s">gcc_common_flags</span>
-<span class="s">gcc_modifier_platform</span>
-<span class="s">cc_load_tools</span>
-<span class="s">cc_add_flags</span>
-<span class="s">link_add_flags</span>
-<span class="s">&#39;&#39;&#39;</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Configuration for gcc</span>
-<span class="sd">&quot;&quot;&quot;</span>
-</pre></div>
+<div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/gcc.html#waflib.Tools.gcc.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Configuration for gcc</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_gcc</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_ar</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">gcc_common_flags</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">gcc_modifier_platform</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">cc_load_tools</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">cc_add_flags</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">link_add_flags</span><span class="p">()</span>
+</pre></div></div>
 
           </div>
         </div>
@@ -230,7 +235,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

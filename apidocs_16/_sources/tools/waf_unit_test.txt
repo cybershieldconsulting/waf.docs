@@ -1,0 +1,8 @@
+waf_unit_test
+=============
+
+.. automodule:: waflib.Tools.waf_unit_test
+
+Features defined in this module:
+
+* `test <../featuremap.html#feature-test>`_

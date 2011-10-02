@@ -1,0 +1,8 @@
+d
+=
+
+.. automodule:: waflib.Tools.d
+
+Features defined in this module:
+
+* `d <../featuremap.html#feature-d>`_

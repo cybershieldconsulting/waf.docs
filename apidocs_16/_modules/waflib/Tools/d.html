@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.d &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.d &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -55,7 +55,7 @@
 
 <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Errors</span>
-<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">taskgen_method</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">extension</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">taskgen_method</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after_method</span><span class="p">,</span> <span class="n">before_method</span><span class="p">,</span> <span class="n">extension</span>
 <span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
 <span class="kn">from</span> <span class="nn">waflib.Tools.ccroot</span> <span class="kn">import</span> <span class="n">link_task</span>
 <span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">d_scan</span><span class="p">,</span> <span class="n">d_config</span>
@@ -64,23 +64,12 @@
 <div class="viewcode-block" id="d"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.d">[docs]</a><span class="k">class</span> <span class="nc">d</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
 	<span class="s">&quot;Compile a d file into an object file&quot;</span>
 	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;GREEN&#39;</span>
-	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${D} ${DFLAGS} ${DINC_ST:INCPATHS} ${D_SRC_F}${SRC} ${D_TGT_F}${TGT}&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${D} ${DFLAGS} ${DINC_ST:INCPATHS} ${D_SRC_F:SRC} ${D_TGT_F:TGT}&#39;</span>
 	<span class="n">scan</span>    <span class="o">=</span> <span class="n">d_scan</span><span class="o">.</span><span class="n">scan</span>
-
-<div class="viewcode-block" id="d.exec_command"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.d.exec_command">[docs]</a>	<span class="k">def</span> <span class="nf">exec_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
-		<span class="sd">&quot;&quot;&quot;dmd wants -of stuck to the file name&quot;&quot;&quot;</span>
-		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
-			<span class="n">lst</span> <span class="o">=</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-			<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)):</span>
-				<span class="k">if</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;-of&#39;</span><span class="p">:</span>
-					<span class="k">del</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-					<span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;-of&#39;</span> <span class="o">+</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-					<span class="k">break</span>
-		<span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
-</div></div>
+</div>
 <div class="viewcode-block" id="d_with_header"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.d_with_header">[docs]</a><span class="k">class</span> <span class="nc">d_with_header</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
 	<span class="s">&quot;Compile a d file and generate a header&quot;</span>
-	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${D} ${DFLAGS} ${DINC_ST:INCPATHS} ${D_HDR_F}${TGT[1].bldpath()} ${D_SRC_F}${SRC} ${D_TGT_F}${TGT[0].bldpath()}&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${D} ${DFLAGS} ${DINC_ST:INCPATHS} ${D_HDR_F:tgt.outputs[1].bldpath()} ${D_SRC_F:SRC} ${D_TGT_F:tgt.outputs[0].bldpath()}&#39;</span>
 </div>
 <div class="viewcode-block" id="d_header"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.d_header">[docs]</a><span class="k">class</span> <span class="nc">d_header</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
 	<span class="s">&quot;Compile d headers&quot;</span>
@@ -89,21 +78,10 @@
 </div>
 <div class="viewcode-block" id="dprogram"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.dprogram">[docs]</a><span class="k">class</span> <span class="nc">dprogram</span><span class="p">(</span><span class="n">link_task</span><span class="p">):</span>
 	<span class="s">&quot;Link object files into a d program&quot;</span>
-	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${D_LINKER} ${DLNK_SRC_F}${SRC} ${DLNK_TGT_F}${TGT} ${RPATH_ST:RPATH} ${DSTLIB_MARKER} ${DSTLIBPATH_ST:STLIBPATH} ${DSTLIB_ST:STLIB} ${DSHLIB_MARKER} ${LIBPATH_ST:LIBPATH} ${DSHLIB_ST:LIB} ${LINKFLAGS}&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${D_LINKER} ${LINKFLAGS} ${DLNK_SRC_F}${SRC} ${DLNK_TGT_F:TGT} ${RPATH_ST:RPATH} ${DSTLIB_MARKER} ${DSTLIBPATH_ST:STLIBPATH} ${DSTLIB_ST:STLIB} ${DSHLIB_MARKER} ${LIBPATH_ST:LIBPATH} ${DSHLIB_ST:LIB}&#39;</span>
 	<span class="n">inst_to</span> <span class="o">=</span> <span class="s">&#39;${BINDIR}&#39;</span>
 	<span class="n">chmod</span>   <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">O755</span>
-<div class="viewcode-block" id="dprogram.exec_command"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.dprogram.exec_command">[docs]</a>	<span class="k">def</span> <span class="nf">exec_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
-		<span class="sd">&quot;&quot;&quot;dmd wants -of stuck to the file name&quot;&quot;&quot;</span>
-		<span class="c"># TODO duplicate, but do we really want multiple inheritance?</span>
-		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
-			<span class="n">lst</span> <span class="o">=</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-			<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)):</span>
-				<span class="k">if</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;-of&#39;</span><span class="p">:</span>
-					<span class="k">del</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-					<span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;-of&#39;</span> <span class="o">+</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-					<span class="k">break</span>
-		<span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">dprogram</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
-</div></div>
+</div>
 <div class="viewcode-block" id="dshlib"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.dshlib">[docs]</a><span class="k">class</span> <span class="nc">dshlib</span><span class="p">(</span><span class="n">dprogram</span><span class="p">):</span>
 	<span class="s">&quot;Link object files into a d shared library&quot;</span>
 	<span class="n">inst_to</span> <span class="o">=</span> <span class="s">&#39;${LIBDIR}&#39;</span>
@@ -198,7 +176,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

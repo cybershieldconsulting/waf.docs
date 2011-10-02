@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.xlcxx &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.xlcxx &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -55,7 +55,6 @@
 <span class="c"># Yinon Ehrlich, 2009</span>
 <span class="c"># Michael Kuhn, 2009</span>
 
-<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">ccroot</span><span class="p">,</span> <span class="n">ar</span>
 <span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
 
@@ -66,6 +65,7 @@
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">cxx</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">([</span><span class="s">&#39;xlc++_r&#39;</span><span class="p">,</span> <span class="s">&#39;xlc++&#39;</span><span class="p">],</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;CXX&#39;</span><span class="p">)</span>
 	<span class="n">cxx</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_to_list</span><span class="p">(</span><span class="n">cxx</span><span class="p">)</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">get_xlc_version</span><span class="p">(</span><span class="n">cxx</span><span class="p">)</span>
 	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CXX_NAME</span> <span class="o">=</span> <span class="s">&#39;xlc++&#39;</span>
 	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CXX</span>      <span class="o">=</span> <span class="n">cxx</span>
 </div>
@@ -76,47 +76,46 @@
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
 
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXX_SRC_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXX_TGT_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;-o&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]</span> <span class="c"># shell hack for -MD</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXX_SRC_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXX_TGT_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;-o&#39;</span><span class="p">]</span>
 
 	<span class="c"># linker</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;LINK_CXX&#39;</span><span class="p">]:</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;LINK_CXX&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;CXX&#39;</span><span class="p">]</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXXLNK_SRC_F&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXXLNK_TGT_F&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-o&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]</span> <span class="c"># shell hack for -MD</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CPPPATH_ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;-I</span><span class="si">%s</span><span class="s">&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DEFINES_ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;-D</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXXLNK_SRC_F&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXXLNK_TGT_F&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-o&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CPPPATH_ST&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="s">&#39;-I</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DEFINES_ST&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="s">&#39;-D</span><span class="si">%s</span><span class="s">&#39;</span>
 
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LIB_ST&#39;</span><span class="p">]</span>              <span class="o">=</span> <span class="s">&#39;-l</span><span class="si">%s</span><span class="s">&#39;</span> <span class="c"># template for adding libs</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LIBPATH_ST&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="s">&#39;-L</span><span class="si">%s</span><span class="s">&#39;</span> <span class="c"># template for adding libpaths</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;STLIB_ST&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;-l</span><span class="si">%s</span><span class="s">&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;STLIBPATH_ST&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;-L</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;STLIB_ST&#39;</span><span class="p">]</span>            <span class="o">=</span> <span class="s">&#39;-l</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;STLIBPATH_ST&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;-L</span><span class="si">%s</span><span class="s">&#39;</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;RPATH_ST&#39;</span><span class="p">]</span>            <span class="o">=</span> <span class="s">&#39;-Wl,-rpath,</span><span class="si">%s</span><span class="s">&#39;</span>
 
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SONAME_ST&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SHLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;STLIB_MARKER&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SONAME_ST&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SHLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;STLIB_MARKER&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="p">[]</span>
 
 	<span class="c"># program</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cxxprogram&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-Wl,-brtl&#39;</span><span class="p">]</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cxxprogram_PATTERN&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cxxprogram&#39;</span><span class="p">]</span><span class="o">=</span> <span class="p">[</span><span class="s">&#39;-Wl,-brtl&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cxxprogram_PATTERN&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span>
 
 	<span class="c"># shared library</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXXFLAGS_cxxshlib&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fPIC&#39;</span><span class="p">]</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cxxshlib&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-G&#39;</span><span class="p">,</span> <span class="s">&#39;-Wl,-brtl,-bexpfull&#39;</span><span class="p">]</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cxxshlib_PATTERN&#39;</span><span class="p">]</span>       <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.so&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CXXFLAGS_cxxshlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fPIC&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cxxshlib&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-G&#39;</span><span class="p">,</span> <span class="s">&#39;-Wl,-brtl,-bexpfull&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cxxshlib_PATTERN&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.so&#39;</span>
 
 	<span class="c"># static lib</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cxxstlib&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cxxstlib_PATTERN&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.a&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cxxstlib&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cxxstlib_PATTERN&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.a&#39;</span>
 </div>
-<span class="n">configure</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
-<span class="s">find_xlcxx</span>
-<span class="s">find_ar</span>
-<span class="s">xlcxx_common_flags</span>
-<span class="s">cxx_load_tools</span>
-<span class="s">cxx_add_flags</span>
-<span class="s">link_add_flags</span>
-<span class="s">&#39;&#39;&#39;</span>
+<span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_xlcxx</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_ar</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">xlcxx_common_flags</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">cxx_load_tools</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">cxx_add_flags</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">link_add_flags</span><span class="p">()</span>
 </pre></div>
 
           </div>
@@ -153,7 +152,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

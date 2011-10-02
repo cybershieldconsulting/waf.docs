@@ -1,0 +1,8 @@
+glib2
+=====
+
+.. automodule:: waflib.Tools.glib2
+
+Features defined in this module:
+
+* `glib2 <../featuremap.html#feature-glib2>`_

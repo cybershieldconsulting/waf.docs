@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.compiler_c &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.compiler_c &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -89,9 +89,9 @@
 <span class="s">&#39;cygwin&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;gcc&#39;</span><span class="p">],</span>
 <span class="s">&#39;darwin&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;gcc&#39;</span><span class="p">],</span>
 <span class="s">&#39;aix&#39;</span><span class="p">:</span>    <span class="p">[</span><span class="s">&#39;xlc&#39;</span><span class="p">,</span> <span class="s">&#39;gcc&#39;</span><span class="p">],</span>
-<span class="s">&#39;linux&#39;</span><span class="p">:</span>  <span class="p">[</span><span class="s">&#39;gcc&#39;</span><span class="p">,</span> <span class="s">&#39;icc&#39;</span><span class="p">,</span> <span class="s">&#39;suncc&#39;</span><span class="p">],</span>
-<span class="s">&#39;sunos&#39;</span><span class="p">:</span>  <span class="p">[</span><span class="s">&#39;gcc&#39;</span><span class="p">,</span> <span class="s">&#39;suncc&#39;</span><span class="p">],</span>
-<span class="s">&#39;irix&#39;</span><span class="p">:</span>   <span class="p">[</span><span class="s">&#39;gcc&#39;</span><span class="p">],</span>
+<span class="s">&#39;linux&#39;</span><span class="p">:</span>  <span class="p">[</span><span class="s">&#39;gcc&#39;</span><span class="p">,</span> <span class="s">&#39;icc&#39;</span><span class="p">],</span>
+<span class="s">&#39;sunos&#39;</span><span class="p">:</span>  <span class="p">[</span><span class="s">&#39;suncc&#39;</span><span class="p">,</span> <span class="s">&#39;gcc&#39;</span><span class="p">],</span>
+<span class="s">&#39;irix&#39;</span><span class="p">:</span>   <span class="p">[</span><span class="s">&#39;gcc&#39;</span><span class="p">,</span> <span class="s">&#39;irixcc&#39;</span><span class="p">],</span>
 <span class="s">&#39;hpux&#39;</span><span class="p">:</span>   <span class="p">[</span><span class="s">&#39;gcc&#39;</span><span class="p">],</span>
 <span class="s">&#39;gnu&#39;</span><span class="p">:</span>    <span class="p">[</span><span class="s">&#39;gcc&#39;</span><span class="p">],</span>
 <span class="s">&#39;java&#39;</span><span class="p">:</span>   <span class="p">[</span><span class="s">&#39;gcc&#39;</span><span class="p">,</span> <span class="s">&#39;msvc&#39;</span><span class="p">,</span> <span class="s">&#39;icc&#39;</span><span class="p">],</span>
@@ -121,7 +121,7 @@
 			<span class="n">debug</span><span class="p">(</span><span class="s">&#39;compiler_c: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="k">if</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;CC&#39;</span><span class="p">]:</span>
-				<span class="n">conf</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+				<span class="n">conf</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get_flat</span><span class="p">(</span><span class="s">&#39;CC&#39;</span><span class="p">))</span>
 				<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;COMPILER_CC&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">compiler</span>
 				<span class="k">break</span>
 			<span class="n">conf</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
@@ -134,6 +134,7 @@
 
 <span class="sd">		$ waf configure --check-c-compiler=gcc</span>
 <span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">opt</span><span class="o">.</span><span class="n">load_special_tools</span><span class="p">(</span><span class="s">&#39;c_*.py&#39;</span><span class="p">,</span> <span class="n">ban</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;c_dumbpreproc.py&#39;</span><span class="p">])</span>
 	<span class="k">global</span> <span class="n">c_compiler</span>
 	<span class="n">build_platform</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">unversioned_sys_platform</span><span class="p">()</span>
 	<span class="n">possible_compiler_list</span> <span class="o">=</span> <span class="n">c_compiler</span><span class="p">[</span><span class="n">build_platform</span> <span class="ow">in</span> <span class="n">c_compiler</span> <span class="ow">and</span> <span class="n">build_platform</span> <span class="ow">or</span> <span class="s">&#39;default&#39;</span><span class="p">]</span>
@@ -180,7 +181,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

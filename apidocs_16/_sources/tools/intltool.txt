@@ -1,0 +1,10 @@
+intltool
+========
+
+.. automodule:: waflib.Tools.intltool
+
+Features defined in this module:
+
+* `intltool_in <../featuremap.html#feature-intltool_in>`_
+
+* `intltool_po <../featuremap.html#feature-intltool_po>`_

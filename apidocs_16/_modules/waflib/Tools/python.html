@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.python &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.python &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -69,12 +69,13 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
-<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">TaskGen</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Runner</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Errors</span>
-<span class="kn">from</span> <span class="nn">waflib.Logs</span> <span class="kn">import</span> <span class="n">debug</span><span class="p">,</span> <span class="n">warn</span><span class="p">,</span> <span class="n">info</span>
-<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">extension</span><span class="p">,</span> <span class="n">taskgen_method</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">feature</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">waflib.Logs</span> <span class="kn">import</span> <span class="n">debug</span><span class="p">,</span> <span class="n">warn</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">error</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">extension</span><span class="p">,</span> <span class="n">before_method</span><span class="p">,</span> <span class="n">after_method</span><span class="p">,</span> <span class="n">feature</span>
 <span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
 
 <span class="n">FRAG</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">#include &lt;Python.h&gt;</span>
 <span class="s">#ifdef __cplusplus</span>
 <span class="s">extern &quot;C&quot; {</span>
 <span class="s">#endif</span>
@@ -96,8 +97,7 @@
 
 <span class="n">INST</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
 <span class="s">import sys, py_compile</span>
-<span class="s">for pyfile in sys.argv[1:]:</span>
-<span class="s">	py_compile.compile(pyfile, pyfile + </span><span class="si">%r</span><span class="s">)</span>
+<span class="s">py_compile.compile(sys.argv[1], sys.argv[2], sys.argv[3])</span>
 <span class="s">&#39;&#39;&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Piece of Python code used in :py:func:`waflib.Tools.python.install_pyfile` for installing python files</span>
@@ -114,22 +114,32 @@
 	<span class="k">except</span><span class="p">:</span>
 		<span class="k">return</span>
 
-	<span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;install_path&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">install_path</span><span class="p">:</span>
+			<span class="k">return</span>
+	<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">install_path</span> <span class="o">=</span> <span class="s">&#39;${PYTHONDIR}&#39;</span>
 
+	<span class="c"># i wonder now why we wanted to do this after the build is over</span>
+	<span class="c"># issue #901: people want to preserve the structure of installed files</span>
 	<span class="k">def</span> <span class="nf">inst_py</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
-		<span class="n">install_pyfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+		<span class="n">install_from</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;install_from&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">install_from</span><span class="p">:</span>
+			<span class="n">install_from</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_dir</span><span class="p">(</span><span class="n">install_from</span><span class="p">)</span>
+		<span class="n">install_pyfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">install_from</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">add_post_fun</span><span class="p">(</span><span class="n">inst_py</span><span class="p">)</span>
 </div>
-<div class="viewcode-block" id="install_pyfile"><a class="viewcode-back" href="../../../tools/python.html#waflib.Tools.python.install_pyfile">[docs]</a><span class="k">def</span> <span class="nf">install_pyfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<div class="viewcode-block" id="install_pyfile"><a class="viewcode-back" href="../../../tools/python.html#waflib.Tools.python.install_pyfile">[docs]</a><span class="k">def</span> <span class="nf">install_pyfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">install_from</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Execute the installation of a python file</span>
 
 <span class="sd">	:param node: python file</span>
 <span class="sd">	:type node: :py:class:`waflib.Node.Node`</span>
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">install_path</span><span class="p">,</span> <span class="p">[</span><span class="n">node</span><span class="p">],</span> <span class="n">postpone</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-	<span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tsk</span><span class="o">.</span><span class="n">get_install_path</span><span class="p">(),</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+	<span class="n">from_node</span> <span class="o">=</span> <span class="n">install_from</span> <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span>
+	<span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_as</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">install_path</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">path_from</span><span class="p">(</span><span class="n">from_node</span><span class="p">),</span> <span class="n">node</span><span class="p">,</span> <span class="n">postpone</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+	<span class="n">path</span> <span class="o">=</span> <span class="n">tsk</span><span class="o">.</span><span class="n">get_install_path</span><span class="p">()</span>
 
 	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">is_install</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
 		<span class="n">info</span><span class="p">(</span><span class="s">&quot;+ removing byte compiled python files&quot;</span><span class="p">)</span>
@@ -140,20 +150,29 @@
 				<span class="k">pass</span>
 
 	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">is_install</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYC&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYO&#39;</span><span class="p">]:</span>
-			<span class="n">info</span><span class="p">(</span><span class="s">&quot;+ byte compiling </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">st1</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="n">error</span><span class="p">(</span><span class="s">&#39;The python file is missing, this should not happen&#39;</span><span class="p">)</span>
 
-		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYC&#39;</span><span class="p">]:</span>
-			<span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHON&#39;</span><span class="p">],</span> <span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="n">INST</span> <span class="o">%</span> <span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="n">path</span><span class="p">]</span>
-			<span class="n">ret</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-			<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
-				<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;pyc compilation failed </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="s">&#39;o&#39;</span><span class="p">]:</span>
+			<span class="n">do_inst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PY&#39;</span> <span class="o">+</span> <span class="n">x</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">st2</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span>
+			<span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+				<span class="k">pass</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">st1</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&lt;=</span> <span class="n">st2</span><span class="o">.</span><span class="n">st_mtime</span><span class="p">:</span>
+					<span class="n">do_inst</span> <span class="o">=</span> <span class="bp">False</span>
 
-		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYO&#39;</span><span class="p">]:</span>
-			<span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHON&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYFLAGS_OPT&#39;</span><span class="p">],</span> <span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="n">INST</span> <span class="o">%</span> <span class="s">&#39;o&#39;</span><span class="p">,</span> <span class="n">path</span><span class="p">]</span>
-			<span class="n">ret</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-			<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
-				<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;pyo compilation failed </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">do_inst</span><span class="p">:</span>
+				<span class="n">lst</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="s">&#39;o&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYFLAGS_OPT&#39;</span><span class="p">]]</span> <span class="ow">or</span> <span class="p">[]</span>
+				<span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">path</span> <span class="o">+</span> <span class="n">x</span><span class="p">,</span> <span class="n">tsk</span><span class="o">.</span><span class="n">get_install_path</span><span class="p">(</span><span class="n">destdir</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span>
+				<span class="n">argv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHON&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">lst</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="n">INST</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+				<span class="n">info</span><span class="p">(</span><span class="s">&#39;+ byte compiling </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">x</span><span class="p">))</span>
+				<span class="n">ret</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+				<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+					<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;py</span><span class="si">%s</span><span class="s"> compilation failed </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">path</span><span class="p">))</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;py&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="feature_py"><a class="viewcode-back" href="../../../tools/python.html#waflib.Tools.python.feature_py">[docs]</a><span class="k">def</span> <span class="nf">feature_py</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -163,21 +182,31 @@
 	<span class="k">pass</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;pyext&#39;</span><span class="p">)</span>
-<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">,</span> <span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">,</span> <span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_bundle&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="init_pyext"><a class="viewcode-back" href="../../../tools/python.html#waflib.Tools.python.init_pyext">[docs]</a><span class="k">def</span> <span class="nf">init_pyext</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Change the values of *cshlib_PATTERN* and *cxxshlib_PATTERN* to remove the</span>
 <span class="sd">	*lib* prefix from library names.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;install_path&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">install_path</span> <span class="o">=</span> <span class="s">&#39;${PYTHONDIR}&#39;</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">install_path</span><span class="p">:</span>
+			<span class="k">return</span>
+	<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">install_path</span> <span class="o">=</span> <span class="s">&#39;${PYTHONARCHDIR}&#39;</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;uselib&#39;</span><span class="p">,</span> <span class="p">[]))</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;PYEXT&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;PYEXT&#39;</span><span class="p">)</span>
 	<span class="c"># override shlib_PATTERN set by the osx module</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;cshlib_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;cxxshlib_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;pyext_PATTERN&#39;</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;cshlib_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;cxxshlib_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;macbundle_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;pyext_PATTERN&#39;</span><span class="p">]</span>
 </div>
-<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">)</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;pyext&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">,</span> <span class="s">&#39;apply_bundle&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="set_bundle"><a class="viewcode-back" href="../../../tools/python.html#waflib.Tools.python.set_bundle">[docs]</a><span class="k">def</span> <span class="nf">set_bundle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;darwin&#39;</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">mac_bundle</span> <span class="o">=</span> <span class="bp">True</span>
+</div>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">)</span>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;pyembed&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="init_pyembed"><a class="viewcode-back" href="../../../tools/python.html#waflib.Tools.python.init_pyembed">[docs]</a><span class="k">def</span> <span class="nf">init_pyembed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
@@ -188,12 +217,10 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;PYEMBED&#39;</span><span class="p">)</span>
 </div>
 <span class="nd">@conf</span>
-<div class="viewcode-block" id="get_python_variables"><a class="viewcode-back" href="../../../tools/python.html#waflib.Tools.python.get_python_variables">[docs]</a><span class="k">def</span> <span class="nf">get_python_variables</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">python_exe</span><span class="p">,</span> <span class="n">variables</span><span class="p">,</span> <span class="n">imports</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;import sys&#39;</span><span class="p">]):</span>
+<div class="viewcode-block" id="get_python_variables"><a class="viewcode-back" href="../../../tools/python.html#waflib.Tools.python.get_python_variables">[docs]</a><span class="k">def</span> <span class="nf">get_python_variables</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">variables</span><span class="p">,</span> <span class="n">imports</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;import sys&#39;</span><span class="p">]):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Execute a python interpreter to dump configuration variables</span>
 
-<span class="sd">	:param python_exe: python interpreter</span>
-<span class="sd">	:type python_exe: list of string</span>
 <span class="sd">	:param variables: variables to print</span>
 <span class="sd">	:type variables: list of string</span>
 <span class="sd">	:param imports: one import by element</span>
@@ -211,7 +238,10 @@
 	<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
 		<span class="k">pass</span>
 
-	<span class="n">out</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">python_exe</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">program</span><span class="p">)],</span> <span class="n">env</span><span class="o">=</span><span class="n">os_env</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">out</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">PYTHON</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">program</span><span class="p">)],</span> <span class="n">env</span><span class="o">=</span><span class="n">os_env</span><span class="p">)</span>
+	<span class="k">except</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;The distutils module is unusable: install &quot;python-devel&quot;?&#39;</span><span class="p">)</span>
 	<span class="n">return_values</span> <span class="o">=</span> <span class="p">[]</span>
 	<span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">):</span>
 		<span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
@@ -236,6 +266,8 @@
 <span class="sd">	* PYEMBED: for embedding a python interpreter</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 
+	<span class="c"># FIXME rewrite</span>
+
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;CC_NAME&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;CXX_NAME&#39;</span><span class="p">]:</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;load a compiler first (gcc, g++, ..)&#39;</span><span class="p">)</span>
 
@@ -243,19 +275,19 @@
 		<span class="n">conf</span><span class="o">.</span><span class="n">check_python_version</span><span class="p">()</span>
 
 	<span class="n">env</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
-	<span class="n">python</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHON&#39;</span><span class="p">]</span>
-	<span class="k">if</span> <span class="ow">not</span> <span class="n">python</span><span class="p">:</span>
+	<span class="n">pybin</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">PYTHON</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">pybin</span><span class="p">:</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not find the python executable&#39;</span><span class="p">)</span>
 
 	<span class="n">v</span> <span class="o">=</span> <span class="s">&#39;prefix SO LDFLAGS LIBDIR LIBPL INCLUDEPY Py_ENABLE_SHARED MACOSX_DEPLOYMENT_TARGET LDSHARED CFLAGS&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
 	<span class="k">try</span><span class="p">:</span>
-		<span class="n">lst</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">get_python_variables</span><span class="p">(</span><span class="n">python</span><span class="p">,</span> <span class="p">[</span><span class="s">&quot;get_config_var(&#39;</span><span class="si">%s</span><span class="s">&#39;)&quot;</span> <span class="o">%</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">],</span>
+		<span class="n">lst</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">get_python_variables</span><span class="p">([</span><span class="s">&quot;get_config_var(&#39;</span><span class="si">%s</span><span class="s">&#39;) or &#39;&#39;&quot;</span> <span class="o">%</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">],</span>
 			<span class="p">[</span><span class="s">&#39;from distutils.sysconfig import get_config_var&#39;</span><span class="p">])</span>
 	<span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&quot;Python development headers not found (-v for details).&quot;</span><span class="p">)</span>
 
 	<span class="n">vals</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> = </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">lst</span><span class="p">)]</span>
-	<span class="n">conf</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&quot;Configuration returned from </span><span class="si">%r</span><span class="s">:</span><span class="se">\n</span><span class="si">%r</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">python</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">vals</span><span class="p">)))</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&quot;Configuration returned from </span><span class="si">%r</span><span class="s">:</span><span class="se">\n</span><span class="si">%r</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pybin</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">vals</span><span class="p">)))</span>
 
 	<span class="n">dct</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">lst</span><span class="p">))</span>
 	<span class="n">x</span> <span class="o">=</span> <span class="s">&#39;MACOSX_DEPLOYMENT_TARGET&#39;</span>
@@ -266,33 +298,41 @@
 
 	<span class="c"># Check for python libraries for embedding</span>
 
-	<span class="n">all_flags</span> <span class="o">=</span> <span class="n">dct</span><span class="p">[</span><span class="s">&#39;LDFLAGS&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">dct</span><span class="p">[</span><span class="s">&#39;LDSHARED&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">dct</span><span class="p">[</span><span class="s">&#39;CFLAGS&#39;</span><span class="p">]</span>
+	<span class="n">all_flags</span> <span class="o">=</span> <span class="n">dct</span><span class="p">[</span><span class="s">&#39;LDFLAGS&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">dct</span><span class="p">[</span><span class="s">&#39;CFLAGS&#39;</span><span class="p">]</span>
 	<span class="n">conf</span><span class="o">.</span><span class="n">parse_flags</span><span class="p">(</span><span class="n">all_flags</span><span class="p">,</span> <span class="s">&#39;PYEMBED&#39;</span><span class="p">)</span>
+
+	<span class="n">all_flags</span> <span class="o">=</span> <span class="n">dct</span><span class="p">[</span><span class="s">&#39;LDFLAGS&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">dct</span><span class="p">[</span><span class="s">&#39;LDSHARED&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">dct</span><span class="p">[</span><span class="s">&#39;CFLAGS&#39;</span><span class="p">]</span>
 	<span class="n">conf</span><span class="o">.</span><span class="n">parse_flags</span><span class="p">(</span><span class="n">all_flags</span><span class="p">,</span> <span class="s">&#39;PYEXT&#39;</span><span class="p">)</span>
 
 	<span class="n">result</span> <span class="o">=</span> <span class="bp">None</span>
-	<span class="n">name</span> <span class="o">=</span> <span class="s">&#39;python&#39;</span> <span class="o">+</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHON_VERSION&#39;</span><span class="p">]</span>
+	<span class="c">#name = &#39;python&#39; + env[&#39;PYTHON_VERSION&#39;]</span>
 
-	<span class="c"># LIBPATH_PYEMBED is already set; see if it works.</span>
-	<span class="n">path</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;LIBPATH_PYEMBED&#39;</span><span class="p">]</span>
-	<span class="n">conf</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s"># Trying default LIBPATH_PYEMBED: </span><span class="si">%r</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
-	<span class="n">result</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">lib</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">uselib</span><span class="o">=</span><span class="s">&#39;PYEMBED&#39;</span><span class="p">,</span> <span class="n">libpath</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+	<span class="c"># TODO simplify this</span>
+	<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;python&#39;</span> <span class="o">+</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHON_VERSION&#39;</span><span class="p">],</span> <span class="s">&#39;python&#39;</span> <span class="o">+</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHON_VERSION&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)):</span>
 
-	<span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
-		<span class="n">conf</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s"># try again with -L$python_LIBDIR: </span><span class="si">%r</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
-		<span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">dct</span><span class="p">[</span><span class="s">&#39;LIBDIR&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">]</span>
-		<span class="n">result</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">lib</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">uselib</span><span class="o">=</span><span class="s">&#39;PYEMBED&#39;</span><span class="p">,</span> <span class="n">libpath</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+		<span class="c"># LIBPATH_PYEMBED is already set; see if it works.</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">result</span> <span class="ow">and</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;LIBPATH_PYEMBED&#39;</span><span class="p">]:</span>
+			<span class="n">path</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;LIBPATH_PYEMBED&#39;</span><span class="p">]</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s"># Trying default LIBPATH_PYEMBED: </span><span class="si">%r</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+			<span class="n">result</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">lib</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">uselib</span><span class="o">=</span><span class="s">&#39;PYEMBED&#39;</span><span class="p">,</span> <span class="n">libpath</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s">&#39;Checking for library </span><span class="si">%s</span><span class="s"> in LIBPATH_PYEMBED&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
 
-	<span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
-		<span class="n">conf</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s"># try again with -L$python_LIBPL (some systems don&#39;t install the python library in $prefix/lib)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
-		<span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">dct</span><span class="p">[</span><span class="s">&#39;LIBPL&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">]</span>
-		<span class="n">result</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">lib</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">uselib</span><span class="o">=</span><span class="s">&#39;PYEMBED&#39;</span><span class="p">,</span> <span class="n">libpath</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">result</span> <span class="ow">and</span> <span class="n">dct</span><span class="p">[</span><span class="s">&#39;LIBDIR&#39;</span><span class="p">]:</span>
+			<span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">dct</span><span class="p">[</span><span class="s">&#39;LIBDIR&#39;</span><span class="p">]]</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s"># try again with -L$python_LIBDIR: </span><span class="si">%r</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+			<span class="n">result</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">lib</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">uselib</span><span class="o">=</span><span class="s">&#39;PYEMBED&#39;</span><span class="p">,</span> <span class="n">libpath</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s">&#39;Checking for library </span><span class="si">%s</span><span class="s"> in LIBDIR&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
 
-	<span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
-		<span class="n">conf</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s"># try again with -L$prefix/libs, and pythonXY name rather than pythonX.Y (win32)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
-		<span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="s">&#39;prefix&#39;</span><span class="p">],</span> <span class="s">&quot;libs&quot;</span><span class="p">)]</span>
-		<span class="n">name</span> <span class="o">=</span> <span class="s">&#39;python&#39;</span> <span class="o">+</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHON_VERSION&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
-		<span class="n">result</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">lib</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">uselib</span><span class="o">=</span><span class="s">&#39;PYEMBED&#39;</span><span class="p">,</span> <span class="n">libpath</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">result</span> <span class="ow">and</span> <span class="n">dct</span><span class="p">[</span><span class="s">&#39;LIBPL&#39;</span><span class="p">]:</span>
+			<span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">dct</span><span class="p">[</span><span class="s">&#39;LIBPL&#39;</span><span class="p">]]</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s"># try again with -L$python_LIBPL (some systems don&#39;t install the python library in $prefix/lib)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+			<span class="n">result</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">lib</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">uselib</span><span class="o">=</span><span class="s">&#39;PYEMBED&#39;</span><span class="p">,</span> <span class="n">libpath</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s">&#39;Checking for library </span><span class="si">%s</span><span class="s"> in python_LIBPL&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
+			<span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="s">&#39;prefix&#39;</span><span class="p">],</span> <span class="s">&quot;libs&quot;</span><span class="p">)]</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s"># try again with -L$prefix/libs, and pythonXY name rather than pythonX.Y (win32)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+			<span class="n">result</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">lib</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">uselib</span><span class="o">=</span><span class="s">&#39;PYEMBED&#39;</span><span class="p">,</span> <span class="n">libpath</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s">&#39;Checking for library </span><span class="si">%s</span><span class="s"> in $prefix/libs&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+			<span class="k">break</span> <span class="c"># do not forget to set LIBPATH_PYEMBED</span>
 
 	<span class="k">if</span> <span class="n">result</span><span class="p">:</span>
 		<span class="n">env</span><span class="p">[</span><span class="s">&#39;LIBPATH_PYEMBED&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">path</span>
@@ -302,34 +342,26 @@
 
 	<span class="c"># under certain conditions, python extensions must link to</span>
 	<span class="c"># python libraries, not just python embedding programs.</span>
-	<span class="k">if</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&#39;win32&#39;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;os2&#39;</span><span class="p">)</span>
-		<span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&#39;darwin&#39;</span> <span class="ow">or</span> <span class="n">dct</span><span class="p">[</span><span class="s">&#39;Py_ENABLE_SHARED&#39;</span><span class="p">]):</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">is_win32</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;os2&#39;</span><span class="p">)</span>
+		<span class="ow">or</span> <span class="n">dct</span><span class="p">[</span><span class="s">&#39;Py_ENABLE_SHARED&#39;</span><span class="p">]):</span>
 		<span class="n">env</span><span class="p">[</span><span class="s">&#39;LIBPATH_PYEXT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;LIBPATH_PYEMBED&#39;</span><span class="p">]</span>
 		<span class="n">env</span><span class="p">[</span><span class="s">&#39;LIB_PYEXT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;LIB_PYEMBED&#39;</span><span class="p">]</span>
 
 	<span class="c"># We check that pythonX.Y-config exists, and if it exists we</span>
 	<span class="c"># use it to get only the includes, else fall back to distutils.</span>
 	<span class="n">num</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHON_VERSION&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[:</span><span class="mi">2</span><span class="p">])</span>
-	<span class="k">try</span><span class="p">:</span>
-		<span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span>
-			<span class="s">&#39;python</span><span class="si">%s</span><span class="s">-config&#39;</span> <span class="o">%</span> <span class="n">num</span><span class="p">,</span>
-			<span class="n">var</span><span class="o">=</span><span class="s">&#39;PYTHON_CONFIG&#39;</span><span class="p">)</span>
-	<span class="k">except</span> <span class="n">conf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
-		<span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span>
-			<span class="s">&#39;python-config-</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">num</span><span class="p">,</span>
-			<span class="n">var</span><span class="o">=</span><span class="s">&#39;PYTHON_CONFIG&#39;</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">([</span><span class="s">&#39;python</span><span class="si">%s</span><span class="s">-config&#39;</span> <span class="o">%</span> <span class="n">num</span><span class="p">,</span> <span class="s">&#39;python-config-</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">num</span><span class="p">,</span> <span class="s">&#39;python</span><span class="si">%s</span><span class="s">m-config&#39;</span> <span class="o">%</span> <span class="n">num</span><span class="p">],</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;PYTHON_CONFIG&#39;</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 
 	<span class="n">includes</span> <span class="o">=</span> <span class="p">[]</span>
 	<span class="k">if</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">PYTHON_CONFIG</span><span class="p">:</span>
-		<span class="k">for</span> <span class="n">incstr</span> <span class="ow">in</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> --includes&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">python</span><span class="p">,</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">PYTHON_CONFIG</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+		<span class="k">for</span> <span class="n">incstr</span> <span class="ow">in</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">PYTHON_CONFIG</span><span class="p">,</span> <span class="s">&#39;--includes&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
 			<span class="c"># strip the -I or /I</span>
 			<span class="k">if</span> <span class="p">(</span><span class="n">incstr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;-I&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">incstr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;/I&#39;</span><span class="p">)):</span>
 				<span class="n">incstr</span> <span class="o">=</span> <span class="n">incstr</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
 			<span class="c"># append include path, unless already given</span>
 			<span class="k">if</span> <span class="n">incstr</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">:</span>
 				<span class="n">includes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">incstr</span><span class="p">)</span>
-		<span class="n">conf</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&quot;Include path for Python extensions &quot;</span>
-			       <span class="s">&quot;(found via python-config --includes): </span><span class="si">%r</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">includes</span><span class="p">,))</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&quot;Include path for Python extensions (found via python-config --includes): </span><span class="si">%r</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">includes</span><span class="p">,))</span>
 		<span class="n">env</span><span class="p">[</span><span class="s">&#39;INCLUDES_PYEXT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">includes</span>
 		<span class="n">env</span><span class="p">[</span><span class="s">&#39;INCLUDES_PYEMBED&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">includes</span>
 	<span class="k">else</span><span class="p">:</span>
@@ -346,10 +378,24 @@
 		<span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CXXFLAGS_PYEMBED&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-fno-strict-aliasing&#39;</span><span class="p">])</span>
 		<span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CXXFLAGS_PYEXT&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-fno-strict-aliasing&#39;</span><span class="p">])</span>
 
+	<span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">CC_NAME</span> <span class="o">==</span> <span class="s">&quot;msvc&quot;</span><span class="p">:</span>
+		<span class="kn">from</span> <span class="nn">distutils.msvccompiler</span> <span class="kn">import</span> <span class="n">MSVCCompiler</span>
+		<span class="n">dist_compiler</span> <span class="o">=</span> <span class="n">MSVCCompiler</span><span class="p">()</span>
+		<span class="n">dist_compiler</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
+		<span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CFLAGS_PYEXT&#39;</span><span class="p">,</span> <span class="n">dist_compiler</span><span class="o">.</span><span class="n">compile_options</span><span class="p">)</span>
+		<span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CXXFLAGS_PYEXT&#39;</span><span class="p">,</span> <span class="n">dist_compiler</span><span class="o">.</span><span class="n">compile_options</span><span class="p">)</span>
+		<span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;LINKFLAGS_PYEXT&#39;</span><span class="p">,</span> <span class="n">dist_compiler</span><span class="o">.</span><span class="n">ldflags_shared</span><span class="p">)</span>
+
 	<span class="c"># See if it compiles</span>
-	<span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">header_name</span><span class="o">=</span><span class="s">&#39;Python.h&#39;</span><span class="p">,</span> <span class="n">define_name</span><span class="o">=</span><span class="s">&#39;HAVE_PYTHON_H&#39;</span><span class="p">,</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">header_name</span><span class="o">=</span><span class="s">&#39;Python.h&#39;</span><span class="p">,</span> <span class="n">define_name</span><span class="o">=</span><span class="s">&#39;HAVE_PYTHON_H&#39;</span><span class="p">,</span>
 		   <span class="n">uselib</span><span class="o">=</span><span class="s">&#39;PYEMBED&#39;</span><span class="p">,</span> <span class="n">fragment</span><span class="o">=</span><span class="n">FRAG</span><span class="p">,</span>
 		   <span class="n">errmsg</span><span class="o">=</span><span class="s">&#39;Could not find the python development headers&#39;</span><span class="p">)</span>
+	<span class="k">except</span> <span class="n">conf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+		<span class="c"># python3.2, oh yeah</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">check_cfg</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">PYTHON_CONFIG</span><span class="p">,</span> <span class="n">package</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">uselib_store</span><span class="o">=</span><span class="s">&#39;PYEMBED&#39;</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;--cflags&#39;</span><span class="p">,</span> <span class="s">&#39;--libs&#39;</span><span class="p">])</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">header_name</span><span class="o">=</span><span class="s">&#39;Python.h&#39;</span><span class="p">,</span> <span class="n">define_name</span><span class="o">=</span><span class="s">&#39;HAVE_PYTHON_H&#39;</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s">&#39;Getting the python flags from python-config&#39;</span><span class="p">,</span>
+			<span class="n">uselib</span><span class="o">=</span><span class="s">&#39;PYEMBED&#39;</span><span class="p">,</span> <span class="n">fragment</span><span class="o">=</span><span class="n">FRAG</span><span class="p">,</span> <span class="n">errmsg</span><span class="o">=</span><span class="s">&#39;Could not find the python development headers elsewhere&#39;</span><span class="p">)</span>
 </div>
 <span class="nd">@conf</span>
 <div class="viewcode-block" id="check_python_version"><a class="viewcode-back" href="../../../tools/python.html#waflib.Tools.python.check_python_version">[docs]</a><span class="k">def</span> <span class="nf">check_python_version</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">minver</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -367,12 +413,12 @@
 <span class="sd">	:type minver: tuple of int</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="k">assert</span> <span class="n">minver</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minver</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
-	<span class="n">python</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHON&#39;</span><span class="p">]</span>
-	<span class="k">if</span> <span class="ow">not</span> <span class="n">python</span><span class="p">:</span>
+	<span class="n">pybin</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHON&#39;</span><span class="p">]</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">pybin</span><span class="p">:</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not find the python executable&#39;</span><span class="p">)</span>
 
 	<span class="c"># Get python version string</span>
-	<span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">python</span><span class="p">,</span> <span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;import sys</span><span class="se">\n</span><span class="s">for x in sys.version_info: print(str(x))&#39;</span><span class="p">]</span>
+	<span class="n">cmd</span> <span class="o">=</span> <span class="n">pybin</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;import sys</span><span class="se">\n</span><span class="s">for x in sys.version_info: print(str(x))&#39;</span><span class="p">]</span>
 	<span class="n">debug</span><span class="p">(</span><span class="s">&#39;python: Running python command </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">cmd</span><span class="p">)</span>
 	<span class="n">lines</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
 	<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">==</span> <span class="mi">5</span><span class="p">,</span> <span class="s">&quot;found </span><span class="si">%i</span><span class="s"> lines, expected 5: </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">),</span> <span class="n">lines</span><span class="p">)</span>
@@ -389,27 +435,40 @@
 		<span class="k">if</span> <span class="s">&#39;PYTHONDIR&#39;</span> <span class="ow">in</span> <span class="n">conf</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
 			<span class="n">pydir</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;PYTHONDIR&#39;</span><span class="p">]</span>
 		<span class="k">else</span><span class="p">:</span>
-			<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&#39;win32&#39;</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">Utils</span><span class="o">.</span><span class="n">is_win32</span><span class="p">:</span>
 				<span class="p">(</span><span class="n">python_LIBDEST</span><span class="p">,</span> <span class="n">pydir</span><span class="p">)</span> <span class="o">=</span> \
-						<span class="n">conf</span><span class="o">.</span><span class="n">get_python_variables</span><span class="p">(</span><span class="n">python</span><span class="p">,</span>
-											  <span class="p">[</span><span class="s">&quot;get_config_var(&#39;LIBDEST&#39;)&quot;</span><span class="p">,</span>
-											   <span class="s">&quot;get_python_lib(standard_lib=0, prefix=</span><span class="si">%r</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PREFIX&#39;</span><span class="p">]],</span>
+						<span class="n">conf</span><span class="o">.</span><span class="n">get_python_variables</span><span class="p">(</span>
+											  <span class="p">[</span><span class="s">&quot;get_config_var(&#39;LIBDEST&#39;) or &#39;&#39;&quot;</span><span class="p">,</span>
+											   <span class="s">&quot;get_python_lib(standard_lib=0, prefix=</span><span class="si">%r</span><span class="s">) or &#39;&#39;&quot;</span> <span class="o">%</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PREFIX&#39;</span><span class="p">]],</span>
 											  <span class="p">[</span><span class="s">&#39;from distutils.sysconfig import get_config_var, get_python_lib&#39;</span><span class="p">])</span>
 			<span class="k">else</span><span class="p">:</span>
 				<span class="n">python_LIBDEST</span> <span class="o">=</span> <span class="bp">None</span>
 				<span class="p">(</span><span class="n">pydir</span><span class="p">,)</span> <span class="o">=</span> \
-						<span class="n">conf</span><span class="o">.</span><span class="n">get_python_variables</span><span class="p">(</span><span class="n">python</span><span class="p">,</span>
-											  <span class="p">[</span><span class="s">&quot;get_python_lib(standard_lib=0, prefix=</span><span class="si">%r</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PREFIX&#39;</span><span class="p">]],</span>
-											  <span class="p">[</span><span class="s">&#39;from distutils.sysconfig import get_config_var, get_python_lib&#39;</span><span class="p">])</span>
+						<span class="n">conf</span><span class="o">.</span><span class="n">get_python_variables</span><span class="p">(</span>
+											  <span class="p">[</span><span class="s">&quot;get_python_lib(standard_lib=0, prefix=</span><span class="si">%r</span><span class="s">) or &#39;&#39;&quot;</span> <span class="o">%</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PREFIX&#39;</span><span class="p">]],</span>
+											  <span class="p">[</span><span class="s">&#39;from distutils.sysconfig import get_python_lib&#39;</span><span class="p">])</span>
 			<span class="k">if</span> <span class="n">python_LIBDEST</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
 				<span class="k">if</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;LIBDIR&#39;</span><span class="p">]:</span>
 					<span class="n">python_LIBDEST</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;LIBDIR&#39;</span><span class="p">],</span> <span class="s">&quot;python&quot;</span> <span class="o">+</span> <span class="n">pyver</span><span class="p">)</span>
 				<span class="k">else</span><span class="p">:</span>
 					<span class="n">python_LIBDEST</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PREFIX&#39;</span><span class="p">],</span> <span class="s">&quot;lib&quot;</span><span class="p">,</span> <span class="s">&quot;python&quot;</span> <span class="o">+</span> <span class="n">pyver</span><span class="p">)</span>
 
+
+		<span class="k">if</span> <span class="s">&#39;PYTHONARCHDIR&#39;</span> <span class="ow">in</span> <span class="n">conf</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+			<span class="n">pyarchdir</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;PYTHONARCHDIR&#39;</span><span class="p">]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="p">(</span><span class="n">pyarchdir</span><span class="p">,</span> <span class="p">)</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">get_python_variables</span><span class="p">(</span>
+											<span class="p">[</span><span class="s">&quot;get_python_lib(plat_specific=1, standard_lib=0, prefix=</span><span class="si">%r</span><span class="s">) or &#39;&#39;&quot;</span> <span class="o">%</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PREFIX&#39;</span><span class="p">]],</span>
+											<span class="p">[</span><span class="s">&#39;from distutils.sysconfig import get_python_lib&#39;</span><span class="p">])</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">pyarchdir</span><span class="p">:</span>
+				<span class="n">pyarchdir</span> <span class="o">=</span> <span class="n">pydir</span>
+
 		<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="s">&#39;define&#39;</span><span class="p">):</span> <span class="c"># conf.define is added by the C tool, so may not exist</span>
 			<span class="n">conf</span><span class="o">.</span><span class="n">define</span><span class="p">(</span><span class="s">&#39;PYTHONDIR&#39;</span><span class="p">,</span> <span class="n">pydir</span><span class="p">)</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">define</span><span class="p">(</span><span class="s">&#39;PYTHONARCHDIR&#39;</span><span class="p">,</span> <span class="n">pyarchdir</span><span class="p">)</span>
+
 		<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHONDIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pydir</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHONARCHDIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pyarchdir</span>
 
 	<span class="c"># Feedback</span>
 	<span class="n">pyver_full</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">pyver_tuple</span><span class="p">[:</span><span class="mi">3</span><span class="p">]))</span>
@@ -422,6 +481,11 @@
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;The python version is too old, expecting </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">minver</span><span class="p">,))</span>
 </div>
+<span class="n">PYTHON_MODULE_TEMPLATE</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">import </span><span class="si">%s</span><span class="s"></span>
+<span class="s">print(1)</span>
+<span class="s">&#39;&#39;&#39;</span>
+
 <span class="nd">@conf</span>
 <div class="viewcode-block" id="check_python_module"><a class="viewcode-back" href="../../../tools/python.html#waflib.Tools.python.check_python_module">[docs]</a><span class="k">def</span> <span class="nf">check_python_module</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">module_name</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
@@ -435,7 +499,7 @@
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">conf</span><span class="o">.</span><span class="n">start_msg</span><span class="p">(</span><span class="s">&#39;Python module </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">module_name</span><span class="p">)</span>
 	<span class="k">try</span><span class="p">:</span>
-		<span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHON&#39;</span><span class="p">],</span> <span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;import </span><span class="si">%s</span><span class="se">\n</span><span class="s">print(1)</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">module_name</span><span class="p">])</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PYTHON&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="n">PYTHON_MODULE_TEMPLATE</span> <span class="o">%</span> <span class="n">module_name</span><span class="p">])</span>
 	<span class="k">except</span><span class="p">:</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;Could not find the python module </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">module_name</span><span class="p">)</span>
@@ -453,6 +517,7 @@
 
 	<span class="k">if</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">PYTHON</span> <span class="o">!=</span> <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">:</span>
 		<span class="n">warn</span><span class="p">(</span><span class="s">&quot;python executable &#39;</span><span class="si">%s</span><span class="s">&#39; different from sys.executable &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">PYTHON</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">))</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">PYTHON</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_to_list</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">PYTHON</span><span class="p">)</span>
 
 	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;PYCMD&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;&quot;import sys, py_compile;py_compile.compile(sys.argv[1], sys.argv[2])&quot;&#39;</span>
@@ -512,7 +577,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

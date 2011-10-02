@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>vala &mdash; Waf v1.6.4 documentation</title>
+    <title>vala &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="copyright" title="Copyright" href="../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../index.html" />
     <link rel="up" title="Waf Tools" href="../tools.html" />
     <link rel="next" title="glib2" href="glib2.html" />
     <link rel="prev" title="dbus" href="dbus.html" /> 
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="dbus.html" title="dbus"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
       </ul>
     </div>  
@@ -94,7 +94,7 @@ to its inputs. The typical example is:</p>
 
 <dl class="class">
 <dt id="waflib.Tools.vala.valac">
-<em class="property">class </em><tt class="descclassname">waflib.Tools.vala.</tt><tt class="descname">valac</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.vala.valac" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">waflib.Tools.vala.</tt><tt class="descname">valac</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/vala.html#valac"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.vala.valac" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
 <p>Task to compile vala files.</p>
 </dd></dl>
@@ -181,66 +181,6 @@ named &#8216;mandatory&#8217; to disable the configuration errors:</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="waflib.Tools.vala.before_method">
-<tt class="descclassname">waflib.Tools.vala.</tt><tt class="descname">before_method</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.vala.before_method" title="Permalink to this definition">¶</a></dt>
-<dd><p>Decorator: register a task generator method which will be executed
-before the functions of given name(s):</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before</span>
-<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
-<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;fun2&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">fun1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;feature 1!&#39;</span><span class="p">)</span>
-<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">fun2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;feature 2!&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
-        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>k</strong> (<em>list of string</em>) &#8211; method names</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="waflib.Tools.vala.after_method">
-<tt class="descclassname">waflib.Tools.vala.</tt><tt class="descname">after_method</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.vala.after_method" title="Permalink to this definition">¶</a></dt>
-<dd><p>Decorator: register a task generator method which will be executed
-after the functions of given name(s):</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after</span>
-<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
-<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;fun2&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">fun1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;feature 1!&#39;</span><span class="p">)</span>
-<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">fun2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;feature 2!&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
-        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;myfeature&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>k</strong> (<em>list of string</em>) &#8211; method names</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="waflib.Tools.vala.extension">
 <tt class="descclassname">waflib.Tools.vala.</tt><tt class="descname">extension</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.vala.extension" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decorator: register a task generator method which will be invoked during
@@ -317,7 +257,7 @@ the processing of source files for the extension given:</p>
         <li class="right" >
           <a href="dbus.html" title="dbus"
              >previous</a> |</li>
-        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
       </ul>
     </div>

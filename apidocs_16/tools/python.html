@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>python &mdash; Waf v1.6.4 documentation</title>
+    <title>python &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="copyright" title="Copyright" href="../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../index.html" />
     <link rel="up" title="Waf Tools" href="../tools.html" />
     <link rel="next" title="ruby" href="ruby.html" />
     <link rel="prev" title="perl" href="perl.html" /> 
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="perl.html" title="perl"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
       </ul>
     </div>  
@@ -127,6 +127,19 @@
 <p>Change the values of <em>cshlib_PATTERN</em> and <em>cxxshlib_PATTERN</em> to remove the
 <em>lib</em> prefix from library names.</p>
 <table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Feature :</th><td class="field-body"><a class="reference external" href="../featuremap.html#feature-pyext">pyext</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.python.set_bundle">
+<tt class="descclassname">waflib.Tools.python.</tt><tt class="descname">set_bundle</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/python.html#set_bundle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.python.set_bundle" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -258,33 +271,6 @@ named &#8216;mandatory&#8217; to disable the configuration errors:</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="waflib.Tools.python.taskgen_method">
-<tt class="descclassname">waflib.Tools.python.</tt><tt class="descname">taskgen_method</tt><big>(</big><em>func</em><big>)</big><a class="headerlink" href="#waflib.Tools.python.taskgen_method" title="Permalink to this definition">¶</a></dt>
-<dd><p>Decorator: register a method as a task generator method.
-The function must accept a task generator as first parameter:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">taskgen_method</span>
-<span class="nd">@taskgen_method</span>
-<span class="k">def</span> <span class="nf">mymethod</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">pass</span>
-</pre></div>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>func</strong> (<em>function</em>) &#8211; task generator method to add</li>
-</ul>
-</td>
-</tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">function</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="waflib.Tools.python.feature">
 <tt class="descclassname">waflib.Tools.python.</tt><tt class="descname">feature</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.python.feature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decorator: register a task generator method that will be executed when the
@@ -377,15 +363,15 @@ after the functions of given name(s):</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="waflib.Tools.python.info">
-<tt class="descclassname">waflib.Tools.python.</tt><tt class="descname">info</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.python.info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrap logging.info</p>
-</dd></dl>
-
-<dl class="function">
 <dt id="waflib.Tools.python.warn">
 <tt class="descclassname">waflib.Tools.python.</tt><tt class="descname">warn</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.python.warn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrap logging.warn</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.python.info">
+<tt class="descclassname">waflib.Tools.python.</tt><tt class="descname">info</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.python.info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap logging.info</p>
 </dd></dl>
 
 <dl class="function">
@@ -483,7 +469,7 @@ the processing of source files for the extension given:</p>
         <li class="right" >
           <a href="perl.html" title="perl"
              >previous</a> |</li>
-        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
       </ul>
     </div>

@@ -1,0 +1,10 @@
+javaw
+=====
+
+.. automodule:: waflib.Tools.javaw
+
+Features defined in this module:
+
+* `jar <../featuremap.html#feature-jar>`_
+
+* `javac <../featuremap.html#feature-javac>`_

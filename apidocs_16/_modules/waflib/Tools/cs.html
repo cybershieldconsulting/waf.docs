@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.cs &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.cs &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -72,7 +72,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Errors</span>
-<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">feature</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">before_method</span><span class="p">,</span> <span class="n">after_method</span><span class="p">,</span> <span class="n">feature</span>
 <span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">ccroot</span>
 <span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
 
@@ -80,7 +80,7 @@
 <span class="n">ccroot</span><span class="o">.</span><span class="n">lib_patterns</span><span class="p">[</span><span class="s">&#39;csshlib&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span><span class="p">]</span>
 
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;cs&#39;</span><span class="p">)</span>
-<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="apply_cs"><a class="viewcode-back" href="../../../tools/cs.html#waflib.Tools.cs.apply_cs">[docs]</a><span class="k">def</span> <span class="nf">apply_cs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Create a C# task bound to the attribute *cs_task*. There can be only one C# task by task generator.</span>
@@ -94,7 +94,7 @@
 			<span class="n">no_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">no_nodes</span>
 
-	<span class="n">bintype</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;type&#39;</span><span class="p">,</span> <span class="s">&#39;exe&#39;</span><span class="p">)</span>
+	<span class="n">bintype</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;type&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.dll&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="s">&#39;library&#39;</span> <span class="ow">or</span> <span class="s">&#39;exe&#39;</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">cs_task</span> <span class="o">=</span> <span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;mcs&#39;</span><span class="p">,</span> <span class="n">cs_nodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="p">))</span>
 	<span class="n">tsk</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CSTYPE</span> <span class="o">=</span> <span class="s">&#39;/target:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">bintype</span>
 	<span class="n">tsk</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">OUT</span>    <span class="o">=</span> <span class="s">&#39;/out:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">tsk</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
@@ -106,7 +106,7 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">install_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">inst_to</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs_task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[:],</span> <span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">chmod</span><span class="o">=</span><span class="n">mod</span><span class="p">)</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;cs&#39;</span><span class="p">)</span>
-<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;apply_cs&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_cs&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="use_cs"><a class="viewcode-back" href="../../../tools/cs.html#waflib.Tools.cs.use_cs">[docs]</a><span class="k">def</span> <span class="nf">use_cs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	C# applications honor the **use** keyword::</span>
@@ -128,12 +128,12 @@
 		<span class="n">tsk</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s">&#39;cs_task&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s">&#39;link_task&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
 		<span class="k">if</span> <span class="ow">not</span> <span class="n">tsk</span><span class="p">:</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;cs task has no link task for use </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">cs_task</span><span class="o">.</span><span class="n">set_run_after</span><span class="p">(</span><span class="n">tsk</span><span class="p">)</span> <span class="c"># order</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">cs_task</span><span class="o">.</span><span class="n">dep_nodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tsk</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span> <span class="c"># dependency</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">cs_task</span><span class="o">.</span><span class="n">set_run_after</span><span class="p">(</span><span class="n">tsk</span><span class="p">)</span> <span class="c"># order (redundant, the order is infered from the nodes inputs/outputs)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">cs_task</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CSFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;/reference:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">tsk</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;cs&#39;</span><span class="p">)</span>
-<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;apply_cs&#39;</span><span class="p">,</span> <span class="s">&#39;use_cs&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_cs&#39;</span><span class="p">,</span> <span class="s">&#39;use_cs&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="debug_cs"><a class="viewcode-back" href="../../../tools/cs.html#waflib.Tools.cs.debug_cs">[docs]</a><span class="k">def</span> <span class="nf">debug_cs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	The C# targets may create .mdb or .pdb files::</span>
@@ -261,7 +261,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

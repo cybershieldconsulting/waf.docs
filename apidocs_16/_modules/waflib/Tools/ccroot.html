@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.ccroot &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.ccroot &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -60,7 +60,7 @@
 <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">TaskGen</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Errors</span>
 <span class="kn">from</span> <span class="nn">waflib.Logs</span> <span class="kn">import</span> <span class="n">error</span><span class="p">,</span> <span class="n">debug</span><span class="p">,</span> <span class="n">warn</span>
-<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">after</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">taskgen_method</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">after_method</span><span class="p">,</span> <span class="n">before_method</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">taskgen_method</span><span class="p">,</span> <span class="n">extension</span>
 <span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">c_aliases</span><span class="p">,</span> <span class="n">c_preproc</span><span class="p">,</span> <span class="n">c_config</span><span class="p">,</span> <span class="n">c_osx</span><span class="p">,</span> <span class="n">c_tests</span>
 <span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
 
@@ -69,12 +69,12 @@
 <span class="sd">Mapping for features to :py:class:`waflib.ConfigSet.ConfigSet` variables. See :py:func:`waflib.Tools.ccroot.propagate_uselib_vars`.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;c&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;INCLUDES&#39;</span><span class="p">,</span> <span class="s">&#39;FRAMEWORKPATH&#39;</span><span class="p">,</span> <span class="s">&#39;DEFINES&#39;</span><span class="p">,</span> <span class="s">&#39;CCDEPS&#39;</span><span class="p">,</span> <span class="s">&#39;CFLAGS&#39;</span><span class="p">])</span>
-<span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;cxx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;INCLUDES&#39;</span><span class="p">,</span> <span class="s">&#39;FRAMEWORKPATH&#39;</span><span class="p">,</span> <span class="s">&#39;DEFINES&#39;</span><span class="p">,</span> <span class="s">&#39;CXXDEPS&#39;</span><span class="p">,</span> <span class="s">&#39;CXXFLAGS&#39;</span><span class="p">])</span>
+<span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;c&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;INCLUDES&#39;</span><span class="p">,</span> <span class="s">&#39;FRAMEWORKPATH&#39;</span><span class="p">,</span> <span class="s">&#39;DEFINES&#39;</span><span class="p">,</span> <span class="s">&#39;CPPFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;CCDEPS&#39;</span><span class="p">,</span> <span class="s">&#39;CFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;ARCH&#39;</span><span class="p">])</span>
+<span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;cxx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;INCLUDES&#39;</span><span class="p">,</span> <span class="s">&#39;FRAMEWORKPATH&#39;</span><span class="p">,</span> <span class="s">&#39;DEFINES&#39;</span><span class="p">,</span> <span class="s">&#39;CPPFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;CXXDEPS&#39;</span><span class="p">,</span> <span class="s">&#39;CXXFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;ARCH&#39;</span><span class="p">])</span>
 <span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;d&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;INCLUDES&#39;</span><span class="p">,</span> <span class="s">&#39;DFLAGS&#39;</span><span class="p">])</span>
 
-<span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;cprogram&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;cxxprogram&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;LIB&#39;</span><span class="p">,</span> <span class="s">&#39;STLIB&#39;</span><span class="p">,</span> <span class="s">&#39;LIBPATH&#39;</span><span class="p">,</span> <span class="s">&#39;STLIBPATH&#39;</span><span class="p">,</span> <span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;RPATH&#39;</span><span class="p">,</span> <span class="s">&#39;LINKDEPS&#39;</span><span class="p">,</span> <span class="s">&#39;FRAMEWORK&#39;</span><span class="p">,</span> <span class="s">&#39;FRAMEWORKPATH&#39;</span><span class="p">])</span>
-<span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;cshlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;cxxshlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;LIB&#39;</span><span class="p">,</span> <span class="s">&#39;STLIB&#39;</span><span class="p">,</span> <span class="s">&#39;LIBPATH&#39;</span><span class="p">,</span> <span class="s">&#39;STLIBPATH&#39;</span><span class="p">,</span> <span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;RPATH&#39;</span><span class="p">,</span> <span class="s">&#39;LINKDEPS&#39;</span><span class="p">,</span> <span class="s">&#39;FRAMEWORK&#39;</span><span class="p">,</span> <span class="s">&#39;FRAMEWORKPATH&#39;</span><span class="p">])</span>
+<span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;cprogram&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;cxxprogram&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;LIB&#39;</span><span class="p">,</span> <span class="s">&#39;STLIB&#39;</span><span class="p">,</span> <span class="s">&#39;LIBPATH&#39;</span><span class="p">,</span> <span class="s">&#39;STLIBPATH&#39;</span><span class="p">,</span> <span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;RPATH&#39;</span><span class="p">,</span> <span class="s">&#39;LINKDEPS&#39;</span><span class="p">,</span> <span class="s">&#39;FRAMEWORK&#39;</span><span class="p">,</span> <span class="s">&#39;FRAMEWORKPATH&#39;</span><span class="p">,</span> <span class="s">&#39;ARCH&#39;</span><span class="p">])</span>
+<span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;cshlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;cxxshlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;LIB&#39;</span><span class="p">,</span> <span class="s">&#39;STLIB&#39;</span><span class="p">,</span> <span class="s">&#39;LIBPATH&#39;</span><span class="p">,</span> <span class="s">&#39;STLIBPATH&#39;</span><span class="p">,</span> <span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;RPATH&#39;</span><span class="p">,</span> <span class="s">&#39;LINKDEPS&#39;</span><span class="p">,</span> <span class="s">&#39;FRAMEWORK&#39;</span><span class="p">,</span> <span class="s">&#39;FRAMEWORKPATH&#39;</span><span class="p">,</span> <span class="s">&#39;ARCH&#39;</span><span class="p">])</span>
 <span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;cstlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;cxxstlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;ARFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;LINKDEPS&#39;</span><span class="p">])</span>
 
 <span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;dprogram&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;LIB&#39;</span><span class="p">,</span> <span class="s">&#39;STLIB&#39;</span><span class="p">,</span> <span class="s">&#39;LIBPATH&#39;</span><span class="p">,</span> <span class="s">&#39;STLIBPATH&#39;</span><span class="p">,</span> <span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;RPATH&#39;</span><span class="p">,</span> <span class="s">&#39;LINKDEPS&#39;</span><span class="p">])</span>
@@ -116,10 +116,11 @@
 
 <span class="sd">	The paths are assumed to be relative to the task generator path, except if they begin by **#**</span>
 <span class="sd">	in which case they are searched from the top-level directory (``bld.srcnode``).</span>
+<span class="sd">	The folders are simply assumed to be existing.</span>
 
 <span class="sd">	The node objects in the list are returned in the output list. The strings are converted</span>
 <span class="sd">	into node objects if possible. The node is searched from the source directory, and if a match is found,</span>
-<span class="sd">	the equivalent build directory is added in the returned list too.  When a folder cannot be found, it is ignored.</span>
+<span class="sd">	the equivalent build directory is created and added to the returned list too. When a folder cannot be found, it is ignored.</span>
 
 <span class="sd">	:param inlst: list of folders</span>
 <span class="sd">	:type inlst: space-delimited string or a list of string/nodes</span>
@@ -129,7 +130,7 @@
 	<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
 	<span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
 	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">inlst</span><span class="p">):</span>
-		<span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">seen</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">x</span><span class="p">:</span>
 			<span class="k">continue</span>
 		<span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
@@ -137,20 +138,21 @@
 			<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-				<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">find_dir</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span><span class="p">)</span>
 			<span class="k">else</span><span class="p">:</span>
 				<span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;#&#39;</span><span class="p">:</span>
-					<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">find_dir</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
-					<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">srcnode</span><span class="o">.</span><span class="n">find_dir</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+					<span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+					<span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">srcnode</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
 				<span class="k">else</span><span class="p">:</span>
-					<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">find_dir</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-					<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_dir</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-	<span class="c"># TODO this is ugly</span>
-	<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span> <span class="k">if</span> <span class="n">x</span><span class="p">]</span>
+					<span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+					<span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+				<span class="n">p</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
 	<span class="k">return</span> <span class="n">lst</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="s">&#39;cxx&#39;</span><span class="p">,</span> <span class="s">&#39;d&#39;</span><span class="p">,</span> <span class="s">&#39;go&#39;</span><span class="p">,</span> <span class="s">&#39;asm&#39;</span><span class="p">,</span> <span class="s">&#39;fc&#39;</span><span class="p">,</span> <span class="s">&#39;includes&#39;</span><span class="p">)</span>
-<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">,</span> <span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">,</span> <span class="s">&#39;process_source&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="apply_incpaths"><a class="viewcode-back" href="../../../tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths">[docs]</a><span class="k">def</span> <span class="nf">apply_incpaths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Task generator method that processes the attribute *includes*::</span>
@@ -203,19 +205,6 @@
 			<span class="n">tmp</span> <span class="o">=</span> <span class="n">folder</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">pattern</span> <span class="o">%</span> <span class="n">name</span>
 			<span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
-</div>
-<div class="viewcode-block" id="link_task.frameworks"><a class="viewcode-back" href="../../../tools/ccroot.html#waflib.Tools.ccroot.link_task.frameworks">[docs]</a>	<span class="k">def</span> <span class="nf">frameworks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-		<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">		Apple compilers love binary options, so the framework flags must be split. To illustrate the problem::</span>
-
-<span class="sd">			def build(bld):</span>
-<span class="sd">				bld.env.append_value(&#39;LINKFLAGS&#39;, &#39;-framework foo&#39;) # no</span>
-<span class="sd">				bld.env.append_value(&#39;LINKFLAGS&#39;, [&#39;-framework&#39;, &#39;foo&#39;]) # yes</span>
-<span class="sd">		&quot;&quot;&quot;</span>
-		<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
-		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">FRAMEWORK</span><span class="p">:</span>
-			<span class="n">lst</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">FRAMEWORK_ST</span> <span class="o">%</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
-		<span class="k">return</span> <span class="n">lst</span>
 </div></div>
 <div class="viewcode-block" id="stlink_task"><a class="viewcode-back" href="../../../tools/ccroot.html#waflib.Tools.ccroot.stlink_task">[docs]</a><span class="k">class</span> <span class="nc">stlink_task</span><span class="p">(</span><span class="n">link_task</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
@@ -234,7 +223,7 @@
 <span class="n">rm_tgt</span><span class="p">(</span><span class="n">stlink_task</span><span class="p">)</span>
 
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="s">&#39;cxx&#39;</span><span class="p">,</span> <span class="s">&#39;d&#39;</span><span class="p">,</span> <span class="s">&#39;go&#39;</span><span class="p">,</span> <span class="s">&#39;fc&#39;</span><span class="p">,</span> <span class="s">&#39;asm&#39;</span><span class="p">)</span>
-<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="apply_link"><a class="viewcode-back" href="../../../tools/ccroot.html#waflib.Tools.ccroot.apply_link">[docs]</a><span class="k">def</span> <span class="nf">apply_link</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Collect the tasks stored in ``compiled_tasks`` (created by :py:func:`waflib.Tools.ccroot.create_compiled_task`), and</span>
@@ -277,76 +266,48 @@
 <span class="nd">@taskgen_method</span>
 <div class="viewcode-block" id="use_rec"><a class="viewcode-back" href="../../../tools/ccroot.html#waflib.Tools.ccroot.use_rec">[docs]</a><span class="k">def</span> <span class="nf">use_rec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Processes the ``use`` keyword recursively. The processing is complicated by the following scenarios:</span>
-
-<span class="sd">	* dependent shared libraries must be linked to all targets</span>
-<span class="sd">	* static libraries must not be linked twice</span>
-<span class="sd">	* static libraries may depend on other static libraries to propagate include paths</span>
-<span class="sd">	* empty libraries may be used to propagate include paths</span>
-<span class="sd">	* there are object-only targets (no link task)</span>
+<span class="sd">	Processes the ``use`` keyword recursively. This method is kind of private and only meant to be used from ``process_use``</span>
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">seen_libs</span><span class="p">:</span>
+
+	<span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_use_not</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_use_seen</span><span class="p">:</span>
 		<span class="k">return</span>
-	<span class="k">else</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">seen_libs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
-	<span class="n">objects</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;objects&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
-	<span class="n">stlib</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;stlib&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
-
-	<span class="n">get</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">get_tgen_by_name</span>
 	<span class="k">try</span><span class="p">:</span>
-		<span class="n">y</span> <span class="o">=</span> <span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+		<span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">get_tgen_by_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 	<span class="k">except</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">tmp_use_not</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 		<span class="k">return</span>
 
+	<span class="bp">self</span><span class="o">.</span><span class="n">tmp_use_seen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 	<span class="n">y</span><span class="o">.</span><span class="n">post</span><span class="p">()</span>
-	<span class="n">has_link</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s">&#39;link_task&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
-	<span class="n">is_static</span> <span class="o">=</span> <span class="n">has_link</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">link_task</span><span class="p">,</span> <span class="n">stlink_task</span><span class="p">)</span>
 
-	<span class="c"># link task and flags</span>
-	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;link_task&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
-		<span class="k">if</span> <span class="n">has_link</span><span class="p">:</span>
-			<span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">is_static</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">is_static</span> <span class="ow">and</span> <span class="n">stlib</span><span class="p">):</span>
-				<span class="n">var</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">link_task</span><span class="p">,</span> <span class="n">stlink_task</span><span class="p">)</span> <span class="ow">and</span> <span class="s">&#39;STLIB&#39;</span> <span class="ow">or</span> <span class="s">&#39;LIB&#39;</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="p">[</span><span class="n">y</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="n">y</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]])</span>
+	<span class="c"># bind temporary attributes on the task generator</span>
+	<span class="n">y</span><span class="o">.</span><span class="n">tmp_use_objects</span> <span class="o">=</span> <span class="n">objects</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;objects&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+	<span class="n">y</span><span class="o">.</span><span class="n">tmp_use_stlib</span>   <span class="o">=</span> <span class="n">stlib</span>   <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;stlib&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">link_task</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">link_task</span>
+	<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+		<span class="n">y</span><span class="o">.</span><span class="n">tmp_use_var</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">objects</span> <span class="o">=</span> <span class="bp">False</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">link_task</span><span class="p">,</span> <span class="n">stlink_task</span><span class="p">):</span>
+			<span class="n">stlib</span> <span class="o">=</span> <span class="bp">False</span>
+			<span class="n">y</span><span class="o">.</span><span class="n">tmp_use_var</span> <span class="o">=</span> <span class="s">&#39;LIB&#39;</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">y</span><span class="o">.</span><span class="n">tmp_use_var</span> <span class="o">=</span> <span class="s">&#39;STLIB&#39;</span>
 
-				<span class="c"># the order</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">set_run_after</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">link_task</span><span class="p">)</span>
-
-				<span class="c"># for the recompilation</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">dep_nodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
-
-				<span class="c"># add the link path too</span>
-				<span class="n">tmp_path</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">bldpath</span><span class="p">()</span>
-				<span class="k">if</span> <span class="ow">not</span> <span class="n">tmp_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="n">var</span> <span class="o">+</span> <span class="s">&#39;PATH&#39;</span><span class="p">]:</span>
-					<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">prepend_value</span><span class="p">(</span><span class="n">var</span> <span class="o">+</span> <span class="s">&#39;PATH&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">tmp_path</span><span class="p">])</span>
-
-			<span class="c">#if is_static and stlib:</span>
-			<span class="c">#	self.link_task.inputs.extend(y.link_task.inputs)</span>
-
-		<span class="k">elif</span> <span class="n">objects</span><span class="p">:</span>
-			<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s">&#39;compiled_tasks&#39;</span><span class="p">,</span> <span class="p">[]):</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
-
+	<span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_use_prec</span>
 	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s">&#39;use&#39;</span><span class="p">,</span> <span class="p">[])):</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">use_rec</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">objects</span><span class="o">=</span><span class="n">objects</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_link</span><span class="p">,</span> <span class="n">stlib</span><span class="o">=</span><span class="n">stlib</span> <span class="ow">and</span> <span class="p">(</span><span class="n">is_static</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">has_link</span><span class="p">))</span>
-
-
-	<span class="c"># add ancestors uselib too - but only propagate those that have no staticlib defined</span>
-	<span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s">&#39;uselib&#39;</span><span class="p">,</span> <span class="p">[])):</span>
-		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;STLIB_&#39;</span> <span class="o">+</span> <span class="n">v</span><span class="p">]:</span>
-			<span class="k">if</span> <span class="ow">not</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="p">:</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
-
-	<span class="c"># if the library task generator provides &#39;export_incdirs&#39;, add to the include path</span>
-	<span class="c"># the export_incdirs must be a list of paths relative to the other library</span>
-	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s">&#39;export_includes&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">includes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">to_incnodes</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">export_includes</span><span class="p">))</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">p</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="n">p</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">use_rec</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">objects</span><span class="o">=</span><span class="n">objects</span><span class="p">,</span> <span class="n">stlib</span><span class="o">=</span><span class="n">stlib</span><span class="p">)</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="s">&#39;cxx&#39;</span><span class="p">,</span> <span class="s">&#39;d&#39;</span><span class="p">,</span> <span class="s">&#39;use&#39;</span><span class="p">,</span> <span class="s">&#39;fc&#39;</span><span class="p">)</span>
-<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;apply_incpaths&#39;</span><span class="p">,</span> <span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">)</span>
-<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">,</span> <span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;apply_incpaths&#39;</span><span class="p">,</span> <span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">,</span> <span class="s">&#39;process_source&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="process_use"><a class="viewcode-back" href="../../../tools/ccroot.html#waflib.Tools.ccroot.process_use">[docs]</a><span class="k">def</span> <span class="nf">process_use</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Process the ``use`` attribute which contains a list of task generator names::</span>
@@ -357,14 +318,93 @@
 
 <span class="sd">	See :py:func:`waflib.Tools.ccroot.use_rec`.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">use_not</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_use_not</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+	<span class="n">use_seen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_use_seen</span> <span class="o">=</span> <span class="p">[]</span> <span class="c"># we would like an ordered set</span>
+	<span class="n">use_prec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_use_prec</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;uselib&#39;</span><span class="p">,</span> <span class="p">[]))</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">includes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;includes&#39;</span><span class="p">,</span> <span class="p">[]))</span>
 	<span class="n">names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;use&#39;</span><span class="p">,</span> <span class="p">[]))</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">seen_libs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
 
 	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">use_rec</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">use_not</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">use_prec</span><span class="p">:</span>
+			<span class="k">del</span> <span class="n">use_prec</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+
+	<span class="c"># topological sort</span>
+	<span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_use_seen</span><span class="p">:</span>
+		<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">use_prec</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+			<span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+				<span class="k">break</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+	<span class="k">while</span> <span class="n">tmp</span><span class="p">:</span>
+		<span class="n">e</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+		<span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">nlst</span> <span class="o">=</span> <span class="n">use_prec</span><span class="p">[</span><span class="n">e</span><span class="p">]</span>
+		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">del</span> <span class="n">use_prec</span><span class="p">[</span><span class="n">e</span><span class="p">]</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nlst</span><span class="p">:</span>
+				<span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">use_prec</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">use_prec</span><span class="p">[</span><span class="n">y</span><span class="p">]:</span>
+						<span class="k">break</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">use_prec</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;Cycle detected in the use processing </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">use_prec</span><span class="p">)</span>
+	<span class="n">out</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+
+	<span class="n">link_task</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;link_task&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span>
+		<span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">get_tgen_by_name</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+		<span class="n">var</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">tmp_use_var</span>
+		<span class="k">if</span> <span class="n">var</span> <span class="ow">and</span> <span class="n">link_task</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">var</span> <span class="o">==</span> <span class="s">&#39;LIB&#39;</span> <span class="ow">or</span> <span class="n">y</span><span class="o">.</span><span class="n">tmp_use_stlib</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="p">[</span><span class="n">y</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="n">y</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]])</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">dep_nodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
+				<span class="n">tmp_path</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">path_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">bldnode</span><span class="p">)</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="n">var</span> <span class="o">+</span> <span class="s">&#39;PATH&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">tmp_path</span><span class="p">])</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">tmp_use_objects</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">add_objects_from_tgen</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s">&#39;export_includes&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">includes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">to_incnodes</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">export_includes</span><span class="p">))</span>
+
+	<span class="c"># and finally, add the uselib variables (no recursion needed)</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">get_tgen_by_name</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;STLIB_&#39;</span> <span class="o">+</span> <span class="n">x</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s">&#39;uselib&#39;</span><span class="p">,</span> <span class="p">[])):</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;STLIB_&#39;</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
 </div>
+<span class="nd">@taskgen_method</span>
+<span class="k">def</span> <span class="nf">add_objects_from_tgen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tg</span><span class="p">):</span>
+	<span class="c"># Not public yet, wait for waf 1.6.7 at least - the purpose of this is to add pdb files to the compiled</span>
+	<span class="c"># tasks but not to the link tasks (to avoid errors)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">link_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_task</span>
+	<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+		<span class="k">pass</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">for</span> <span class="n">tsk</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tg</span><span class="p">,</span> <span class="s">&#39;compiled_tasks&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tsk</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.o&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.obj&#39;</span><span class="p">):</span>
+					<span class="n">link_task</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
 <span class="nd">@taskgen_method</span>
 <div class="viewcode-block" id="get_uselib_vars"><a class="viewcode-back" href="../../../tools/ccroot.html#waflib.Tools.ccroot.get_uselib_vars">[docs]</a><span class="k">def</span> <span class="nf">get_uselib_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
@@ -378,7 +418,7 @@
 	<span class="k">return</span> <span class="n">_vars</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="s">&#39;cxx&#39;</span><span class="p">,</span> <span class="s">&#39;d&#39;</span><span class="p">,</span> <span class="s">&#39;fc&#39;</span><span class="p">,</span> <span class="s">&#39;javac&#39;</span><span class="p">,</span> <span class="s">&#39;cs&#39;</span><span class="p">,</span> <span class="s">&#39;uselib&#39;</span><span class="p">)</span>
-<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;process_use&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;process_use&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="propagate_uselib_vars"><a class="viewcode-back" href="../../../tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars">[docs]</a><span class="k">def</span> <span class="nf">propagate_uselib_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Process uselib variables for adding flags. For example, the following target::</span>
@@ -412,8 +452,8 @@
 
 <span class="c"># ============ the code above must not know anything about import libs ==========</span>
 </div>
-<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;cshlib&#39;</span><span class="p">,</span> <span class="s">&#39;cxxshlib&#39;</span><span class="p">)</span>
-<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;cshlib&#39;</span><span class="p">,</span> <span class="s">&#39;cxxshlib&#39;</span><span class="p">,</span> <span class="s">&#39;fcshlib&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="apply_implib"><a class="viewcode-back" href="../../../tools/ccroot.html#waflib.Tools.ccroot.apply_implib">[docs]</a><span class="k">def</span> <span class="nf">apply_implib</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Handle dlls and their import libs on Windows-like systems.</span>
@@ -425,7 +465,11 @@
 		<span class="k">return</span>
 
 	<span class="n">dll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-	<span class="n">implib</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;implib_PATTERN&#39;</span><span class="p">]</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+	<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">Node</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+		<span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">name</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+	<span class="n">implib</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;implib_PATTERN&#39;</span><span class="p">]</span> <span class="o">%</span> <span class="n">name</span>
 	<span class="n">implib</span> <span class="o">=</span> <span class="n">dll</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="n">implib</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;IMPLIB_ST&#39;</span><span class="p">]</span> <span class="o">%</span> <span class="n">implib</span><span class="o">.</span><span class="n">bldpath</span><span class="p">())</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">implib</span><span class="p">)</span>
@@ -435,8 +479,10 @@
 		<span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
 			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;invalid def file </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">defs</span><span class="p">)</span>
 		<span class="k">if</span> <span class="s">&#39;msvc&#39;</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CC_NAME</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CXX_NAME</span><span class="p">):</span>
-			<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;/def:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
-		<span class="k">else</span><span class="p">:</span> <span class="c">#gcc for windows takes *.def file a an input without any special flag</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;/def:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">path_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">bldnode</span><span class="p">))</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">dep_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="c">#gcc for windows takes *.def file a an input without any special flag</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
 	<span class="k">try</span><span class="p">:</span>
@@ -451,7 +497,7 @@
 <span class="c"># ============ the code above must not know anything about vnum processing on unix platforms =========</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;cshlib&#39;</span><span class="p">,</span> <span class="s">&#39;cxxshlib&#39;</span><span class="p">,</span> <span class="s">&#39;dshlib&#39;</span><span class="p">,</span> <span class="s">&#39;fcshlib&#39;</span><span class="p">,</span> <span class="s">&#39;vnum&#39;</span><span class="p">)</span>
-<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="apply_vnum"><a class="viewcode-back" href="../../../tools/ccroot.html#waflib.Tools.ccroot.apply_vnum">[docs]</a><span class="k">def</span> <span class="nf">apply_vnum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Enforce version numbering on shared libraries. The valid version numbers must have at most two dots::</span>
@@ -496,7 +542,7 @@
 		<span class="n">t3</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">symlink_as</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">libname</span><span class="p">,</span> <span class="n">name3</span><span class="p">)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">vnum_install_task</span> <span class="o">=</span> <span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">,</span> <span class="n">t3</span><span class="p">)</span>
 </div>
-<div class="viewcode-block" id="vnum_task"><a class="viewcode-back" href="../../../tools/ccroot.html#waflib.Tools.ccroot.vnum_task">[docs]</a><span class="k">class</span> <span class="nc">vnum_task</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+<div class="viewcode-block" id="vnum"><a class="viewcode-back" href="../../../tools/ccroot.html#waflib.Tools.ccroot.vnum">[docs]</a><span class="k">class</span> <span class="nc">vnum</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Create the symbolic links for a versioned shared library. Instances are created by :py:func:`waflib.Tools.ccroot.apply_vnum`</span>
 <span class="sd">	&quot;&quot;&quot;</span>
@@ -521,6 +567,10 @@
 <span class="sd">	Task used for reading a system library and adding the dependency on it</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="k">def</span> <span class="nf">runnable_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_after</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">t</span><span class="o">.</span><span class="n">hasrun</span><span class="p">:</span>
+				<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">ASK_LATER</span>
+
 		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
 			<span class="n">x</span><span class="o">.</span><span class="n">sig</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">h_file</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
 		<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">SKIP_ME</span>
@@ -530,6 +580,10 @@
 <span class="sd">	Task used for reading a system library and adding the dependency on it</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="k">def</span> <span class="nf">runnable_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_after</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">t</span><span class="o">.</span><span class="n">hasrun</span><span class="p">:</span>
+				<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">ASK_LATER</span>
+
 		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
 			<span class="n">x</span><span class="o">.</span><span class="n">sig</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">h_file</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
 		<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">SKIP_ME</span>
@@ -583,7 +637,20 @@
 		<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;could not find library </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">link_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;fake_</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">lib_type</span><span class="p">,</span> <span class="p">[],</span> <span class="p">[</span><span class="n">node</span><span class="p">])</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
-</pre></div></div>
+
+</div>
+<span class="k">class</span> <span class="nc">fake_o</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">runnable_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">SKIP_ME</span>
+
+<span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.o&#39;</span><span class="p">,</span> <span class="s">&#39;.obj&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">add_those_o_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+	<span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;fake_o&#39;</span><span class="p">,</span> <span class="p">[],</span> <span class="n">node</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">compiled_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tsk</span><span class="p">)</span>
+	<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">compiled_tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">tsk</span><span class="p">]</span>
+</pre></div>
 
           </div>
         </div>
@@ -619,7 +686,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

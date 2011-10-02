@@ -1,0 +1,12 @@
+python
+======
+
+.. automodule:: waflib.Tools.python
+
+Features defined in this module:
+
+* `py <../featuremap.html#feature-py>`_
+
+* `pyembed <../featuremap.html#feature-pyembed>`_
+
+* `pyext <../featuremap.html#feature-pyext>`_

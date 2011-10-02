@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.qt4 &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.qt4 &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -68,7 +68,23 @@
 <span class="sd">			target   = &#39;window&#39;,</span>
 <span class="sd">		)</span>
 
-<span class="sd">This module also demonstrates how to add tasks dynamically (when the build has started)</span>
+<span class="sd">The C++ files must include the .moc files, which is regarded as the</span>
+<span class="sd">best practice (much faster compilations). This also implies that the</span>
+<span class="sd">include paths have to be set properly. To have the include paths added</span>
+<span class="sd">automatically, use the following::</span>
+
+<span class="sd">	from waflib.TaskGen import feature, before_method, after_method</span>
+<span class="sd">	@feature(&#39;cxx&#39;)</span>
+<span class="sd">	@after_method(&#39;process_source&#39;)</span>
+<span class="sd">	@before_method(&#39;apply_incpaths&#39;)</span>
+<span class="sd">	def add_includes_paths(self):</span>
+<span class="sd">		incs = set(self.to_list(getattr(self, &#39;includes&#39;, &#39;&#39;)))</span>
+<span class="sd">		for x in self.compiled_tasks:</span>
+<span class="sd">			incs.add(x.inputs[0].parent.path_from(self.path))</span>
+<span class="sd">		self.includes = list(incs)</span>
+
+<span class="sd">Another tool provides a Qt processing that does not require the moc</span>
+<span class="sd">includes. See http://code.google.com/p/waf/source/browse/trunk/playground/slow_qt/</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="k">try</span><span class="p">:</span>
@@ -82,8 +98,9 @@
 
 <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">c_preproc</span><span class="p">,</span> <span class="n">cxx</span>
-<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">TaskGen</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Runner</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Errors</span>
-<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">extension</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after_method</span><span class="p">,</span> <span class="n">extension</span>
+<span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
 <span class="kn">from</span> <span class="nn">waflib.Logs</span> <span class="kn">import</span> <span class="n">error</span>
 
 <span class="n">MOC_H</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.h&#39;</span><span class="p">,</span> <span class="s">&#39;.hpp&#39;</span><span class="p">,</span> <span class="s">&#39;.hxx&#39;</span><span class="p">,</span> <span class="s">&#39;.hh&#39;</span><span class="p">]</span>
@@ -105,6 +122,8 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">File extensions of C++ files that may require a .moc processing</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">QT4_LIBS</span> <span class="o">=</span> <span class="s">&quot;QtCore QtGui QtUiTools QtNetwork QtOpenGL QtSql QtSvg QtTest QtXml QtXmlPatterns QtWebKit Qt3Support QtHelp QtScript QtDeclarative&quot;</span>
 
 <div class="viewcode-block" id="qxx"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.qxx">[docs]</a><span class="k">class</span> <span class="nc">qxx</span><span class="p">(</span><span class="n">cxx</span><span class="o">.</span><span class="n">cxx</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
@@ -136,21 +155,13 @@
 <span class="sd">		then postpone the task execution (there is no need to recompute the task signature).</span>
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moc_done</span><span class="p">:</span>
-			<span class="c"># if there is a moc task, delay the computation of the file signature</span>
-			<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_after</span><span class="p">:</span>
-				<span class="k">if</span> <span class="ow">not</span> <span class="n">t</span><span class="o">.</span><span class="n">hasrun</span><span class="p">:</span>
-					<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">ASK_LATER</span>
-			<span class="c"># the moc file enters in the dependency calculation</span>
-			<span class="c"># so we need to recompute the signature when the moc file is present</span>
-			<span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">()</span>
 			<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">runnable_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 		<span class="k">else</span><span class="p">:</span>
-			<span class="c"># yes, really, there are people who generate cxx files</span>
 			<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_after</span><span class="p">:</span>
 				<span class="k">if</span> <span class="ow">not</span> <span class="n">t</span><span class="o">.</span><span class="n">hasrun</span><span class="p">:</span>
 					<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">ASK_LATER</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">add_moc_tasks</span><span class="p">()</span>
-			<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">ASK_LATER</span>
+			<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">runnable_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="qxx.add_moc_tasks"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.qxx.add_moc_tasks">[docs]</a>	<span class="k">def</span> <span class="nf">add_moc_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
@@ -187,22 +198,25 @@
 			<span class="n">mocfiles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
 
 			<span class="c"># find the extension - this search is done only once</span>
-			<span class="n">ext</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
-			<span class="k">try</span><span class="p">:</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">qt_header_ext</span>
-			<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="k">pass</span>
 
-			<span class="k">if</span> <span class="ow">not</span> <span class="n">ext</span><span class="p">:</span>
-				<span class="n">base2</span> <span class="o">=</span> <span class="n">d</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
-				<span class="k">for</span> <span class="n">exth</span> <span class="ow">in</span> <span class="n">MOC_H</span><span class="p">:</span>
-					<span class="n">k</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">base2</span><span class="o">+</span><span class="n">exth</span><span class="p">)</span>
-					<span class="k">if</span> <span class="n">k</span><span class="p">:</span>
+			<span class="n">h_node</span> <span class="o">=</span> <span class="bp">None</span>
+			<span class="k">try</span><span class="p">:</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">qt_header_ext</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+			<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="k">pass</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">ext</span><span class="p">:</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">MOC_H</span>
+
+			<span class="n">base2</span> <span class="o">=</span> <span class="n">d</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">includes_nodes</span><span class="p">:</span>
+				<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">ext</span><span class="p">:</span>
+					<span class="n">h_node</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">base2</span> <span class="o">+</span> <span class="n">e</span><span class="p">)</span>
+					<span class="k">if</span> <span class="n">h_node</span><span class="p">:</span>
 						<span class="k">break</span>
 				<span class="k">else</span><span class="p">:</span>
-					<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;no header found for </span><span class="si">%r</span><span class="s"> which is a moc file&#39;</span> <span class="o">%</span> <span class="n">d</span><span class="p">)</span>
+					<span class="k">continue</span>
+				<span class="k">break</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;no header found for </span><span class="si">%r</span><span class="s"> which is a moc file&#39;</span> <span class="o">%</span> <span class="n">d</span><span class="p">)</span>
 
 			<span class="c"># next time we will not search for the extension (look at the &#39;for&#39; loop below)</span>
-
-			<span class="n">h_node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">base2</span> <span class="o">+</span> <span class="n">exth</span><span class="p">)</span>
 			<span class="n">m_node</span> <span class="o">=</span> <span class="n">h_node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.moc&#39;</span><span class="p">)</span>
 			<span class="n">bld</span><span class="o">.</span><span class="n">node_deps</span><span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">(),</span> <span class="n">m_node</span><span class="o">.</span><span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">h_node</span>
 
@@ -270,7 +284,10 @@
 	<span class="n">rcnode</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;_rc.cpp&#39;</span><span class="p">)</span>
 	<span class="n">rcctask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;rcc&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">rcnode</span><span class="p">)</span>
 	<span class="n">cpptask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;cxx&#39;</span><span class="p">,</span> <span class="n">rcnode</span><span class="p">,</span> <span class="n">rcnode</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.o&#39;</span><span class="p">))</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">compiled_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cpptask</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">compiled_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cpptask</span><span class="p">)</span>
+	<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">compiled_tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">cpptask</span><span class="p">]</span>
 	<span class="k">return</span> <span class="n">cpptask</span>
 </div>
 <span class="nd">@extension</span><span class="p">(</span><span class="o">*</span><span class="n">EXT_UI</span><span class="p">)</span>
@@ -285,7 +302,7 @@
 	<span class="bp">self</span><span class="o">.</span><span class="n">lang</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;lang&#39;</span><span class="p">,</span> <span class="p">[]))</span> <span class="o">+</span> <span class="p">[</span><span class="n">node</span><span class="p">]</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;qt4&#39;</span><span class="p">)</span>
-<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="apply_qt4"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.apply_qt4">[docs]</a><span class="k">def</span> <span class="nf">apply_qt4</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Add MOC_FLAGS which may be necessary for moc::</span>
@@ -310,7 +327,8 @@
 			<span class="n">qmtasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;ts2qm&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.qm&#39;</span><span class="p">)))</span>
 
 		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;update&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">trans_qt4</span><span class="p">:</span>
-			<span class="n">cxxnodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">compiled_tasks</span><span class="p">]</span>
+			<span class="n">cxxnodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">compiled_tasks</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
+				<span class="n">a</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s">&#39;inputs&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">a</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.ui&#39;</span><span class="p">)]</span>
 			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">qmtasks</span><span class="p">:</span>
 				<span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;trans_update&#39;</span><span class="p">,</span> <span class="n">cxxnodes</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
 
@@ -328,7 +346,10 @@
 		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span> <span class="k">continue</span>
 		<span class="n">f</span> <span class="o">=</span> <span class="n">flag</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
 		<span class="k">if</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;-D&#39;</span><span class="p">,</span> <span class="s">&#39;-I&#39;</span><span class="p">,</span> <span class="s">&#39;/D&#39;</span><span class="p">,</span> <span class="s">&#39;/I&#39;</span><span class="p">]:</span>
-			<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;/&#39;</span><span class="p">):</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;-&#39;</span> <span class="o">+</span> <span class="n">flag</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;MOC_FLAGS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lst</span>
 </div>
 <span class="nd">@extension</span><span class="p">(</span><span class="o">*</span><span class="n">EXT_QT4</span><span class="p">)</span>
@@ -370,7 +391,7 @@
 <span class="sd">	Create *.moc* files</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
-	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${QT_MOC} ${MOC_FLAGS} ${SRC} ${MOC_ST} ${TGT}&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${QT_MOC} ${MOC_FLAGS} ${MOCCPPPATH_ST:INCPATHS} ${MOCDEFINES_ST:DEFINES} ${SRC} ${MOC_ST} ${TGT}&#39;</span>
 </div>
 <div class="viewcode-block" id="ui4"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.ui4">[docs]</a><span class="k">class</span> <span class="nc">ui4</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
@@ -405,26 +426,33 @@
 <span class="sd">	Besides the configuration options, the environment variable QT4_ROOT may be used</span>
 <span class="sd">	to give the location of the qt4 libraries (absolute path).</span>
 
-<span class="sd">	The detection may use the program *pkg-config* through :py:func:`waflib.Tools.config_c.check_cfg`</span>
+<span class="sd">	The detection will use the program *pkg-config* through :py:func:`waflib.Tools.config_c.check_cfg`</span>
 <span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">find_qt4_binaries</span><span class="p">()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">set_qt4_libs_to_check</span><span class="p">()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">find_qt4_libraries</span><span class="p">()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">add_qt4_rpath</span><span class="p">()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">simplify_qt4_libs</span><span class="p">()</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="find_qt4_binaries"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.find_qt4_binaries">[docs]</a><span class="k">def</span> <span class="nf">find_qt4_binaries</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
 	<span class="n">opt</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span>
 
 	<span class="n">qtdir</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">opt</span><span class="p">,</span> <span class="s">&#39;qtdir&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
 	<span class="n">qtbin</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">opt</span><span class="p">,</span> <span class="s">&#39;qtbin&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
-	<span class="n">qtlibs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">opt</span><span class="p">,</span> <span class="s">&#39;qtlibs&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
-	<span class="n">useframework</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">opt</span><span class="p">,</span> <span class="s">&#39;use_qt4_osxframework&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
 
 	<span class="n">paths</span> <span class="o">=</span> <span class="p">[]</span>
 
-	<span class="c"># the path to qmake has been given explicitely</span>
-	<span class="k">if</span> <span class="n">qtbin</span><span class="p">:</span>
-		<span class="n">paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">qtbin</span><span class="p">]</span>
+	<span class="k">if</span> <span class="n">qtdir</span><span class="p">:</span>
+		<span class="n">qtbin</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtdir</span><span class="p">,</span> <span class="s">&#39;bin&#39;</span><span class="p">)</span>
 
-	<span class="c"># the qt directory has been given - we deduce the qt binary path</span>
+	<span class="c"># the qt directory has been given from QT4_ROOT - deduce the qt binary path</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">qtdir</span><span class="p">:</span>
 		<span class="n">qtdir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;QT4_ROOT&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
 		<span class="n">qtbin</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtdir</span><span class="p">,</span> <span class="s">&#39;bin&#39;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">qtbin</span><span class="p">:</span>
 		<span class="n">paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">qtbin</span><span class="p">]</span>
 
 	<span class="c"># no qtdir, look in the path and in /usr/local/Trolltech</span>
@@ -432,7 +460,7 @@
 		<span class="n">paths</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;PATH&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">)</span>
 		<span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;/usr/share/qt4/bin/&#39;</span><span class="p">)</span>
 		<span class="k">try</span><span class="p">:</span>
-			<span class="n">lst</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s">&#39;/usr/local/Trolltech/&#39;</span><span class="p">)</span>
+			<span class="n">lst</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s">&#39;/usr/local/Trolltech/&#39;</span><span class="p">)</span>
 		<span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
 			<span class="k">pass</span>
 		<span class="k">else</span><span class="p">:</span>
@@ -466,20 +494,11 @@
 						<span class="n">cand</span> <span class="o">=</span> <span class="n">qmake</span>
 						<span class="n">prev_ver</span> <span class="o">=</span> <span class="n">new_ver</span>
 	<span class="k">if</span> <span class="n">cand</span><span class="p">:</span>
-		<span class="n">qmake</span> <span class="o">=</span> <span class="n">cand</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">QMAKE</span> <span class="o">=</span> <span class="n">cand</span>
 	<span class="k">else</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not find qmake for qt4&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;Could not find qmake for qt4&#39;</span><span class="p">)</span>
 
-	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">QMAKE</span> <span class="o">=</span> <span class="n">qmake</span>
-	<span class="n">qtincludes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">qmake</span><span class="p">,</span> <span class="s">&#39;-query&#39;</span><span class="p">,</span> <span class="s">&#39;QT_INSTALL_HEADERS&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-	<span class="n">qtdir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">qmake</span><span class="p">,</span> <span class="s">&#39;-query&#39;</span><span class="p">,</span> <span class="s">&#39;QT_INSTALL_PREFIX&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span>
-	<span class="n">qtbin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">qmake</span><span class="p">,</span> <span class="s">&#39;-query&#39;</span><span class="p">,</span> <span class="s">&#39;QT_INSTALL_BINS&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span>
-
-	<span class="k">if</span> <span class="ow">not</span> <span class="n">qtlibs</span><span class="p">:</span>
-		<span class="k">try</span><span class="p">:</span>
-			<span class="n">qtlibs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">qmake</span><span class="p">,</span> <span class="s">&#39;-query&#39;</span><span class="p">,</span> <span class="s">&#39;QT_INSTALL_LIBS&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-		<span class="k">except</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">:</span>
-			<span class="n">qtlibs</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtdir</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">)</span>
+	<span class="n">qtbin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">QMAKE</span><span class="p">,</span> <span class="s">&#39;-query&#39;</span><span class="p">,</span> <span class="s">&#39;QT_INSTALL_BINS&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span>
 
 	<span class="k">def</span> <span class="nf">find_bin</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
 		<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
@@ -497,16 +516,13 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;cannot find the uic compiler for qt4&#39;</span><span class="p">)</span>
 
 	<span class="k">try</span><span class="p">:</span>
-		<span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;QT_UIC&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&quot; -version 2&gt;&amp;1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+		<span class="n">uicver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;QT_UIC&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&quot; -version 2&gt;&amp;1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 	<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;your uic compiler is for qt3, add uic for qt4 to your path&#39;</span><span class="p">)</span>
-
-	<span class="n">version</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;Qt User Interface Compiler &#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">)</span>
-	<span class="n">version</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;User Interface Compiler for Qt&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">version</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39; 3.&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for uic version&#39;</span><span class="p">,</span> <span class="s">&#39;(</span><span class="si">%s</span><span class="s">: too old)&#39;</span> <span class="o">%</span> <span class="n">version</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;uic is too old&#39;</span><span class="p">)</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for uic version&#39;</span><span class="p">,</span> <span class="s">&#39;(</span><span class="si">%s</span><span class="s">)&#39;</span><span class="o">%</span><span class="n">version</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;this uic compiler is for qt3, add uic for qt4 to your path&#39;</span><span class="p">)</span>
+	<span class="n">uicver</span> <span class="o">=</span> <span class="n">uicver</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;Qt User Interface Compiler &#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;User Interface Compiler for Qt&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for uic version&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">uicver</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">uicver</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39; 3.&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;this uic compiler is for qt3, add uic for qt4 to your path&#39;</span><span class="p">)</span>
 
 	<span class="n">find_bin</span><span class="p">([</span><span class="s">&#39;moc-qt4&#39;</span><span class="p">,</span> <span class="s">&#39;moc&#39;</span><span class="p">],</span> <span class="s">&#39;QT_MOC&#39;</span><span class="p">)</span>
 	<span class="n">find_bin</span><span class="p">([</span><span class="s">&#39;rcc&#39;</span><span class="p">],</span> <span class="s">&#39;QT_RCC&#39;</span><span class="p">)</span>
@@ -518,22 +534,93 @@
 	<span class="n">env</span><span class="p">[</span><span class="s">&#39;MOC_ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;-o&#39;</span>
 	<span class="n">env</span><span class="p">[</span><span class="s">&#39;ui_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;ui_</span><span class="si">%s</span><span class="s">.h&#39;</span>
 	<span class="n">env</span><span class="p">[</span><span class="s">&#39;QT_LRELEASE_FLAGS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-silent&#39;</span><span class="p">]</span>
-
-	<span class="nb">vars</span> <span class="o">=</span> <span class="s">&quot;QtCore QtGui QtUiTools QtNetwork QtOpenGL QtSql QtSvg QtTest QtXml QtWebKit Qt3Support&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-	<span class="n">vars_debug</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">+</span><span class="s">&#39;_debug&#39;</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">]</span>
-
-	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;PKG_CONFIG_PATH&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
-		<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;PKG_CONFIG_PATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">/pkgconfig:/usr/lib/qt4/lib/pkgconfig:/opt/qt4/lib/pkgconfig:/usr/lib/qt4/lib:/opt/qt4/lib pkg-config --silence-errors&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">qtlibs</span><span class="p">,</span> <span class="n">qtlibs</span><span class="p">)</span>
-
-	<span class="n">pkgconfig</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;pkg-config&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s">&#39;pkg-config&#39;</span>
-	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">vars_debug</span><span class="o">+</span><span class="nb">vars</span><span class="p">:</span>
+	<span class="n">env</span><span class="o">.</span><span class="n">MOCCPPPATH_ST</span> <span class="o">=</span> <span class="s">&#39;-I</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">env</span><span class="o">.</span><span class="n">MOCDEFINES_ST</span> <span class="o">=</span> <span class="s">&#39;-D</span><span class="si">%s</span><span class="s">&#39;</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="find_qt4_libraries"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.find_qt4_libraries">[docs]</a><span class="k">def</span> <span class="nf">find_qt4_libraries</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="n">qtlibs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="s">&#39;qtlibs&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">qtlibs</span><span class="p">:</span>
 		<span class="k">try</span><span class="p">:</span>
-			<span class="bp">self</span><span class="o">.</span><span class="n">check_cfg</span><span class="p">(</span><span class="n">package</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="s">&#39;--cflags --libs&#39;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">pkgconfig</span><span class="p">)</span>
-		<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
-			<span class="k">pass</span>
+			<span class="n">qtlibs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">QMAKE</span><span class="p">,</span> <span class="s">&#39;-query&#39;</span><span class="p">,</span> <span class="s">&#39;QT_INSTALL_LIBS&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+		<span class="k">except</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">:</span>
+			<span class="n">qtdir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">QMAKE</span><span class="p">,</span> <span class="s">&#39;-query&#39;</span><span class="p">,</span> <span class="s">&#39;QT_INSTALL_PREFIX&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span>
+			<span class="n">qtlibs</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtdir</span><span class="p">,</span> <span class="s">&#39;lib&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Found the Qt4 libraries in&#39;</span><span class="p">,</span> <span class="n">qtlibs</span><span class="p">)</span>
 
+	<span class="n">qtincludes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">QMAKE</span><span class="p">,</span> <span class="s">&#39;-query&#39;</span><span class="p">,</span> <span class="s">&#39;QT_INSTALL_HEADERS&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+	<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;PKG_CONFIG_PATH&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+		<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;PKG_CONFIG_PATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">/pkgconfig:/usr/lib/qt4/lib/pkgconfig:/opt/qt4/lib/pkgconfig:/usr/lib/qt4/lib:/opt/qt4/lib&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">qtlibs</span><span class="p">,</span> <span class="n">qtlibs</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">check_cfg</span><span class="p">(</span><span class="n">atleast_pkgconfig_version</span><span class="o">=</span><span class="s">&#39;0.1&#39;</span><span class="p">)</span>
+	<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+		<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">qt4_vars</span><span class="p">:</span>
+			<span class="n">uselib</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+			<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&quot;darwin&quot;</span><span class="p">:</span>
+				<span class="c"># Since at least qt 4.7.3 each library locates in separate directory</span>
+				<span class="n">frameworkName</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="s">&quot;.framework&quot;</span>
+				<span class="n">qtDynamicLib</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtlibs</span><span class="p">,</span> <span class="n">frameworkName</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+				<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">qtDynamicLib</span><span class="p">):</span>
+					<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;FRAMEWORK_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="n">qtDynamicLib</span><span class="p">,</span> <span class="s">&#39;GREEN&#39;</span><span class="p">)</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;YELLOW&#39;</span><span class="p">)</span>
+				<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;INCLUDES_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtlibs</span><span class="p">,</span> <span class="n">frameworkName</span><span class="p">,</span> <span class="s">&#39;Headers&#39;</span><span class="p">))</span>
+			<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">!=</span> <span class="s">&quot;win32&quot;</span><span class="p">:</span>
+				<span class="n">qtDynamicLib</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtlibs</span><span class="p">,</span> <span class="s">&quot;lib&quot;</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="s">&quot;.so&quot;</span><span class="p">)</span>
+				<span class="n">qtStaticLib</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtlibs</span><span class="p">,</span> <span class="s">&quot;lib&quot;</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="s">&quot;.a&quot;</span><span class="p">)</span>
+				<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">qtDynamicLib</span><span class="p">):</span>
+					<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;LIB_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="n">qtDynamicLib</span><span class="p">,</span> <span class="s">&#39;GREEN&#39;</span><span class="p">)</span>
+				<span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">qtStaticLib</span><span class="p">):</span>
+					<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;LIB_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="n">qtStaticLib</span><span class="p">,</span> <span class="s">&#39;GREEN&#39;</span><span class="p">)</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;YELLOW&#39;</span><span class="p">)</span>
+
+				<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;LIBPATH_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">qtlibs</span><span class="p">)</span>
+				<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;INCLUDES_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">qtincludes</span><span class="p">)</span>
+				<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;INCLUDES_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtincludes</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="c"># Release library names are like QtCore4</span>
+				<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;lib</span><span class="si">%s</span><span class="s">.a&quot;</span><span class="p">,</span> <span class="s">&quot;lib</span><span class="si">%s</span><span class="s">4.a&quot;</span><span class="p">,</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">.lib&quot;</span><span class="p">,</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">4.lib&quot;</span><span class="p">):</span>
+					<span class="n">lib</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtlibs</span><span class="p">,</span> <span class="n">k</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
+					<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">lib</span><span class="p">):</span>
+						<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;LIB_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">k</span><span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="p">:</span> <span class="n">k</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)])</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="n">lib</span><span class="p">,</span> <span class="s">&#39;GREEN&#39;</span><span class="p">)</span>
+						<span class="k">break</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;YELLOW&#39;</span><span class="p">)</span>
+
+				<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;LIBPATH_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">qtlibs</span><span class="p">)</span>
+				<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;INCLUDES_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">qtincludes</span><span class="p">)</span>
+				<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;INCLUDES_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtincludes</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+
+				<span class="c"># Debug library names are like QtCore4d</span>
+				<span class="n">uselib</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">+</span> <span class="s">&quot;_debug&quot;</span>
+				<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;lib</span><span class="si">%s</span><span class="s">d.a&quot;</span><span class="p">,</span> <span class="s">&quot;lib</span><span class="si">%s</span><span class="s">d4.a&quot;</span><span class="p">,</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">d.lib&quot;</span><span class="p">,</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">d4.lib&quot;</span><span class="p">):</span>
+					<span class="n">lib</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtlibs</span><span class="p">,</span> <span class="n">k</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
+					<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">lib</span><span class="p">):</span>
+						<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;LIB_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">k</span><span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="p">:</span> <span class="n">k</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)])</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="n">lib</span><span class="p">,</span> <span class="s">&#39;GREEN&#39;</span><span class="p">)</span>
+						<span class="k">break</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;YELLOW&#39;</span><span class="p">)</span>
+
+				<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;LIBPATH_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">qtlibs</span><span class="p">)</span>
+				<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;INCLUDES_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">qtincludes</span><span class="p">)</span>
+				<span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;INCLUDES_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">qtincludes</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">qt4_vars_debug</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">qt4_vars</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">check_cfg</span><span class="p">(</span><span class="n">package</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="s">&#39;--cflags --libs&#39;</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="simplify_qt4_libs"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.simplify_qt4_libs">[docs]</a><span class="k">def</span> <span class="nf">simplify_qt4_libs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="c"># the libpaths make really long command-lines</span>
 	<span class="c"># remove the qtcore ones from qtgui, etc</span>
+	<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
 	<span class="k">def</span> <span class="nf">process_lib</span><span class="p">(</span><span class="n">vars_</span><span class="p">,</span> <span class="n">coreval</span><span class="p">):</span>
 		<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">vars_</span><span class="p">:</span>
 			<span class="n">var</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
@@ -550,10 +637,13 @@
 					<span class="n">accu</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lib</span><span class="p">)</span>
 				<span class="n">env</span><span class="p">[</span><span class="s">&#39;LIBPATH_&#39;</span><span class="o">+</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">accu</span>
 
-	<span class="n">process_lib</span><span class="p">(</span><span class="nb">vars</span><span class="p">,</span> <span class="s">&#39;LIBPATH_QTCORE&#39;</span><span class="p">)</span>
-	<span class="n">process_lib</span><span class="p">(</span><span class="n">vars_debug</span><span class="p">,</span> <span class="s">&#39;LIBPATH_QTCORE_DEBUG&#39;</span><span class="p">)</span>
-
+	<span class="n">process_lib</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qt4_vars</span><span class="p">,</span>       <span class="s">&#39;LIBPATH_QTCORE&#39;</span><span class="p">)</span>
+	<span class="n">process_lib</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qt4_vars_debug</span><span class="p">,</span> <span class="s">&#39;LIBPATH_QTCORE_DEBUG&#39;</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="add_qt4_rpath"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.add_qt4_rpath">[docs]</a><span class="k">def</span> <span class="nf">add_qt4_rpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="c"># rpath if wanted</span>
+	<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
 	<span class="k">if</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">want_rpath</span><span class="p">:</span>
 		<span class="k">def</span> <span class="nf">process_rpath</span><span class="p">(</span><span class="n">vars_</span><span class="p">,</span> <span class="n">coreval</span><span class="p">):</span>
 			<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">vars_</span><span class="p">:</span>
@@ -568,8 +658,17 @@
 								<span class="k">continue</span>
 						<span class="n">accu</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;-Wl,--rpath=&#39;</span><span class="o">+</span><span class="n">lib</span><span class="p">)</span>
 					<span class="n">env</span><span class="p">[</span><span class="s">&#39;RPATH_&#39;</span><span class="o">+</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">accu</span>
-		<span class="n">process_rpath</span><span class="p">(</span><span class="nb">vars</span><span class="p">,</span> <span class="s">&#39;LIBPATH_QTCORE&#39;</span><span class="p">)</span>
-		<span class="n">process_rpath</span><span class="p">(</span><span class="n">vars_debug</span><span class="p">,</span> <span class="s">&#39;LIBPATH_QTCORE_DEBUG&#39;</span><span class="p">)</span>
+		<span class="n">process_rpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qt4_vars</span><span class="p">,</span>       <span class="s">&#39;LIBPATH_QTCORE&#39;</span><span class="p">)</span>
+		<span class="n">process_rpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qt4_vars_debug</span><span class="p">,</span> <span class="s">&#39;LIBPATH_QTCORE_DEBUG&#39;</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="set_qt4_libs_to_check"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.set_qt4_libs_to_check">[docs]</a><span class="k">def</span> <span class="nf">set_qt4_libs_to_check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;qt4_vars&#39;</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">qt4_vars</span> <span class="o">=</span> <span class="n">QT4_LIBS</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">qt4_vars</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qt4_vars</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;qt4_vars_debug&#39;</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">qt4_vars_debug</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="o">+</span> <span class="s">&#39;_debug&#39;</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">qt4_vars</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">qt4_vars_debug</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qt4_vars_debug</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="options"><a class="viewcode-back" href="../../../tools/qt4.html#waflib.Tools.qt4.options">[docs]</a><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
@@ -626,7 +725,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

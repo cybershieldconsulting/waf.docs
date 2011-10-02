@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>c_config &mdash; Waf v1.6.4 documentation</title>
+    <title>c_config &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="copyright" title="Copyright" href="../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../index.html" />
     <link rel="up" title="Waf Tools" href="../tools.html" />
     <link rel="next" title="c_osx" href="c_osx.html" />
     <link rel="prev" title="cxx" href="cxx.html" /> 
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="cxx.html" title="cxx"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
       </ul>
     </div>  
@@ -230,7 +230,7 @@ To force a specific compiler, prefer the methods <a class="reference internal" h
 
 <dl class="class">
 <dt id="waflib.Tools.c_config.test_exec">
-<em class="property">class </em><tt class="descclassname">waflib.Tools.c_config.</tt><tt class="descname">test_exec</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.c_config.test_exec" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">waflib.Tools.c_config.</tt><tt class="descname">test_exec</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_config.html#test_exec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_config.test_exec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
 <p>A task for executing a programs after they are built. See <a class="reference internal" href="#waflib.Tools.c_config.test_exec_fun" title="waflib.Tools.c_config.test_exec_fun"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Tools.c_config.test_exec_fun()</span></tt></a>.</p>
 </dd></dl>
@@ -263,7 +263,7 @@ This is used by configuration tests:</p>
 <dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
 <p>Create a temporary build context to execute a build. A reference to that build
 context is kept on self.test_bld for debugging purposes.
-The parameters given in the arguments to this function are passes as arguments for
+The parameters given in the arguments to this function are passed as arguments for
 a single task generator created in the build. Only three parameters are obligatory:</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -533,6 +533,13 @@ set in conf.env.define_key / conf.env.include_key. No include guards are added.<
 </dd></dl>
 
 <dl class="function">
+<dt id="waflib.Tools.c_config.get_xlc_version">
+<tt class="descclassname">waflib.Tools.c_config.</tt><tt class="descname">get_xlc_version</tt><big>(</big><em>conf</em>, <em>cc</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_config.html#get_xlc_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_config.get_xlc_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a>
+Get the compiler version</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="waflib.Tools.c_config.add_as_needed">
 <tt class="descclassname">waflib.Tools.c_config.</tt><tt class="descname">add_as_needed</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_config.html#add_as_needed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_config.add_as_needed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
@@ -541,7 +548,7 @@ set in conf.env.define_key / conf.env.include_key. No include guards are added.<
 
 <dl class="class">
 <dt id="waflib.Tools.c_config.cfgtask">
-<em class="property">class </em><tt class="descclassname">waflib.Tools.c_config.</tt><tt class="descname">cfgtask</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.c_config.cfgtask" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">waflib.Tools.c_config.</tt><tt class="descname">cfgtask</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_config.html#cfgtask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_config.cfgtask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.TaskBase</span></tt></a></p>
 <p>A task that executes configuration tests
 make sure that the checks write to conf.env in a thread-safe manner</p>
@@ -659,7 +666,7 @@ after the functions of given name(s):</p>
 
 <dl class="function">
 <dt id="waflib.Tools.c_config.multicheck">
-<tt class="descclassname">waflib.Tools.c_config.</tt><tt class="descname">multicheck</tt><big>(</big><em>self</em>, <em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.c_config.multicheck" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">waflib.Tools.c_config.</tt><tt class="descname">multicheck</tt><big>(</big><em>self</em>, <em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c_config.html#multicheck"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c_config.multicheck" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
 <p>Use tuples to perform parallel configuration tests</p>
 </dd></dl>
@@ -722,7 +729,7 @@ after the functions of given name(s):</p>
         <li class="right" >
           <a href="cxx.html" title="cxx"
              >previous</a> |</li>
-        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
       </ul>
     </div>

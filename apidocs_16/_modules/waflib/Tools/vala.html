@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.vala &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.vala &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -59,11 +59,11 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">os.path</span><span class="o">,</span> <span class="nn">shutil</span><span class="o">,</span> <span class="nn">re</span>
-<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Context</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Runner</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Errors</span>
-<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">extension</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">before</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Context</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">extension</span>
 <span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
 
-<div class="viewcode-block" id="valac_task"><a class="viewcode-back" href="../../../tools/vala.html#waflib.Tools.vala.valac_task">[docs]</a><span class="k">class</span> <span class="nc">valac_task</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+<div class="viewcode-block" id="valac"><a class="viewcode-back" href="../../../tools/vala.html#waflib.Tools.vala.valac">[docs]</a><span class="k">class</span> <span class="nc">valac</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Task to compile vala files.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
@@ -86,7 +86,6 @@
 			<span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;--target-glib=</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_glib</span><span class="p">)</span>
 
 		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_lib</span><span class="p">:</span>
-			<span class="n">output_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">bld_dir</span><span class="p">()</span>
 			<span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;--library=&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
 			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
 				<span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.h&#39;</span><span class="p">):</span>
@@ -150,9 +149,9 @@
 	<span class="c"># there is only one vala task and it compiles all vala files .. :-/</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">valatask</span><span class="p">:</span>
 		<span class="k">def</span> <span class="nf">_get_api_version</span><span class="p">():</span>
-			<span class="n">api_version</span> <span class="o">=</span> <span class="nb">getattr</span> <span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="p">,</span> <span class="s">&#39;API_VERSION&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
-			<span class="k">if</span> <span class="n">api_version</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
-				<span class="n">version</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="o">.</span><span class="n">VERSION</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)</span>
+			<span class="n">api_version</span> <span class="o">=</span> <span class="s">&#39;1.0&#39;</span>
+			<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="p">,</span> <span class="s">&#39;API_VERSION&#39;</span><span class="p">):</span>
+				<span class="n">version</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="o">.</span><span class="n">API_VERSION</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)</span>
 				<span class="k">if</span> <span class="n">version</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot;0&quot;</span><span class="p">:</span>
 					<span class="n">api_version</span> <span class="o">=</span> <span class="s">&quot;0.&quot;</span> <span class="o">+</span> <span class="n">version</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 				<span class="k">else</span><span class="p">:</span>
@@ -277,15 +276,24 @@
 
 	<span class="k">if</span> <span class="n">valatask</span><span class="o">.</span><span class="n">is_lib</span><span class="p">:</span>
 		<span class="n">headers_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">valatask</span><span class="o">.</span><span class="n">outputs</span> <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">suffix</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;.h&quot;</span><span class="p">]</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">install_vheader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">valatask</span><span class="o">.</span><span class="n">header_path</span><span class="p">,</span> <span class="n">headers_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">install_vheader</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">headers_list</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">install_vheader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">valatask</span><span class="o">.</span><span class="n">header_path</span><span class="p">,</span> <span class="n">headers_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
 
 		<span class="n">vapi_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">valatask</span><span class="o">.</span><span class="n">outputs</span> <span class="k">if</span> <span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">suffix</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;.vapi&quot;</span><span class="p">,</span> <span class="s">&quot;.deps&quot;</span><span class="p">))]</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">install_vapi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">valatask</span><span class="o">.</span><span class="n">vapi_path</span><span class="p">,</span> <span class="n">vapi_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">install_vapi</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">vapi_list</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">install_vapi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">valatask</span><span class="o">.</span><span class="n">vapi_path</span><span class="p">,</span> <span class="n">vapi_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
 
 		<span class="n">gir_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">valatask</span><span class="o">.</span><span class="n">outputs</span> <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">suffix</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;.gir&quot;</span><span class="p">]</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">install_gir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">valatask</span><span class="o">.</span><span class="n">gir_path</span><span class="p">,</span> <span class="n">gir_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">install_gir</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">gir_list</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">install_gir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">valatask</span><span class="o">.</span><span class="n">gir_path</span><span class="p">,</span> <span class="n">gir_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
 </div>
-<span class="n">valac_task</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">update_outputs</span><span class="p">(</span><span class="n">valac_task</span><span class="p">)</span> <span class="c"># no decorators for python2 classes</span>
+<span class="n">valac</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">update_outputs</span><span class="p">(</span><span class="n">valac</span><span class="p">)</span> <span class="c"># no decorators for python2 classes</span>
 
 <span class="nd">@conf</span>
 <div class="viewcode-block" id="find_valac"><a class="viewcode-back" href="../../../tools/vala.html#waflib.Tools.vala.find_valac">[docs]</a><span class="k">def</span> <span class="nf">find_valac</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">valac_name</span><span class="p">,</span> <span class="n">min_version</span><span class="p">):</span>
@@ -411,7 +419,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

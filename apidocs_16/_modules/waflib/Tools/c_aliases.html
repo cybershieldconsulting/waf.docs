@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.c_aliases &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.c_aliases &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -94,7 +94,7 @@
 	<span class="n">feats</span> <span class="o">=</span> <span class="p">[]</span>
 
 	<span class="c"># watch the order, cxx will have the precedence</span>
-	<span class="k">if</span> <span class="s">&#39;cxx&#39;</span> <span class="ow">in</span> <span class="n">exts</span> <span class="ow">or</span> <span class="s">&#39;cpp&#39;</span> <span class="ow">in</span> <span class="n">exts</span> <span class="ow">or</span> <span class="s">&#39;c++&#39;</span> <span class="ow">in</span> <span class="n">exts</span> <span class="ow">or</span> <span class="s">&#39;cc&#39;</span> <span class="ow">in</span> <span class="n">exts</span><span class="p">:</span>
+	<span class="k">if</span> <span class="s">&#39;cxx&#39;</span> <span class="ow">in</span> <span class="n">exts</span> <span class="ow">or</span> <span class="s">&#39;cpp&#39;</span> <span class="ow">in</span> <span class="n">exts</span> <span class="ow">or</span> <span class="s">&#39;c++&#39;</span> <span class="ow">in</span> <span class="n">exts</span> <span class="ow">or</span> <span class="s">&#39;cc&#39;</span> <span class="ow">in</span> <span class="n">exts</span> <span class="ow">or</span> <span class="s">&#39;C&#39;</span> <span class="ow">in</span> <span class="n">exts</span><span class="p">:</span>
 		<span class="n">feats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;cxx&#39;</span><span class="p">)</span>
 
 	<span class="k">if</span> <span class="s">&#39;c&#39;</span> <span class="ow">in</span> <span class="n">exts</span> <span class="ow">or</span> <span class="s">&#39;vala&#39;</span> <span class="ow">in</span> <span class="n">exts</span><span class="p">:</span>
@@ -168,7 +168,7 @@
 <span class="sd">	Alias for creating object files by looking at the file extensions::</span>
 
 <span class="sd">		def build(bld):</span>
-<span class="sd">			bld.program(source=&#39;foo.c&#39;, target=&#39;app&#39;)</span>
+<span class="sd">			bld.objects(source=&#39;foo.c&#39;, target=&#39;app&#39;)</span>
 <span class="sd">			# equivalent to:</span>
 <span class="sd">			# bld(features=&#39;c&#39;, source=&#39;foo.c&#39;, target=&#39;app&#39;)</span>
 
@@ -211,7 +211,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

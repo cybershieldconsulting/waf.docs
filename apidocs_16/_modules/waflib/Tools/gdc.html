@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.gdc &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.gdc &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -75,23 +75,24 @@
 	<span class="c"># for mory info about the meaning of this dict see dmd.py</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DFLAGS&#39;</span><span class="p">]</span>            <span class="o">=</span> <span class="p">[]</span>
 
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;D_SRC_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;D_TGT_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;-o&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;D_SRC_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;D_TGT_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;-o</span><span class="si">%s</span><span class="s">&#39;</span>
 
 	<span class="c"># linker</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;D_LINKER&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;D&#39;</span><span class="p">]</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DLNK_SRC_F&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DLNK_TGT_F&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-o&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DINC_ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;-I</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DLNK_TGT_F&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;-o</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DINC_ST&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;-I</span><span class="si">%s</span><span class="s">&#39;</span>
 
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DSHLIB_MARKER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;DSTLIB_MARKER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DSTLIB_ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;DSHLIB_ST&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;-l</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DSTLIB_ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;DSHLIB_ST&#39;</span><span class="p">]</span>         <span class="o">=</span> <span class="s">&#39;-l</span><span class="si">%s</span><span class="s">&#39;</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DSTLIBPATH_ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;DLIBPATH_ST&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;-L</span><span class="si">%s</span><span class="s">&#39;</span>
 
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_dshlib&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-shared&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_dshlib&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-shared&#39;</span><span class="p">]</span>
 
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DHEADER_ext&#39;</span><span class="p">]</span>       <span class="o">=</span> <span class="s">&#39;.di&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;D_HDR_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;-fintfc -fintfc-file=&#39;</span>
+	<span class="n">v</span><span class="o">.</span><span class="n">DFLAGS_d_with_header</span> <span class="o">=</span> <span class="s">&#39;-fintfc&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;D_HDR_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;-fintfc-file=</span><span class="si">%s</span><span class="s">&#39;</span>
 </div>
 <div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/gdc.html#waflib.Tools.gdc.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
@@ -138,7 +139,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

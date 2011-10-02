@@ -1,0 +1,8 @@
+qt4
+===
+
+.. automodule:: waflib.Tools.qt4
+
+Features defined in this module:
+
+* `qt4 <../featuremap.html#feature-qt4>`_

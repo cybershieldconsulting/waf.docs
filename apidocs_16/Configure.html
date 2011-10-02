@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Configure &mdash; Waf v1.6.4 documentation</title>
+    <title>Configure &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="copyright" title="Copyright" href="copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="index.html" />
     <link rel="next" title="Context" href="Context.html" />
     <link rel="prev" title="ConfigSet" href="ConfigSet.html" /> 
   </head>
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="ConfigSet.html" title="ConfigSet"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Waf v1.6.8 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -304,7 +304,7 @@ named &#8216;mandatory&#8217; to disable the configuration errors:</p>
 
 <dl class="function">
 <dt id="waflib.Configure.add_os_flags">
-<tt class="descclassname">waflib.Configure.</tt><tt class="descname">add_os_flags</tt><big>(</big><em>self</em>, <em>var</em>, <em>dest=None</em><big>)</big><a class="headerlink" href="#waflib.Configure.add_os_flags" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">waflib.Configure.</tt><tt class="descname">add_os_flags</tt><big>(</big><em>self</em>, <em>var</em>, <em>dest=None</em><big>)</big><a class="reference internal" href="_modules/waflib/Configure.html#add_os_flags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Configure.add_os_flags" title="Permalink to this definition">¶</a></dt>
 <dd><p>Import operating system environment values into <tt class="docutils literal"><span class="pre">conf.env</span></tt> dict:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
         <span class="n">conf</span><span class="o">.</span><span class="n">add_os_flags</span><span class="p">(</span><span class="s">&#39;CFLAGS&#39;</span><span class="p">)</span>
@@ -326,7 +326,7 @@ named &#8216;mandatory&#8217; to disable the configuration errors:</p>
 
 <dl class="function">
 <dt id="waflib.Configure.cmd_to_list">
-<tt class="descclassname">waflib.Configure.</tt><tt class="descname">cmd_to_list</tt><big>(</big><em>self</em>, <em>cmd</em><big>)</big><a class="headerlink" href="#waflib.Configure.cmd_to_list" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">waflib.Configure.</tt><tt class="descname">cmd_to_list</tt><big>(</big><em>self</em>, <em>cmd</em><big>)</big><a class="reference internal" href="_modules/waflib/Configure.html#cmd_to_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Configure.cmd_to_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Detect if a command is written in pseudo shell like <tt class="docutils literal"><span class="pre">ccache</span> <span class="pre">g++</span></tt> and return a list.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -386,7 +386,7 @@ named &#8216;mandatory&#8217; to disable the configuration errors:</p>
 <dt id="waflib.Configure.find_program">
 <tt class="descclassname">waflib.Configure.</tt><tt class="descname">find_program</tt><big>(</big><em>self</em>, <em>filename</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Configure.html#find_program"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Configure.find_program" title="Permalink to this definition">¶</a></dt>
 <dd><p>Search for a program on the operating system</p>
-<p>When var is used, you may set os.environ[var] to help finding a specific program version, for example:</p>
+<p>When var is used, you may set os.environ[var] to help find a specific program version, for example:</p>
 <div class="highlight-python"><pre>$ VALAC=/usr/bin/valac_test waf configure</pre>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -479,7 +479,7 @@ named &#8216;mandatory&#8217; to disable the configuration errors:</p>
         <li class="right" >
           <a href="ConfigSet.html" title="ConfigSet"
              >previous</a> |</li>
-        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Waf v1.6.8 documentation</a> &raquo;</li> 
       </ul>
     </div>
 

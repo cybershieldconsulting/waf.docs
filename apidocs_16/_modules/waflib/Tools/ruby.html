@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.ruby &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.ruby &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -62,6 +62,7 @@
 <span class="sd">		conf.load(&#39;compiler_c ruby&#39;)</span>
 <span class="sd">		conf.check_ruby_version((1,8,0))</span>
 <span class="sd">		conf.check_ruby_ext_devel()</span>
+<span class="sd">		conf.check_ruby_module(&#39;libxml&#39;)</span>
 <span class="sd">	def build(bld):</span>
 <span class="sd">		bld(</span>
 <span class="sd">			features = &#39;c cshlib rubyext&#39;,</span>
@@ -73,11 +74,11 @@
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Utils</span>
-<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">before</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">before_method</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after_method</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">extension</span>
 <span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
 
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;rubyext&#39;</span><span class="p">)</span>
-<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;apply_incpaths&#39;</span><span class="p">,</span> <span class="s">&#39;apply_lib_vars&#39;</span><span class="p">,</span> <span class="s">&#39;apply_bundle&#39;</span><span class="p">,</span> <span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;apply_incpaths&#39;</span><span class="p">,</span> <span class="s">&#39;apply_lib_vars&#39;</span><span class="p">,</span> <span class="s">&#39;apply_bundle&#39;</span><span class="p">,</span> <span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="init_rubyext"><a class="viewcode-back" href="../../../tools/ruby.html#waflib.Tools.ruby.init_rubyext">[docs]</a><span class="k">def</span> <span class="nf">init_rubyext</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Add required variables for ruby extensions</span>
@@ -90,7 +91,7 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">uselib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;RUBYEXT&#39;</span><span class="p">)</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;rubyext&#39;</span><span class="p">)</span>
-<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">,</span> <span class="s">&#39;propagate_uselib&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">,</span> <span class="s">&#39;propagate_uselib&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="apply_ruby_so_name"><a class="viewcode-back" href="../../../tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name">[docs]</a><span class="k">def</span> <span class="nf">apply_ruby_so_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Strip the *lib* prefix from ruby extensions</span>
@@ -128,8 +129,10 @@
 		<span class="k">if</span> <span class="n">ver</span> <span class="o">&lt;</span> <span class="n">minver</span><span class="p">:</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;ruby is too old </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">ver</span><span class="p">)</span>
 		<span class="n">cver</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">minver</span><span class="p">])</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">cver</span> <span class="o">=</span> <span class="n">ver</span>
 
-	<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;ruby&#39;</span><span class="p">,</span> <span class="n">cver</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for ruby version </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">minver</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">),</span> <span class="n">cver</span><span class="p">)</span>
 </div>
 <span class="nd">@conf</span>
 <div class="viewcode-block" id="check_ruby_ext_devel"><a class="viewcode-back" href="../../../tools/ruby.html#waflib.Tools.ruby.check_ruby_ext_devel">[docs]</a><span class="k">def</span> <span class="nf">check_ruby_ext_devel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -191,6 +194,45 @@
 	<span class="k">else</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LIBDIR_RUBY</span> <span class="o">=</span> <span class="n">read_config</span><span class="p">(</span><span class="s">&#39;sitelibdir&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 </div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_ruby_module"><a class="viewcode-back" href="../../../tools/ruby.html#waflib.Tools.ruby.check_ruby_module">[docs]</a><span class="k">def</span> <span class="nf">check_ruby_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module_name</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Check if the selected ruby interpreter can require the given ruby module::</span>
+
+<span class="sd">		def configure(conf):</span>
+<span class="sd">			conf.check_ruby_module(&#39;libxml&#39;)</span>
+
+<span class="sd">	:param module_name: module</span>
+<span class="sd">	:type  module_name: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">start_msg</span><span class="p">(</span><span class="s">&#39;Ruby module </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">module_name</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;RUBY&#39;</span><span class="p">],</span> <span class="s">&#39;-e&#39;</span><span class="p">,</span> <span class="s">&#39;require </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s">;puts 1&#39;</span> <span class="o">%</span> <span class="n">module_name</span><span class="p">])</span>
+	<span class="k">except</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;Could not find the ruby module </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">module_name</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+</div>
+<span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.rb&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+	<span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;run_ruby&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+
+<div class="viewcode-block" id="run_ruby"><a class="viewcode-back" href="../../../tools/ruby.html#waflib.Tools.ruby.run_ruby">[docs]</a><span class="k">class</span> <span class="nc">run_ruby</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Task to run ruby files detected by file extension .rb::</span>
+<span class="sd">	</span>
+<span class="sd">		def options(opt):</span>
+<span class="sd">			opt.load(&#39;ruby&#39;)</span>
+<span class="sd">		</span>
+<span class="sd">		def configure(ctx):</span>
+<span class="sd">			ctx.check_ruby_version()</span>
+<span class="sd">		</span>
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.env[&#39;RBFLAGS&#39;] = &#39;-e puts &quot;hello world&quot;&#39;</span>
+<span class="sd">			bld(source=&#39;a_ruby_file.rb&#39;)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${RUBY} ${RBFLAGS} -I ${SRC[0].parent.abspath()} ${SRC}&#39;</span>
+</div>
 <div class="viewcode-block" id="options"><a class="viewcode-back" href="../../../tools/ruby.html#waflib.Tools.ruby.options">[docs]</a><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Add the ``--with-ruby-archdir``, ``--with-ruby-libdir`` and ``--with-ruby-binary`` options</span>
@@ -234,7 +276,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

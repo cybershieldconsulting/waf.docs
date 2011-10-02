@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Configure &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Configure &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="copyright" title="Copyright" href="../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -106,10 +106,14 @@
 			<span class="n">url</span> <span class="o">=</span> <span class="s">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">sub</span><span class="p">,</span> <span class="n">tool</span> <span class="o">+</span> <span class="s">&#39;.py&#39;</span><span class="p">))</span>
 			<span class="k">try</span><span class="p">:</span>
 				<span class="n">web</span> <span class="o">=</span> <span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-				<span class="k">if</span> <span class="n">web</span><span class="o">.</span><span class="n">getcode</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-					<span class="k">continue</span>
-			<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">web</span><span class="o">.</span><span class="n">getcode</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+						<span class="k">continue</span>
+				<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+					<span class="k">pass</span>
+			<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
 				<span class="c"># on python3 urlopen throws an exception</span>
+				<span class="c"># python 2.3 does not have getcode and throws an exception to fail</span>
 				<span class="k">continue</span>
 			<span class="k">else</span><span class="p">:</span>
 				<span class="n">tmp</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">Context</span><span class="o">.</span><span class="n">waf_dir</span><span class="p">,</span> <span class="s">&#39;waflib&#39;</span><span class="p">,</span> <span class="s">&#39;extras&#39;</span><span class="p">,</span> <span class="n">tool</span> <span class="o">+</span> <span class="s">&#39;.py&#39;</span><span class="p">)))</span>
@@ -139,7 +143,7 @@
 <span class="sd">	&quot;&quot;&quot;</span>
 
 	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
-		<span class="nb">super</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+		<span class="nb">super</span><span class="p">(</span><span class="n">ConfigurationContext</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">environ</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">all_envs</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -216,7 +220,7 @@
 		<span class="k">if</span> <span class="ow">not</span> <span class="n">out</span><span class="p">:</span>
 			<span class="n">out</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="p">,</span> <span class="n">Context</span><span class="o">.</span><span class="n">OUT</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
 		<span class="k">if</span> <span class="ow">not</span> <span class="n">out</span><span class="p">:</span>
-			<span class="n">out</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">lockfile</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;.lock-waf&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+			<span class="n">out</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">lockfile</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;.lock-waf_</span><span class="si">%s</span><span class="s">_&#39;</span> <span class="o">%</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;.lock-waf&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
 
 		<span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span> <span class="o">=</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
@@ -254,10 +258,10 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Setting out to&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
 
 		<span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">srcnode</span><span class="p">)</span> <span class="o">==</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span><span class="p">):</span>
-			<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;setting top == out&#39;</span><span class="p">)</span>
+			<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;Setting top == out (remember to use &quot;update_outputs&quot;)&#39;</span><span class="p">)</span>
 		<span class="k">elif</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">srcnode</span><span class="p">):</span>
 			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">srcnode</span><span class="o">.</span><span class="n">is_child_of</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
-				<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;Using an uncommon top directory&#39;</span><span class="p">)</span>
+				<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;Are you certain that you do not want to set top=&quot;.&quot; ?&#39;</span><span class="p">)</span>
 
 		<span class="nb">super</span><span class="p">(</span><span class="n">ConfigurationContext</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 
@@ -283,9 +287,12 @@
 		<span class="n">env</span><span class="p">[</span><span class="s">&#39;files&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span>
 		<span class="n">env</span><span class="p">[</span><span class="s">&#39;environ&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">environ</span><span class="p">)</span>
 
-		<span class="n">env</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">run_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">Options</span><span class="o">.</span><span class="n">lockfile</span><span class="p">)</span>
-		<span class="n">env</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">top_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">Options</span><span class="o">.</span><span class="n">lockfile</span><span class="p">)</span>
-		<span class="n">env</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">Options</span><span class="o">.</span><span class="n">lockfile</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">NO_LOCK_IN_RUN</span><span class="p">:</span>
+			<span class="n">env</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">run_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">Options</span><span class="o">.</span><span class="n">lockfile</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">NO_LOCK_IN_TOP</span><span class="p">:</span>
+			<span class="n">env</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">top_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">Options</span><span class="o">.</span><span class="n">lockfile</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">NO_LOCK_IN_OUT</span><span class="p">:</span>
+			<span class="n">env</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">Options</span><span class="o">.</span><span class="n">lockfile</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="ConfigurationContext.prepare_env"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.prepare_env">[docs]</a>	<span class="k">def</span> <span class="nf">prepare_env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
@@ -375,38 +382,6 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">hash</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s">&#39;rb&#39;</span><span class="p">)))</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
 </div>
-<div class="viewcode-block" id="ConfigurationContext.add_os_flags"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.add_os_flags">[docs]</a>	<span class="k">def</span> <span class="nf">add_os_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-		<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">		Import operating system environment values into ``conf.env`` dict::</span>
-
-<span class="sd">			def configure(conf):</span>
-<span class="sd">				conf.add_os_flags(&#39;CFLAGS&#39;)</span>
-
-<span class="sd">		:param var: variable to use</span>
-<span class="sd">		:type var: string</span>
-<span class="sd">		:param dest: destination variable, by default the same as var</span>
-<span class="sd">		:type dest: string</span>
-<span class="sd">		&quot;&quot;&quot;</span>
-		<span class="c"># do not use &#39;get&#39; to make certain the variable is not defined</span>
-		<span class="k">try</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="n">dest</span> <span class="ow">or</span> <span class="n">var</span><span class="p">,</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="n">var</span><span class="p">]))</span>
-		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span> <span class="k">pass</span>
-</div>
-<div class="viewcode-block" id="ConfigurationContext.cmd_to_list"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.cmd_to_list">[docs]</a>	<span class="k">def</span> <span class="nf">cmd_to_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">):</span>
-		<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">		Detect if a command is written in pseudo shell like ``ccache g++`` and return a list.</span>
-
-<span class="sd">		:param cmd: command</span>
-<span class="sd">		:type cmd: a string or a list of string</span>
-<span class="sd">		&quot;&quot;&quot;</span>
-		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cmd</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">):</span>
-			<span class="k">try</span><span class="p">:</span>
-				<span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
-			<span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-				<span class="k">return</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
-			<span class="k">else</span><span class="p">:</span>
-				<span class="k">return</span> <span class="p">[</span><span class="n">cmd</span><span class="p">]</span>
-		<span class="k">return</span> <span class="n">cmd</span>
-</div>
 <div class="viewcode-block" id="ConfigurationContext.eval_rules"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.eval_rules">[docs]</a>	<span class="k">def</span> <span class="nf">eval_rules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rules</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">		Execute the configuration tests. The method :py:meth:`waflib.Configure.ConfigurationContext.err_handler`</span>
@@ -443,7 +418,12 @@
 </div></div>
 <div class="viewcode-block" id="conf"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.conf">[docs]</a><span class="k">def</span> <span class="nf">conf</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Decorator: attach new configuration functions to :py:class:`waflib.Build.BuildContext` and :py:class:`waflib.Configure.ConfigurationContext`</span>
+<span class="sd">	Decorator: attach new configuration functions to :py:class:`waflib.Build.BuildContext` and</span>
+<span class="sd">	:py:class:`waflib.Configure.ConfigurationContext`. The methods bound will accept a parameter</span>
+<span class="sd">	named &#39;mandatory&#39; to disable the configuration errors::</span>
+
+<span class="sd">		def configure(conf):</span>
+<span class="sd">			conf.find_program(&#39;abc&#39;, mandatory=False)</span>
 
 <span class="sd">	:param f: method to bind</span>
 <span class="sd">	:type f: function</span>
@@ -463,6 +443,40 @@
 	<span class="nb">setattr</span><span class="p">(</span><span class="n">ConfigurationContext</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">fun</span><span class="p">)</span>
 	<span class="nb">setattr</span><span class="p">(</span><span class="n">Build</span><span class="o">.</span><span class="n">BuildContext</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">fun</span><span class="p">)</span>
 	<span class="k">return</span> <span class="n">f</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="add_os_flags"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.add_os_flags">[docs]</a><span class="k">def</span> <span class="nf">add_os_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Import operating system environment values into ``conf.env`` dict::</span>
+
+<span class="sd">		def configure(conf):</span>
+<span class="sd">			conf.add_os_flags(&#39;CFLAGS&#39;)</span>
+
+<span class="sd">	:param var: variable to use</span>
+<span class="sd">	:type var: string</span>
+<span class="sd">	:param dest: destination variable, by default the same as var</span>
+<span class="sd">	:type dest: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c"># do not use &#39;get&#39; to make certain the variable is not defined</span>
+	<span class="k">try</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="n">dest</span> <span class="ow">or</span> <span class="n">var</span><span class="p">,</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="n">var</span><span class="p">]))</span>
+	<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span> <span class="k">pass</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="cmd_to_list"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.cmd_to_list">[docs]</a><span class="k">def</span> <span class="nf">cmd_to_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Detect if a command is written in pseudo shell like ``ccache g++`` and return a list.</span>
+
+<span class="sd">	:param cmd: command</span>
+<span class="sd">	:type cmd: a string or a list of string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cmd</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">):</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="p">[</span><span class="n">cmd</span><span class="p">]</span>
+	<span class="k">return</span> <span class="n">cmd</span>
 </div>
 <span class="nd">@conf</span>
 <div class="viewcode-block" id="check_waf_version"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.check_waf_version">[docs]</a><span class="k">def</span> <span class="nf">check_waf_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mini</span><span class="o">=</span><span class="s">&#39;1.6.0&#39;</span><span class="p">,</span> <span class="n">maxi</span><span class="o">=</span><span class="s">&#39;1.7.0&#39;</span><span class="p">):</span>
@@ -507,7 +521,7 @@
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Search for a program on the operating system</span>
 
-<span class="sd">	When var is used, you may set os.environ[var] to help finding a specific program version, for example::</span>
+<span class="sd">	When var is used, you may set os.environ[var] to help find a specific program version, for example::</span>
 
 <span class="sd">		$ VALAC=/usr/bin/valac_test waf configure</span>
 
@@ -519,7 +533,7 @@
 <span class="sd">	:type ext: list of string</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 
-	<span class="n">exts</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;exts&#39;</span><span class="p">,</span> <span class="n">Options</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&#39;win32&#39;</span> <span class="ow">and</span> <span class="s">&#39;.exe,.com,.bat,.cmd&#39;</span> <span class="ow">or</span> <span class="s">&#39;,.sh,.pl,.py&#39;</span><span class="p">)</span>
+	<span class="n">exts</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;exts&#39;</span><span class="p">,</span> <span class="n">Utils</span><span class="o">.</span><span class="n">is_win32</span> <span class="ow">and</span> <span class="s">&#39;.exe,.com,.bat,.cmd&#39;</span> <span class="ow">or</span> <span class="s">&#39;,.sh,.pl,.py&#39;</span><span class="p">)</span>
 
 	<span class="n">environ</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;environ&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">)</span>
 
@@ -554,9 +568,14 @@
 				<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">path_list</span><span class="p">:</span>
 					<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
 						<span class="k">break</span>
-					<span class="n">x</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">b</span> <span class="o">+</span> <span class="n">a</span><span class="p">)</span>
+					<span class="n">x</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">b</span> <span class="o">+</span> <span class="n">a</span><span class="p">))</span>
 					<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
 						<span class="n">ret</span> <span class="o">=</span> <span class="n">x</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span> <span class="ow">and</span> <span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="p">:</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">get_registry_app_path</span><span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">HKEY_CURRENT_USER</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span> <span class="ow">and</span> <span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="p">:</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">get_registry_app_path</span><span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">HKEY_LOCAL_MACHINE</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
 
 	<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for program &#39;</span> <span class="o">+</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="n">ret</span> <span class="ow">or</span> <span class="bp">False</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&#39;find program=</span><span class="si">%r</span><span class="s"> paths=</span><span class="si">%r</span><span class="s"> var=</span><span class="si">%r</span><span class="s"> -&gt; </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">path_list</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">ret</span><span class="p">))</span>
@@ -589,7 +608,7 @@
 	<span class="k">try</span><span class="p">:</span>
 		<span class="n">app</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">path_list</span><span class="o">=</span><span class="n">path_list</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">,</span> <span class="n">environ</span><span class="o">=</span><span class="n">environ</span><span class="p">,</span> <span class="n">exts</span><span class="o">=</span><span class="n">exts</span><span class="p">)</span>
 	<span class="k">except</span><span class="p">:</span>
-		<span class="n">perl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;perl&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;PERL&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;perl&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;PERL&#39;</span><span class="p">)</span>
 		<span class="n">app</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;PATH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">))</span>
 		<span class="k">if</span> <span class="ow">not</span> <span class="n">app</span><span class="p">:</span>
 			<span class="k">raise</span>
@@ -632,7 +651,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

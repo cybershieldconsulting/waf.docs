@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.gnu_dirs &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.gnu_dirs &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -92,6 +92,7 @@
 <span class="sd">============== ========================================= =======================</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Context</span>
 
 <span class="n">_options</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;, &#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="s">&#39;&#39;&#39;</span>
@@ -118,12 +119,14 @@
 
 <div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/gnu_dirs.html#waflib.Tools.gnu_dirs.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Read the command-line options to set lots of variables in *conf.env*</span>
+<span class="sd">	Read the command-line options to set lots of variables in *conf.env*. The variables</span>
+<span class="sd">	BINDIR and LIBDIR will be overwritten.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="k">def</span> <span class="nf">get_param</span><span class="p">(</span><span class="n">varname</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
 		<span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">default</span>
 
 	<span class="n">env</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LIBDIR</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">BINDIR</span> <span class="o">=</span> <span class="p">[]</span>
 	<span class="n">env</span><span class="p">[</span><span class="s">&#39;EXEC_PREFIX&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_param</span><span class="p">(</span><span class="s">&#39;EXEC_PREFIX&#39;</span><span class="p">,</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;PREFIX&#39;</span><span class="p">])</span>
 	<span class="n">env</span><span class="p">[</span><span class="s">&#39;PACKAGE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="p">,</span> <span class="s">&#39;APPNAME&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">env</span><span class="p">[</span><span class="s">&#39;PACKAGE&#39;</span><span class="p">]</span>
 
@@ -136,12 +139,12 @@
 			<span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
 			<span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
 				<span class="k">try</span><span class="p">:</span>
-					<span class="n">env</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subst_vars</span><span class="p">(</span><span class="n">get_param</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="p">),</span> <span class="n">env</span><span class="p">)</span>
+					<span class="n">env</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subst_vars</span><span class="p">(</span><span class="n">get_param</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">),</span> <span class="n">env</span><span class="p">)</span>
 				<span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
 					<span class="n">complete</span> <span class="o">=</span> <span class="bp">False</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">complete</span><span class="p">:</span>
 		<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_options</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">()]]</span>
-		<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;Variable substitution failure </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">lst</span><span class="p">)</span>
+		<span class="k">raise</span> <span class="n">conf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;Variable substitution failure </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">lst</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="options"><a class="viewcode-back" href="../../../tools/gnu_dirs.html#waflib.Tools.gnu_dirs.options">[docs]</a><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
@@ -208,7 +211,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

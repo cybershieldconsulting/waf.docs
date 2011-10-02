@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.javaw &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.javaw &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -80,7 +80,7 @@
 <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
 <span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">TaskGen</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Errors</span><span class="p">,</span> <span class="n">Node</span>
-<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before_method</span><span class="p">,</span> <span class="n">after_method</span>
 
 <span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">ccroot</span>
 <span class="n">ccroot</span><span class="o">.</span><span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;javac&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;CLASSPATH&#39;</span><span class="p">,</span> <span class="s">&#39;JAVACFLAGS&#39;</span><span class="p">])</span>
@@ -88,7 +88,8 @@
 
 <span class="n">SOURCE_RE</span> <span class="o">=</span> <span class="s">&#39;**/*.java&#39;</span>
 <span class="n">JAR_RE</span> <span class="o">=</span> <span class="s">&#39;**/*&#39;</span>
-<span class="n">re_classes</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;\[wrote\ (.*?\.class)\]&#39;</span><span class="p">)</span>
+<span class="n">re_verbose</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;^\[.*?\]\n*&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+<span class="n">re_classes</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;\[wrote (?:RegularFileObject\[)*(.*?\.class)\]&#39;</span><span class="p">)</span>
 
 <span class="n">class_check_source</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
 <span class="s">public class Test {</span>
@@ -111,7 +112,7 @@
 <span class="s">&#39;&#39;&#39;</span>
 
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;javac&#39;</span><span class="p">)</span>
-<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="apply_java"><a class="viewcode-back" href="../../../tools/javaw.html#waflib.Tools.javaw.apply_java">[docs]</a><span class="k">def</span> <span class="nf">apply_java</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Create a javac task for compiling *.java files*. There can be</span>
@@ -161,7 +162,7 @@
 		<span class="n">tsk</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;JAVACFLAGS&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-sourcepath&#39;</span><span class="p">,</span> <span class="n">names</span><span class="p">])</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;javac&#39;</span><span class="p">)</span>
-<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;apply_java&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_java&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="use_javac_files"><a class="viewcode-back" href="../../../tools/javaw.html#waflib.Tools.javaw.use_javac_files">[docs]</a><span class="k">def</span> <span class="nf">use_javac_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Process the *use* attribute referring to other java compilations</span>
@@ -184,24 +185,25 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CLASSPATH&#39;</span><span class="p">,</span> <span class="n">lst</span><span class="p">)</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;javac&#39;</span><span class="p">)</span>
-<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;apply_java&#39;</span><span class="p">,</span> <span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">,</span> <span class="s">&#39;use_javac_files&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_java&#39;</span><span class="p">,</span> <span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">,</span> <span class="s">&#39;use_javac_files&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="set_classpath"><a class="viewcode-back" href="../../../tools/javaw.html#waflib.Tools.javaw.set_classpath">[docs]</a><span class="k">def</span> <span class="nf">set_classpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Set the CLASSPATH value on the *javac* task previously created.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CLASSPATH&#39;</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;classpath&#39;</span><span class="p">,</span> <span class="p">[]))</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">javac_task</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CLASSPATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CLASSPATH</span><span class="p">)</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
+		<span class="n">x</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CLASSPATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CLASSPATH</span><span class="p">)</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;jar&#39;</span><span class="p">)</span>
-<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;apply_java&#39;</span><span class="p">,</span> <span class="s">&#39;use_javac_files&#39;</span><span class="p">)</span>
-<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_java&#39;</span><span class="p">,</span> <span class="s">&#39;use_javac_files&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="jar_files"><a class="viewcode-back" href="../../../tools/javaw.html#waflib.Tools.javaw.jar_files">[docs]</a><span class="k">def</span> <span class="nf">jar_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Create a jar task. There can be only one jar task by task generator.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">destfile</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;destfile&#39;</span><span class="p">,</span> <span class="s">&#39;test.jar&#39;</span><span class="p">)</span>
 	<span class="n">jaropts</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;jaropts&#39;</span><span class="p">,</span> <span class="p">[])</span>
-	<span class="n">jarcreate</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;jarcreate&#39;</span><span class="p">,</span> <span class="s">&#39;cf&#39;</span><span class="p">)</span>
+        <span class="n">manifest</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;manifest&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
 
 	<span class="n">basedir</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;basedir&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
 	<span class="k">if</span> <span class="n">basedir</span><span class="p">:</span>
@@ -213,6 +215,13 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;Could not find the basedir </span><span class="si">%r</span><span class="s"> for </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basedir</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
 
 	<span class="bp">self</span><span class="o">.</span><span class="n">jar_task</span> <span class="o">=</span> <span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;jar_create&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">manifest</span><span class="p">:</span>
+            <span class="n">jarcreate</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;jarcreate&#39;</span><span class="p">,</span> <span class="s">&#39;cfm&#39;</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">manifest</span><span class="p">)</span>
+            <span class="n">tsk</span><span class="o">.</span><span class="n">dep_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">jaropts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">jarcreate</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;jarcreate&#39;</span><span class="p">,</span> <span class="s">&#39;cf&#39;</span><span class="p">)</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">destfile</span><span class="p">,</span> <span class="n">Node</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
 		<span class="n">destfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="n">destfile</span><span class="p">)</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">destfile</span><span class="p">:</span>
@@ -231,7 +240,7 @@
 		<span class="n">tsk</span><span class="o">.</span><span class="n">set_run_after</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">javac_task</span><span class="p">)</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;jar&#39;</span><span class="p">)</span>
-<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;jar_files&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;jar_files&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="use_jar_files"><a class="viewcode-back" href="../../../tools/javaw.html#waflib.Tools.javaw.use_jar_files">[docs]</a><span class="k">def</span> <span class="nf">use_jar_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Process the *use* attribute to set the build order on the</span>
@@ -343,6 +352,9 @@
 				<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;cannot find </span><span class="si">%r</span><span class="s"> in </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">()))</span>
 			<span class="n">n</span><span class="o">.</span><span class="n">sig</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">h_file</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">task_sigs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">()]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_sig</span>
+		<span class="n">out</span> <span class="o">=</span> <span class="n">re_verbose</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+		<span class="k">if</span> <span class="n">out</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="n">out</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
 </div></div>
 <div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/javaw.html#waflib.Tools.javaw.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
@@ -436,16 +448,29 @@
 	<span class="n">javaHome</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;JAVA_HOME&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
 
 	<span class="nb">dir</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">find_dir</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">JAVA_HOME</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;/include&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nb">dir</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;JAVA_HOME does not seem to be set properly&#39;</span><span class="p">)</span>
+
 	<span class="n">f</span> <span class="o">=</span> <span class="nb">dir</span><span class="o">.</span><span class="n">ant_glob</span><span class="p">(</span><span class="s">&#39;**/(jni|jni_md).h&#39;</span><span class="p">)</span>
 	<span class="n">incDirs</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span>
 
 	<span class="nb">dir</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">find_dir</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">JAVA_HOME</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-	<span class="n">f</span> <span class="o">=</span> <span class="nb">dir</span><span class="o">.</span><span class="n">ant_glob</span><span class="p">(</span><span class="s">&#39;**/*jvm.(so|dll)&#39;</span><span class="p">)</span>
+	<span class="n">f</span> <span class="o">=</span> <span class="nb">dir</span><span class="o">.</span><span class="n">ant_glob</span><span class="p">(</span><span class="s">&#39;**/*jvm.(so|dll|dylib)&#39;</span><span class="p">)</span>
 	<span class="n">libDirs</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span> <span class="ow">or</span> <span class="p">[</span><span class="n">javaHome</span><span class="p">]</span>
 
-	<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">libDirs</span><span class="p">):</span>
-		<span class="k">if</span> <span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">header_name</span><span class="o">=</span><span class="s">&#39;jni.h&#39;</span><span class="p">,</span> <span class="n">define_name</span><span class="o">=</span><span class="s">&#39;HAVE_JNI_H&#39;</span><span class="p">,</span> <span class="n">lib</span><span class="o">=</span><span class="s">&#39;jvm&#39;</span><span class="p">,</span>
-				<span class="n">libpath</span><span class="o">=</span><span class="n">d</span><span class="p">,</span> <span class="n">includes</span><span class="o">=</span><span class="n">incDirs</span><span class="p">,</span> <span class="n">uselib_store</span><span class="o">=</span><span class="s">&#39;JAVA&#39;</span><span class="p">,</span> <span class="n">uselib</span><span class="o">=</span><span class="s">&#39;JAVA&#39;</span><span class="p">):</span>
+	<span class="c"># On windows, we need both the .dll and .lib to link.  On my JDK, they are</span>
+	<span class="c"># in different directories...</span>
+	<span class="n">f</span> <span class="o">=</span> <span class="nb">dir</span><span class="o">.</span><span class="n">ant_glob</span><span class="p">(</span><span class="s">&#39;**/*jvm.(lib)&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">f</span><span class="p">:</span>
+		<span class="n">libDirs</span> <span class="o">=</span> <span class="p">[[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">()]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">libDirs</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span>
+
+	<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">libDirs</span><span class="p">:</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">header_name</span><span class="o">=</span><span class="s">&#39;jni.h&#39;</span><span class="p">,</span> <span class="n">define_name</span><span class="o">=</span><span class="s">&#39;HAVE_JNI_H&#39;</span><span class="p">,</span> <span class="n">lib</span><span class="o">=</span><span class="s">&#39;jvm&#39;</span><span class="p">,</span>
+				<span class="n">libpath</span><span class="o">=</span><span class="n">d</span><span class="p">,</span> <span class="n">includes</span><span class="o">=</span><span class="n">incDirs</span><span class="p">,</span> <span class="n">uselib_store</span><span class="o">=</span><span class="s">&#39;JAVA&#39;</span><span class="p">,</span> <span class="n">uselib</span><span class="o">=</span><span class="s">&#39;JAVA&#39;</span><span class="p">)</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
 			<span class="k">break</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not find lib jvm in </span><span class="si">%r</span><span class="s"> (see config.log)&#39;</span> <span class="o">%</span> <span class="n">libDirs</span><span class="p">)</span>
@@ -485,7 +510,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

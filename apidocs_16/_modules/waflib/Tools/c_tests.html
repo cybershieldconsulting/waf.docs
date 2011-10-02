@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.c_tests &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.c_tests &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -57,7 +57,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
-<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before_method</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 
 <span class="n">LIB_CODE</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
@@ -80,7 +80,7 @@
 <span class="s">&#39;&#39;&#39;</span>
 
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;link_lib_test&#39;</span><span class="p">)</span>
-<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="link_lib_test_fun"><a class="viewcode-back" href="../../../tools/c_tests.html#waflib.Tools.c_tests.link_lib_test_fun">[docs]</a><span class="k">def</span> <span class="nf">link_lib_test_fun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	The configuration test :py:func:`waflib.Tools.ccroot.run_c_code` declares a unique task generator,</span>
@@ -96,10 +96,10 @@
 	<span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
 	<span class="n">m</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
 	<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span>
-	<span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="n">write_test_file</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;test.c&#39;</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="n">LIB_CODE</span><span class="p">)</span>
-	<span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="n">write_test_file</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;main.c&#39;</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="n">MAIN_CODE</span><span class="p">)</span>
-	<span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span> <span class="n">m</span> <span class="o">+</span> <span class="s">&#39;shlib&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;test.c&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;test&#39;</span><span class="p">)</span>
-	<span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span> <span class="n">m</span> <span class="o">+</span> <span class="s">&#39;program test_exec&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;main.c&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s">&#39;test&#39;</span><span class="p">,</span> <span class="n">rpath</span><span class="o">=</span><span class="n">rpath</span><span class="p">)</span>
+	<span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="n">write_test_file</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;test.&#39;</span> <span class="o">+</span> <span class="n">mode</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="n">LIB_CODE</span><span class="p">)</span>
+	<span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="n">write_test_file</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;main.&#39;</span> <span class="o">+</span> <span class="n">mode</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="n">MAIN_CODE</span><span class="p">)</span>
+	<span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span> <span class="n">m</span> <span class="o">+</span> <span class="s">&#39;shlib&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;test.&#39;</span> <span class="o">+</span> <span class="n">mode</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;test&#39;</span><span class="p">)</span>
+	<span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span> <span class="n">m</span> <span class="o">+</span> <span class="s">&#39;program test_exec&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;main.&#39;</span> <span class="o">+</span> <span class="n">mode</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s">&#39;test&#39;</span><span class="p">,</span> <span class="n">rpath</span><span class="o">=</span><span class="n">rpath</span><span class="p">)</span>
 </div>
 <span class="nd">@conf</span>
 <div class="viewcode-block" id="check_library"><a class="viewcode-back" href="../../../tools/c_tests.html#waflib.Tools.c_tests.check_library">[docs]</a><span class="k">def</span> <span class="nf">check_library</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -170,7 +170,7 @@
 
 <span class="c">########################################################################################</span>
 </div>
-<span class="n">LARGE_FRAGMENT</span> <span class="o">=</span> <span class="s">&#39;#include &lt;unistd.h&gt;</span><span class="se">\n</span><span class="s">int main() { return !(sizeof(off_t) &gt;= 8); };&#39;</span>
+<span class="n">LARGE_FRAGMENT</span> <span class="o">=</span> <span class="s">&#39;#include &lt;unistd.h&gt;</span><span class="se">\n</span><span class="s">int main() { return !(sizeof(off_t) &gt;= 8); }</span><span class="se">\n</span><span class="s">&#39;</span>
 
 <span class="nd">@conf</span>
 <div class="viewcode-block" id="check_large_file"><a class="viewcode-back" href="../../../tools/c_tests.html#waflib.Tools.c_tests.check_large_file">[docs]</a><span class="k">def</span> <span class="nf">check_large_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
@@ -198,23 +198,25 @@
 	<span class="n">kw</span><span class="p">[</span><span class="s">&#39;fragment&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">LARGE_FRAGMENT</span>
 
 	<span class="n">kw</span><span class="p">[</span><span class="s">&#39;msg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;Checking for large file support&#39;</span>
+	<span class="n">ret</span> <span class="o">=</span> <span class="bp">True</span>
 	<span class="k">try</span><span class="p">:</span>
 		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">DEST_BINFMT</span> <span class="o">!=</span> <span class="s">&#39;pe&#39;</span><span class="p">:</span>
-			<span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+			<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
 	<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
 		<span class="k">pass</span>
 	<span class="k">else</span><span class="p">:</span>
-		<span class="k">return</span> <span class="bp">True</span>
+		<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">True</span>
 
 	<span class="n">kw</span><span class="p">[</span><span class="s">&#39;msg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;Checking for -D_FILE_OFFSET_BITS=64&#39;</span>
 	<span class="n">kw</span><span class="p">[</span><span class="s">&#39;defines&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;_FILE_OFFSET_BITS=64&#39;</span><span class="p">]</span>
 	<span class="k">try</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
 	<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
 		<span class="k">pass</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">define</span><span class="p">(</span><span class="s">&#39;_FILE_OFFSET_BITS&#39;</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
-		<span class="k">return</span> <span class="bp">True</span>
+		<span class="k">return</span> <span class="n">ret</span>
 
 	<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;There is no support for large files&#39;</span><span class="p">)</span>
 
@@ -255,7 +257,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

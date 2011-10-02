@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Task &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Task &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="copyright" title="Copyright" href="../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -171,7 +171,8 @@
 				<span class="n">cls</span><span class="o">.</span><span class="n">hcode</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">run_str</span>
 				<span class="n">cls</span><span class="o">.</span><span class="n">run_str</span> <span class="o">=</span> <span class="bp">None</span>
 				<span class="n">cls</span><span class="o">.</span><span class="n">run</span> <span class="o">=</span> <span class="n">f</span>
-				<span class="n">cls</span><span class="o">.</span><span class="n">vars</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dvars</span><span class="p">)</span>
+				<span class="n">cls</span><span class="o">.</span><span class="n">vars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">vars</span> <span class="o">+</span> <span class="n">dvars</span><span class="p">))</span>
+				<span class="n">cls</span><span class="o">.</span><span class="n">vars</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
 			<span class="k">elif</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="s">&#39;run&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="s">&#39;hcode&#39;</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
 				<span class="c"># getattr(cls, &#39;hcode&#39;) would look in the upper classes</span>
 				<span class="n">cls</span><span class="o">.</span><span class="n">hcode</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">h_fun</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">run</span><span class="p">)</span>
@@ -265,7 +266,7 @@
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">return</span> <span class="n">RUN_ME</span>
 </div>
-<div class="viewcode-block" id="TaskBase.process"><a class="viewcode-back" href="../../Task.html#waflib.Task.TaskBase.process">[docs]</a>	<span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">		Assume that the task has had a new attribute ``master`` which is an instance of :py:class:`waflib.Runner.Parallel`.</span>
 <span class="sd">		Execute the task and then put it back in the queue :py:attr:`waflib.Runner.Parallel.out` (may be replaced by subclassing).</span>
@@ -275,19 +276,18 @@
 			<span class="n">m</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 			<span class="k">return</span>
 
-		<span class="c"># TODO remove the task signature immediately before it is executed</span>
+		<span class="c"># remove the task signature immediately before it is executed</span>
 		<span class="c"># in case of failure the task will be executed again</span>
-		<span class="c">#try:</span>
-		<span class="c">#	del self.generator.bld.task_sigs[self.uid()]</span>
-		<span class="c">#except:</span>
-		<span class="c">#	pass</span>
-
-		<span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">returned_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">log_display</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="p">)</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">task_sigs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">()]</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="k">pass</span>
 
 		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">returned_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">log_display</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="p">)</span>
 			<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-		<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+		<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">err_msg</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">ex_stack</span><span class="p">()</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">hasrun</span> <span class="o">=</span> <span class="n">EXCEPTION</span>
 
@@ -313,7 +313,7 @@
 			<span class="n">m</span><span class="o">.</span><span class="n">error_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
 		<span class="n">m</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-</div>
+
 <div class="viewcode-block" id="TaskBase.run"><a class="viewcode-back" href="../../Task.html#waflib.Task.TaskBase.run">[docs]</a>	<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">		Execute the task (executed by threads). Override in subclasses.</span>
@@ -340,9 +340,17 @@
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="n">col1</span> <span class="o">=</span> <span class="n">Logs</span><span class="o">.</span><span class="n">colors</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">)</span>
 		<span class="n">col2</span> <span class="o">=</span> <span class="n">Logs</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">NORMAL</span>
+		<span class="n">master</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span>
+
+		<span class="k">def</span> <span class="nf">cur</span><span class="p">():</span>
+			<span class="c"># the current task position, computed as late as possible</span>
+			<span class="n">tmp</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+			<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">master</span><span class="p">,</span> <span class="s">&#39;ready&#39;</span><span class="p">):</span>
+				<span class="n">tmp</span> <span class="o">-=</span> <span class="n">master</span><span class="o">.</span><span class="n">ready</span><span class="o">.</span><span class="n">qsize</span><span class="p">()</span>
+			<span class="k">return</span> <span class="n">master</span><span class="o">.</span><span class="n">processed</span> <span class="o">+</span> <span class="n">tmp</span>
 
 		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">progress_bar</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">progress_line</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">returned_tasks</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">)</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">progress_line</span><span class="p">(</span><span class="n">cur</span><span class="p">(),</span> <span class="n">master</span><span class="o">.</span><span class="n">total</span><span class="p">,</span> <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">)</span>
 
 		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">progress_bar</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
 			<span class="n">ela</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">timer</span><span class="p">)</span>
@@ -354,16 +362,16 @@
 				<span class="n">outs</span> <span class="o">=</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">n</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">])</span>
 			<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
 				<span class="n">outs</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
-			<span class="k">return</span> <span class="s">&#39;|Total </span><span class="si">%s</span><span class="s">|Current </span><span class="si">%s</span><span class="s">|Inputs </span><span class="si">%s</span><span class="s">|Outputs </span><span class="si">%s</span><span class="s">|Time </span><span class="si">%s</span><span class="s">|</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">returned_tasks</span><span class="p">),</span> <span class="n">ins</span><span class="p">,</span> <span class="n">outs</span><span class="p">,</span> <span class="n">ela</span><span class="p">)</span>
+			<span class="k">return</span> <span class="s">&#39;|Total </span><span class="si">%s</span><span class="s">|Current </span><span class="si">%s</span><span class="s">|Inputs </span><span class="si">%s</span><span class="s">|Outputs </span><span class="si">%s</span><span class="s">|Time </span><span class="si">%s</span><span class="s">|</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">master</span><span class="o">.</span><span class="n">total</span><span class="p">,</span> <span class="n">cur</span><span class="p">(),</span> <span class="n">ins</span><span class="p">,</span> <span class="n">outs</span><span class="p">,</span> <span class="n">ela</span><span class="p">)</span>
 
 		<span class="n">s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 		<span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="p">:</span>
 			<span class="k">return</span> <span class="bp">None</span>
 
-		<span class="n">total</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+		<span class="n">total</span> <span class="o">=</span> <span class="n">master</span><span class="o">.</span><span class="n">total</span>
 		<span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">total</span><span class="p">))</span>
 		<span class="n">fs</span> <span class="o">=</span> <span class="s">&#39;[</span><span class="si">%%%d</span><span class="s">d/</span><span class="si">%%%d</span><span class="s">d] </span><span class="si">%%</span><span class="s">s</span><span class="si">%%</span><span class="s">s</span><span class="si">%%</span><span class="s">s&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
-		<span class="k">return</span> <span class="n">fs</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">returned_tasks</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">col1</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">col2</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">fs</span> <span class="o">%</span> <span class="p">(</span><span class="n">cur</span><span class="p">(),</span> <span class="n">total</span><span class="p">,</span> <span class="n">col1</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">col2</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="TaskBase.attr"><a class="viewcode-back" href="../../Task.html#waflib.Task.TaskBase.attr">[docs]</a>	<span class="k">def</span> <span class="nf">attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">att</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
@@ -407,6 +415,31 @@
 			<span class="k">return</span> <span class="s">&#39; -&gt; missing files: </span><span class="si">%r</span><span class="se">\n</span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="k">return</span> <span class="s">&#39;?&#39;</span>
+</div>
+<div class="viewcode-block" id="TaskBase.colon"><a class="viewcode-back" href="../../Task.html#waflib.Task.TaskBase.colon">[docs]</a>	<span class="k">def</span> <span class="nf">colon</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		private function for the moment</span>
+
+<span class="sd">		used for scriptlet expressions such as ${FOO_ST:FOO}, for example, if</span>
+<span class="sd">		env.FOO_ST = [&#39;-a&#39;, &#39;-b&#39;]</span>
+<span class="sd">		env.FOO    = [&#39;1&#39;, &#39;2&#39;]</span>
+<span class="sd">		then the result will be [&#39;-a&#39;, &#39;-b&#39;, &#39;1&#39;, &#39;-a&#39;, &#39;-b&#39;, &#39;2&#39;]</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="n">var1</span><span class="p">]</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var2</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="n">it</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="n">var2</span><span class="p">]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">it</span> <span class="o">=</span> <span class="n">var2</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="k">return</span> <span class="p">[</span><span class="n">tmp</span> <span class="o">%</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">it</span><span class="p">]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">Logs</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">tmp</span> <span class="ow">and</span> <span class="n">it</span><span class="p">:</span>
+				<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;Missing env variable </span><span class="si">%r</span><span class="s"> for task </span><span class="si">%r</span><span class="s"> (generator </span><span class="si">%r</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="p">))</span>
+			<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+			<span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+			<span class="k">return</span> <span class="n">lst</span>
 </div></div>
 <div class="viewcode-block" id="Task"><a class="viewcode-back" href="../../Task.html#waflib.Task.Task">[docs]</a><span class="k">class</span> <span class="nc">Task</span><span class="p">(</span><span class="n">TaskBase</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
@@ -457,8 +490,17 @@
 </div>
 <div class="viewcode-block" id="Task.uid"><a class="viewcode-back" href="../../Task.html#waflib.Task.Task.uid">[docs]</a>	<span class="k">def</span> <span class="nf">uid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">		Obtain a unique id which will be identical in different build instances.</span>
-<span class="sd">		The node paths, the class name, and the function are inputs for the hash.</span>
+<span class="sd">		Return an identifier used to determine if tasks are up-to-date. Since the</span>
+<span class="sd">		identifier will be stored between executions, it must be:</span>
+
+<span class="sd">			- unique: no two tasks return the same value (for a given build context)</span>
+<span class="sd">			- the same for a given task instance</span>
+
+<span class="sd">		By default, the node paths, the class name, and the function are used</span>
+<span class="sd">		as inputs to compute a hash.</span>
+
+<span class="sd">		The pointer to the object (python built-in &#39;id&#39;) will change between build executions,</span>
+<span class="sd">		and must be avoided in such hashes.</span>
 
 <span class="sd">		:return: hash value</span>
 <span class="sd">		:rtype: string</span>
@@ -539,7 +581,7 @@
 		<span class="c"># implicit deps / scanner results</span>
 		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="p">:</span>
 			<span class="k">try</span><span class="p">:</span>
-				<span class="n">imp_sig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_implicit_deps</span><span class="p">()</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">sig_implicit_deps</span><span class="p">()</span>
 			<span class="k">except</span> <span class="n">Errors</span><span class="o">.</span><span class="n">TaskRescan</span><span class="p">:</span>
 				<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">()</span>
 
@@ -557,7 +599,6 @@
 			<span class="k">if</span> <span class="ow">not</span> <span class="n">t</span><span class="o">.</span><span class="n">hasrun</span><span class="p">:</span>
 				<span class="k">return</span> <span class="n">ASK_LATER</span>
 
-		<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
 		<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span>
 
 		<span class="c"># first compute the signature</span>
@@ -596,7 +637,6 @@
 <span class="sd">		of their contents. See the class decorator :py:func:`waflib.Task.update_outputs` if you need this behaviour.</span>
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span>
-		<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
 		<span class="n">sig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">()</span>
 
 		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
@@ -713,8 +753,19 @@
 			<span class="k">try</span><span class="p">:</span>
 				<span class="k">if</span> <span class="n">prev</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_sig_implicit_deps</span><span class="p">():</span>
 					<span class="k">return</span> <span class="n">prev</span>
-			<span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span> <span class="c"># raised if a file was renamed</span>
-				<span class="k">pass</span>
+			<span class="k">except</span><span class="p">:</span>
+				<span class="c"># when a file was renamed (IOError usually), remove the stale nodes (headers in folders without source files)</span>
+				<span class="c"># this will break the order calculation for headers created during the build in the source directory (should be uncommon)</span>
+				<span class="c"># the behaviour will differ when top != out</span>
+				<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">bld</span><span class="o">.</span><span class="n">node_deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">(),</span> <span class="p">[]):</span>
+					<span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">is_child_of</span><span class="p">(</span><span class="n">bld</span><span class="o">.</span><span class="n">srcnode</span><span class="p">):</span>
+						<span class="k">try</span><span class="p">:</span>
+							<span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+						<span class="k">except</span><span class="p">:</span>
+							<span class="k">try</span><span class="p">:</span>
+								<span class="k">del</span> <span class="n">x</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+							<span class="k">except</span><span class="p">:</span>
+								<span class="k">pass</span>
 			<span class="k">del</span> <span class="n">bld</span><span class="o">.</span><span class="n">task_sigs</span><span class="p">[(</span><span class="n">key</span><span class="p">,</span> <span class="s">&#39;imp&#39;</span><span class="p">)]</span>
 			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">TaskRescan</span><span class="p">(</span><span class="s">&#39;rescan&#39;</span><span class="p">)</span>
 
@@ -731,8 +782,17 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">are_implicit_nodes_ready</span><span class="p">()</span>
 
 		<span class="c"># recompute the signature and return it</span>
-		<span class="n">bld</span><span class="o">.</span><span class="n">task_sigs</span><span class="p">[(</span><span class="n">key</span><span class="p">,</span> <span class="s">&#39;imp&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">sig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_sig_implicit_deps</span><span class="p">()</span>
-		<span class="k">return</span> <span class="n">sig</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">bld</span><span class="o">.</span><span class="n">task_sigs</span><span class="p">[(</span><span class="n">key</span><span class="p">,</span> <span class="s">&#39;imp&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">sig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_sig_implicit_deps</span><span class="p">()</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">Logs</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+				<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">bld</span><span class="o">.</span><span class="n">node_deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">(),</span> <span class="p">[]):</span>
+					<span class="k">try</span><span class="p">:</span>
+						<span class="n">k</span><span class="o">.</span><span class="n">get_bld_sig</span><span class="p">()</span>
+					<span class="k">except</span><span class="p">:</span>
+						<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;Missing signature for node </span><span class="si">%r</span><span class="s"> (may cause rebuilds)&#39;</span> <span class="o">%</span> <span class="n">k</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">sig</span>
 </div>
 <div class="viewcode-block" id="Task.compute_sig_implicit_deps"><a class="viewcode-back" href="../../Task.html#waflib.Task.Task.compute_sig_implicit_deps">[docs]</a>	<span class="k">def</span> <span class="nf">compute_sig_implicit_deps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
@@ -746,24 +806,14 @@
 		<span class="n">upd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="o">.</span><span class="n">update</span>
 
 		<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span>
-		<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
 
 		<span class="bp">self</span><span class="o">.</span><span class="n">are_implicit_nodes_ready</span><span class="p">()</span>
 
-		<span class="k">try</span><span class="p">:</span>
-			<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">bld</span><span class="o">.</span><span class="n">node_deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">(),</span> <span class="p">[]):</span>
-				<span class="c"># can do an optimization here</span>
-				<span class="n">upd</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">get_bld_sig</span><span class="p">())</span>
-		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-			<span class="c"># do it again to display a meaningful error message</span>
-			<span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
-			<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">bld</span><span class="o">.</span><span class="n">node_deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">(),</span> <span class="p">[]):</span>
-				<span class="k">try</span><span class="p">:</span>
-					<span class="n">k</span><span class="o">.</span><span class="n">get_bld_sig</span><span class="p">()</span>
-				<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-					<span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;Missing node signature for </span><span class="si">%r</span><span class="s"> (for implicit dependencies </span><span class="si">%r</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
-
+		<span class="c"># scanner returns a node that does not have a signature</span>
+		<span class="c"># just *ignore* the error and let them figure out from the compiler output</span>
+		<span class="c"># waf -k behaviour</span>
+		<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">bld</span><span class="o">.</span><span class="n">node_deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">(),</span> <span class="p">[]):</span>
+			<span class="n">upd</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">get_bld_sig</span><span class="p">())</span>
 		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
 </div>
 <div class="viewcode-block" id="Task.are_implicit_nodes_ready"><a class="viewcode-back" href="../../Task.html#waflib.Task.Task.are_implicit_nodes_ready">[docs]</a>	<span class="k">def</span> <span class="nf">are_implicit_nodes_ready</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -818,9 +868,8 @@
 		<span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;outputs&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
 			<span class="k">return</span> <span class="bp">None</span>
 
-		<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
 		<span class="n">sig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">()</span>
-		<span class="n">ssig</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span>
+		<span class="n">ssig</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">())</span> <span class="o">+</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span>
 
 		<span class="c"># first try to access the cache folder for the task</span>
 		<span class="n">dname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">cache_global</span><span class="p">,</span> <span class="n">ssig</span><span class="p">)</span>
@@ -865,9 +914,11 @@
 		<span class="c"># try to avoid data corruption as much as possible</span>
 		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;cached&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
 			<span class="k">return</span> <span class="bp">None</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;outputs&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">None</span>
 
 		<span class="n">sig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">()</span>
-		<span class="n">ssig</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span>
+		<span class="n">ssig</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">())</span> <span class="o">+</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span>
 		<span class="n">dname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">cache_global</span><span class="p">,</span> <span class="n">ssig</span><span class="p">)</span>
 		<span class="n">tmpdir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">cache_global</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="s">&#39;waf&#39;</span><span class="p">)</span>
 
@@ -996,7 +1047,7 @@
 <span class="n">reg_act</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&quot;(?P&lt;backslash&gt;</span><span class="se">\\</span><span class="s">)|(?P&lt;dollar&gt;\$\$)|(?P&lt;subst&gt;\$\{(?P&lt;var&gt;\w+)(?P&lt;code&gt;.*?)\})&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
 <div class="viewcode-block" id="compile_fun_shell"><a class="viewcode-back" href="../../Task.html#waflib.Task.compile_fun_shell">[docs]</a><span class="k">def</span> <span class="nf">compile_fun_shell</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Create a compiled function to execute a process without the shell</span>
+<span class="sd">	Create a compiled function to execute a process with the shell</span>
 <span class="sd">	WARNING: this method may disappear anytime, so use compile_fun instead</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 
@@ -1022,8 +1073,15 @@
 			<span class="k">else</span><span class="p">:</span> <span class="n">app</span><span class="p">(</span><span class="s">&#39;&quot; &quot;.join([a.path_from(bld.bldnode) for a in tsk.outputs])&#39;</span><span class="p">)</span>
 		<span class="k">elif</span> <span class="n">meth</span><span class="p">:</span>
 			<span class="k">if</span> <span class="n">meth</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">):</span>
-				<span class="n">app</span><span class="p">(</span><span class="s">&#39;&quot; &quot;.join([env[</span><span class="si">%r</span><span class="s">] </span><span class="si">%%</span><span class="s"> x for x in env[</span><span class="si">%r</span><span class="s">]])&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">meth</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
-				<span class="n">dvars</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">var</span><span class="p">,</span> <span class="n">meth</span><span class="p">[</span><span class="mi">1</span><span class="p">:]])</span>
+				<span class="n">m</span> <span class="o">=</span> <span class="n">meth</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+				<span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="s">&#39;SRC&#39;</span><span class="p">:</span>
+					<span class="n">m</span> <span class="o">=</span> <span class="s">&#39;[a.path_from(bld.bldnode) for a in tsk.inputs]&#39;</span>
+				<span class="k">elif</span> <span class="n">m</span> <span class="o">==</span> <span class="s">&#39;TGT&#39;</span><span class="p">:</span>
+					<span class="n">m</span> <span class="o">=</span> <span class="s">&#39;[a.path_from(bld.bldnode) for a in tsk.outputs]&#39;</span>
+				<span class="k">elif</span> <span class="n">m</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;tsk&#39;</span><span class="p">,</span> <span class="s">&#39;gen&#39;</span><span class="p">,</span> <span class="s">&#39;bld&#39;</span><span class="p">):</span>
+					<span class="n">dvars</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">var</span><span class="p">,</span> <span class="n">meth</span><span class="p">[</span><span class="mi">1</span><span class="p">:]])</span>
+					<span class="n">m</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">m</span>
+				<span class="n">app</span><span class="p">(</span><span class="s">&#39;&quot; &quot;.join(tsk.colon(</span><span class="si">%r</span><span class="s">, </span><span class="si">%s</span><span class="s">))&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span>
 			<span class="k">else</span><span class="p">:</span>
 				<span class="n">app</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">meth</span><span class="p">))</span>
 		<span class="k">else</span><span class="p">:</span>
@@ -1069,8 +1127,15 @@
 			<span class="k">else</span><span class="p">:</span> <span class="n">app</span><span class="p">(</span><span class="s">&quot;lst.extend([a.path_from(bld.bldnode) for a in tsk.outputs])&quot;</span><span class="p">)</span>
 		<span class="k">elif</span> <span class="n">meth</span><span class="p">:</span>
 			<span class="k">if</span> <span class="n">meth</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">):</span>
-				<span class="n">app</span><span class="p">(</span><span class="s">&#39;lst.extend([env[</span><span class="si">%r</span><span class="s">] </span><span class="si">%%</span><span class="s"> x for x in env[</span><span class="si">%r</span><span class="s">]])&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">meth</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
-				<span class="n">dvars</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">var</span><span class="p">,</span> <span class="n">meth</span><span class="p">[</span><span class="mi">1</span><span class="p">:]])</span>
+				<span class="n">m</span> <span class="o">=</span> <span class="n">meth</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+				<span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="s">&#39;SRC&#39;</span><span class="p">:</span>
+					<span class="n">m</span> <span class="o">=</span> <span class="s">&#39;[a.path_from(bld.bldnode) for a in tsk.inputs]&#39;</span>
+				<span class="k">elif</span> <span class="n">m</span> <span class="o">==</span> <span class="s">&#39;TGT&#39;</span><span class="p">:</span>
+					<span class="n">m</span> <span class="o">=</span> <span class="s">&#39;[a.path_from(bld.bldnode) for a in tsk.outputs]&#39;</span>
+				<span class="k">elif</span> <span class="n">m</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;tsk&#39;</span><span class="p">,</span> <span class="s">&#39;gen&#39;</span><span class="p">,</span> <span class="s">&#39;bld&#39;</span><span class="p">):</span>
+					<span class="n">dvars</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">var</span><span class="p">,</span> <span class="n">m</span><span class="p">])</span>
+					<span class="n">m</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">m</span>
+				<span class="n">app</span><span class="p">(</span><span class="s">&#39;lst.extend(tsk.colon(</span><span class="si">%r</span><span class="s">, </span><span class="si">%s</span><span class="s">))&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span>
 			<span class="k">else</span><span class="p">:</span>
 				<span class="n">app</span><span class="p">(</span><span class="s">&#39;lst.extend(gen.to_list(</span><span class="si">%s%s</span><span class="s">))&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">meth</span><span class="p">))</span>
 		<span class="k">else</span><span class="p">:</span>
@@ -1080,7 +1145,6 @@
 	<span class="k">if</span> <span class="n">extr</span><span class="p">:</span>
 		<span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
 			<span class="n">app</span><span class="p">(</span><span class="s">&quot;lst.extend(</span><span class="si">%r</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">params</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
-
 	<span class="n">fun</span> <span class="o">=</span> <span class="n">COMPILE_TEMPLATE_NOSHELL</span> <span class="o">%</span> <span class="s">&quot;</span><span class="se">\n\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
 	<span class="n">Logs</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;action: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">fun</span><span class="p">)</span>
 	<span class="k">return</span> <span class="p">(</span><span class="n">funex</span><span class="p">(</span><span class="n">fun</span><span class="p">),</span> <span class="n">dvars</span><span class="p">)</span>
@@ -1094,7 +1158,7 @@
 
 <span class="sd">	for example::</span>
 
-<span class="sd">		from waflib import compile_fun</span>
+<span class="sd">		from waflib.Task import compile_fun</span>
 <span class="sd">		compile_fun(&#39;cxx&#39;, &#39;${CXX} -o ${TGT[0]} ${SRC} -I ${SRC[0].parent.bldpath()}&#39;)</span>
 
 <span class="sd">		def build(bld):</span>
@@ -1112,7 +1176,7 @@
 	<span class="k">else</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">compile_fun_noshell</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
 </div>
-<div class="viewcode-block" id="task_factory"><a class="viewcode-back" href="../../Task.html#waflib.Task.task_factory">[docs]</a><span class="k">def</span> <span class="nf">task_factory</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="p">[],</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;GREEN&#39;</span><span class="p">,</span> <span class="n">ext_in</span><span class="o">=</span><span class="p">[],</span> <span class="n">ext_out</span><span class="o">=</span><span class="p">[],</span> <span class="n">before</span><span class="o">=</span><span class="p">[],</span> <span class="n">after</span><span class="o">=</span><span class="p">[],</span> <span class="n">shell</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">scan</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="task_factory"><a class="viewcode-back" href="../../Task.html#waflib.Task.task_factory">[docs]</a><span class="k">def</span> <span class="nf">task_factory</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;GREEN&#39;</span><span class="p">,</span> <span class="n">ext_in</span><span class="o">=</span><span class="p">[],</span> <span class="n">ext_out</span><span class="o">=</span><span class="p">[],</span> <span class="n">before</span><span class="o">=</span><span class="p">[],</span> <span class="n">after</span><span class="o">=</span><span class="p">[],</span> <span class="n">shell</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">scan</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Return a new task subclass with the function ``run`` compiled from the line given.</span>
 <span class="sd">	Provided for compatibility with waf 1.4-1.5, when we did not use metaclasses to register new objects.</span>
@@ -1131,7 +1195,7 @@
 <span class="sd">	&quot;&quot;&quot;</span>
 
 	<span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-		<span class="s">&#39;vars&#39;</span><span class="p">:</span> <span class="nb">vars</span><span class="p">,</span>
+		<span class="s">&#39;vars&#39;</span><span class="p">:</span> <span class="nb">vars</span> <span class="ow">or</span> <span class="p">[],</span> <span class="c"># function arguments are static, and this one may be modified by the class</span>
 		<span class="s">&#39;color&#39;</span><span class="p">:</span> <span class="n">color</span><span class="p">,</span>
 		<span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
 		<span class="s">&#39;ext_in&#39;</span><span class="p">:</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">ext_in</span><span class="p">),</span>
@@ -1185,6 +1249,7 @@
 		<span class="n">old_post_run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 		<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
 			<span class="n">node</span><span class="o">.</span><span class="n">sig</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">h_file</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">task_sigs</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">()</span> <span class="c"># issue #1017</span>
 	<span class="n">cls</span><span class="o">.</span><span class="n">post_run</span> <span class="o">=</span> <span class="n">post_run</span>
 
 
@@ -1199,16 +1264,17 @@
 			<span class="c"># perform a second check, returning &#39;SKIP_ME&#39; as we are expecting that</span>
 			<span class="c"># the signatures do not match</span>
 			<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span>
-			<span class="n">new_sig</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">()</span>
 			<span class="n">prev_sig</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">task_sigs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">()]</span>
-			<span class="k">if</span> <span class="n">prev_sig</span> <span class="o">==</span> <span class="n">new_sig</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">prev_sig</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">():</span>
 				<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
-					<span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">sig</span><span class="p">:</span>
+					<span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">sig</span> <span class="ow">or</span> <span class="n">bld</span><span class="o">.</span><span class="n">task_sigs</span><span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">abspath</span><span class="p">()]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">():</span>
 						<span class="k">return</span> <span class="n">RUN_ME</span>
 				<span class="k">return</span> <span class="n">SKIP_ME</span>
 		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
 			<span class="k">pass</span>
 		<span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
 			<span class="k">pass</span>
 		<span class="k">return</span> <span class="n">RUN_ME</span>
 	<span class="n">cls</span><span class="o">.</span><span class="n">runnable_status</span> <span class="o">=</span> <span class="n">runnable_status</span>
@@ -1250,7 +1316,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

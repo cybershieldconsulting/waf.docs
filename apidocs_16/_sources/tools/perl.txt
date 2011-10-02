@@ -1,0 +1,8 @@
+perl
+====
+
+.. automodule:: waflib.Tools.perl
+
+Features defined in this module:
+
+* `perlext <../featuremap.html#feature-perlext>`_

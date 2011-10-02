@@ -1,0 +1,8 @@
+cs
+==
+
+.. automodule:: waflib.Tools.cs
+
+Features defined in this module:
+
+* `cs <../featuremap.html#feature-cs>`_

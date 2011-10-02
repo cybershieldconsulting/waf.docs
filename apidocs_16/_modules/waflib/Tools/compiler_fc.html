@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.compiler_fc &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.compiler_fc &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -60,7 +60,8 @@
 	<span class="s">&#39;darwin&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="s">&#39;gfortran&#39;</span><span class="p">,</span> <span class="s">&#39;g95&#39;</span><span class="p">,</span> <span class="s">&#39;ifort&#39;</span><span class="p">],</span>
 	<span class="s">&#39;linux&#39;</span>  <span class="p">:</span> <span class="p">[</span><span class="s">&#39;gfortran&#39;</span><span class="p">,</span> <span class="s">&#39;g95&#39;</span><span class="p">,</span> <span class="s">&#39;ifort&#39;</span><span class="p">],</span>
 	<span class="s">&#39;java&#39;</span>   <span class="p">:</span> <span class="p">[</span><span class="s">&#39;gfortran&#39;</span><span class="p">,</span> <span class="s">&#39;g95&#39;</span><span class="p">,</span> <span class="s">&#39;ifort&#39;</span><span class="p">],</span>
-	<span class="s">&#39;default&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;gfortran&#39;</span><span class="p">]</span>
+	<span class="s">&#39;default&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;gfortran&#39;</span><span class="p">],</span>
+	<span class="s">&#39;aix&#39;</span>    <span class="p">:</span> <span class="p">[</span><span class="s">&#39;gfortran&#39;</span><span class="p">]</span>
 <span class="p">}</span>
 
 <span class="k">def</span> <span class="nf">__list_possible_compiler</span><span class="p">(</span><span class="n">platform</span><span class="p">):</span>
@@ -71,7 +72,7 @@
 
 <div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/compiler_fc.html#waflib.Tools.compiler_fc.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Try to find a suitable C compiler or raise a :py:class:`waflib.Errors.ConfigurationError`.</span>
+<span class="sd">	Try to find a suitable Fortran compiler or raise a :py:class:`waflib.Errors.ConfigurationError`.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="k">try</span><span class="p">:</span> <span class="n">test_for_compiler</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">check_fc</span>
 	<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&quot;Add options(opt): opt.load(&#39;compiler_fc&#39;)&quot;</span><span class="p">)</span>
@@ -88,7 +89,7 @@
 			<span class="k">if</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;FC&#39;</span><span class="p">]:</span>
 				<span class="n">orig</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get_merged_dict</span><span class="p">()</span>
 				<span class="n">conf</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">orig</span>
-				<span class="n">conf</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+				<span class="n">conf</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get_flat</span><span class="p">(</span><span class="s">&#39;FC&#39;</span><span class="p">))</span>
 				<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">COMPILER_FORTRAN</span> <span class="o">=</span> <span class="n">compiler</span>
 				<span class="k">break</span>
 			<span class="n">conf</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
@@ -101,6 +102,7 @@
 
 <span class="sd">		$ waf configure --check-fortran-compiler=ifort</span>
 <span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">opt</span><span class="o">.</span><span class="n">load_special_tools</span><span class="p">(</span><span class="s">&#39;fc_*.py&#39;</span><span class="p">)</span>
 	<span class="n">build_platform</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">unversioned_sys_platform</span><span class="p">()</span>
 	<span class="n">detected_platform</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">platform</span>
 	<span class="n">possible_compiler_list</span> <span class="o">=</span> <span class="n">__list_possible_compiler</span><span class="p">(</span><span class="n">detected_platform</span><span class="p">)</span>
@@ -149,7 +151,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.dbus &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.dbus &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -70,7 +70,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Errors</span>
-<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">taskgen_method</span><span class="p">,</span> <span class="n">before</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">taskgen_method</span><span class="p">,</span> <span class="n">before_method</span>
 
 <span class="nd">@taskgen_method</span>
 <div class="viewcode-block" id="add_dbus_file"><a class="viewcode-back" href="../../../tools/dbus.html#waflib.Tools.dbus.add_dbus_file">[docs]</a><span class="k">def</span> <span class="nf">add_dbus_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
@@ -90,7 +90,7 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">meths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;process_dbus&#39;</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">dbus_lst</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">filename</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">mode</span><span class="p">])</span>
 </div>
-<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;apply_core&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;apply_core&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="process_dbus"><a class="viewcode-back" href="../../../tools/dbus.html#waflib.Tools.dbus.process_dbus">[docs]</a><span class="k">def</span> <span class="nf">process_dbus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Process the dbus files stored in the attribute *dbus_lst* to create :py:class:`waflib.Tools.dbus.dbus_binding_tool` instances.</span>
@@ -153,7 +153,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

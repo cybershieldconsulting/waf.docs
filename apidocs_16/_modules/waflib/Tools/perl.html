@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.perl &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.perl &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -76,9 +76,9 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Utils</span>
 <span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
-<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">extension</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">extension</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before_method</span>
 
-<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;apply_incpaths&#39;</span><span class="p">,</span> <span class="s">&#39;apply_link&#39;</span><span class="p">,</span> <span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;apply_incpaths&#39;</span><span class="p">,</span> <span class="s">&#39;apply_link&#39;</span><span class="p">,</span> <span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">)</span>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;perlext&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="init_perlext"><a class="viewcode-back" href="../../../tools/perl.html#waflib.Tools.perl.init_perlext">[docs]</a><span class="k">def</span> <span class="nf">init_perlext</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
@@ -112,13 +112,21 @@
 <span class="sd">	Check if Perl is installed, and set the variable PERL.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">res</span> <span class="o">=</span> <span class="bp">True</span>
+	
+	<span class="n">cver</span> <span class="o">=</span> <span class="s">&quot;&quot;</span> <span class="k">if</span> <span class="n">minver</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="s">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="n">minver</span><span class="p">))</span>
 
-	<span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="s">&#39;perlbinary&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">start_msg</span><span class="p">(</span><span class="s">&#39;Checking for minimum perl version </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">cver</span><span class="p">)</span>
+
+	<span class="n">perl</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="s">&#39;perlbinary&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">perl</span><span class="p">:</span>
 		<span class="n">perl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;perl&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;PERL&#39;</span><span class="p">)</span>
-		<span class="k">if</span> <span class="ow">not</span> <span class="n">perl</span><span class="p">:</span>
-			<span class="k">return</span> <span class="bp">False</span>
-	<span class="k">else</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PERL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">perl</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">perlbinary</span>
+	
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">perl</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="s">&quot;Perl not found&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&quot;YELLOW&quot;</span><span class="p">)</span>
+		<span class="k">return</span> <span class="bp">False</span>
+	
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PERL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">perl</span>
 
 	<span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">perl</span><span class="p">,</span> <span class="s">&quot;-e&quot;</span><span class="p">,</span> <span class="s">&#39;printf </span><span class="se">\&quot;</span><span class="s">%vd</span><span class="se">\&quot;</span><span class="s">, $^V&#39;</span><span class="p">])</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">version</span><span class="p">:</span>
@@ -129,11 +137,7 @@
 		<span class="k">if</span> <span class="n">ver</span> <span class="o">&lt;</span> <span class="n">minver</span><span class="p">:</span>
 			<span class="n">res</span> <span class="o">=</span> <span class="bp">False</span>
 
-	<span class="k">if</span> <span class="n">minver</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-		<span class="n">cver</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
-	<span class="k">else</span><span class="p">:</span>
-		<span class="n">cver</span> <span class="o">=</span> <span class="s">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="n">minver</span><span class="p">))</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;perl&#39;</span><span class="p">,</span> <span class="n">cver</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&quot;GREEN&quot;</span> <span class="k">if</span> <span class="n">res</span> <span class="k">else</span> <span class="s">&quot;YELLOW&quot;</span><span class="p">)</span>
 	<span class="k">return</span> <span class="n">res</span>
 </div>
 <span class="nd">@conf</span>
@@ -154,7 +158,7 @@
 	<span class="k">except</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
 		<span class="k">return</span> <span class="bp">None</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="n">r</span> <span class="ow">or</span> <span class="bp">True</span><span class="p">)</span>
 	<span class="k">return</span> <span class="n">r</span>
 </div>
 <span class="nd">@conf</span>
@@ -232,7 +236,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

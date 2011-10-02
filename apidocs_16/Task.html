@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Task &mdash; Waf v1.6.4 documentation</title>
+    <title>Task &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="copyright" title="Copyright" href="copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="index.html" />
     <link rel="next" title="TaskGen" href="TaskGen.html" />
     <link rel="prev" title="Scripting" href="Scripting.html" /> 
   </head>
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="Scripting.html" title="Scripting"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Waf v1.6.8 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -254,13 +254,6 @@ subclasses of <a class="reference internal" href="#waflib.Task.Task" title="wafl
 </dd></dl>
 
 <dl class="method">
-<dt id="waflib.Task.TaskBase.process">
-<tt class="descname">process</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.process" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assume that the task has had a new attribute <tt class="docutils literal"><span class="pre">master</span></tt> which is an instance of <a class="reference internal" href="Runner.html#waflib.Runner.Parallel" title="waflib.Runner.Parallel"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Runner.Parallel</span></tt></a>.
-Execute the task and then put it back in the queue <a class="reference internal" href="Runner.html#waflib.Runner.Parallel.out" title="waflib.Runner.Parallel.out"><tt class="xref py py-attr docutils literal"><span class="pre">waflib.Runner.Parallel.out</span></tt></a> (may be replaced by subclassing).</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="waflib.Task.TaskBase.run">
 <tt class="descname">run</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute the task (executed by threads). Override in subclasses.</p>
@@ -350,7 +343,7 @@ Execute the task and then put it back in the queue <a class="reference internal"
 
 <dl class="method">
 <dt id="waflib.Task.TaskBase.colon">
-<tt class="descname">colon</tt><big>(</big><em>var1</em>, <em>var2</em><big>)</big><a class="headerlink" href="#waflib.Task.TaskBase.colon" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">colon</tt><big>(</big><em>var1</em>, <em>var2</em><big>)</big><a class="reference internal" href="_modules/waflib/Task.html#TaskBase.colon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Task.TaskBase.colon" title="Permalink to this definition">¶</a></dt>
 <dd><p>private function for the moment</p>
 <p>used for scriptlet expressions such as ${FOO_ST:FOO}, for example, if
 env.FOO_ST = [&#8216;-a&#8217;, &#8216;-b&#8217;]
@@ -879,7 +872,7 @@ directory, create it first and declare:</p>
         <li class="right" >
           <a href="Scripting.html" title="Scripting"
              >previous</a> |</li>
-        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Waf v1.6.8 documentation</a> &raquo;</li> 
       </ul>
     </div>
 

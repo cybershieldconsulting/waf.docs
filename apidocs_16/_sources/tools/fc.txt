@@ -1,0 +1,14 @@
+fc
+==
+
+.. automodule:: waflib.Tools.fc
+
+Features defined in this module:
+
+* `fcprogram <../featuremap.html#feature-fcprogram>`_
+
+* `fcprogram_test <../featuremap.html#feature-fcprogram_test>`_
+
+* `fcshlib <../featuremap.html#feature-fcshlib>`_
+
+* `fcstlib <../featuremap.html#feature-fcstlib>`_

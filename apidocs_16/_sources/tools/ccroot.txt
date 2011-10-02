@@ -1,0 +1,40 @@
+ccroot
+======
+
+.. automodule:: waflib.Tools.ccroot
+
+Features defined in this module:
+
+* `asm <../featuremap.html#feature-asm>`_
+
+* `c <../featuremap.html#feature-c>`_
+
+* `cs <../featuremap.html#feature-cs>`_
+
+* `cshlib <../featuremap.html#feature-cshlib>`_
+
+* `cxx <../featuremap.html#feature-cxx>`_
+
+* `cxxshlib <../featuremap.html#feature-cxxshlib>`_
+
+* `d <../featuremap.html#feature-d>`_
+
+* `dshlib <../featuremap.html#feature-dshlib>`_
+
+* `fake_lib <../featuremap.html#feature-fake_lib>`_
+
+* `fc <../featuremap.html#feature-fc>`_
+
+* `fcshlib <../featuremap.html#feature-fcshlib>`_
+
+* `go <../featuremap.html#feature-go>`_
+
+* `includes <../featuremap.html#feature-includes>`_
+
+* `javac <../featuremap.html#feature-javac>`_
+
+* `use <../featuremap.html#feature-use>`_
+
+* `uselib <../featuremap.html#feature-uselib>`_
+
+* `vnum <../featuremap.html#feature-vnum>`_

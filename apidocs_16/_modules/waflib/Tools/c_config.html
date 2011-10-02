@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.c_config &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.c_config &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -56,11 +56,10 @@
 <span class="sd">C/C++/D configuration helpers</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">imp</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">shlex</span><span class="o">,</span> <span class="nn">shutil</span>
-<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Configure</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">TaskGen</span><span class="p">,</span> <span class="n">Errors</span><span class="p">,</span> <span class="n">ConfigSet</span>
-<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">feature</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">imp</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">shlex</span><span class="o">,</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Configure</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">TaskGen</span><span class="p">,</span> <span class="n">Errors</span><span class="p">,</span> <span class="n">ConfigSet</span><span class="p">,</span> <span class="n">Runner</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">before_method</span><span class="p">,</span> <span class="n">after_method</span><span class="p">,</span> <span class="n">feature</span>
 <span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
-<span class="kn">from</span> <span class="nn">waflib.Utils</span> <span class="kn">import</span> <span class="n">subprocess</span>
 
 <span class="n">WAF_CONFIG_H</span>   <span class="o">=</span> <span class="s">&#39;config.h&#39;</span>
 <span class="sd">&quot;&quot;&quot;default name for the config.h file&quot;&quot;&quot;</span>
@@ -188,7 +187,7 @@
 			<span class="n">tmp</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">lst</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
 			<span class="n">app</span><span class="p">(</span><span class="s">&#39;CFLAGS&#39;</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span>
 			<span class="n">app</span><span class="p">(</span><span class="s">&#39;CXXFLAGS&#39;</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span>
-		<span class="k">elif</span> <span class="n">st</span> <span class="o">==</span> <span class="s">&#39;-D&#39;</span> <span class="ow">or</span> <span class="n">st</span> <span class="o">==</span> <span class="s">&#39;/D&#39;</span><span class="p">:</span>
+		<span class="k">elif</span> <span class="n">st</span> <span class="o">==</span> <span class="s">&#39;-D&#39;</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CXX_NAME</span> <span class="o">==</span> <span class="s">&#39;msvc&#39;</span> <span class="ow">and</span> <span class="n">st</span> <span class="o">==</span> <span class="s">&#39;/D&#39;</span><span class="p">):</span> <span class="c"># not perfect but..</span>
 			<span class="k">if</span> <span class="ow">not</span> <span class="n">ot</span><span class="p">:</span> <span class="n">ot</span> <span class="o">=</span> <span class="n">lst</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 			<span class="n">app</span><span class="p">(</span><span class="s">&#39;DEFINES_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="p">[</span><span class="n">ot</span><span class="p">])</span>
 		<span class="k">elif</span> <span class="n">st</span> <span class="o">==</span> <span class="s">&#39;-l&#39;</span><span class="p">:</span>
@@ -210,6 +209,11 @@
 		<span class="k">elif</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;-m&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;-f&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;-dynamic&#39;</span><span class="p">):</span>
 			<span class="n">app</span><span class="p">(</span><span class="s">&#39;CFLAGS_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">])</span>
 			<span class="n">app</span><span class="p">(</span><span class="s">&#39;CXXFLAGS_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">])</span>
+		<span class="k">elif</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;-bundle&#39;</span><span class="p">):</span>
+			<span class="n">app</span><span class="p">(</span><span class="s">&#39;LINKFLAGS_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">])</span>
+		<span class="k">elif</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;-undefined&#39;</span><span class="p">):</span>
+			<span class="n">arg</span> <span class="o">=</span> <span class="n">lst</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+			<span class="n">app</span><span class="p">(</span><span class="s">&#39;LINKFLAGS_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">arg</span><span class="p">])</span>
 		<span class="k">elif</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;-arch&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;-isysroot&#39;</span><span class="p">):</span>
 			<span class="n">tmp</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">lst</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
 			<span class="n">app</span><span class="p">(</span><span class="s">&#39;CFLAGS_&#39;</span> <span class="o">+</span> <span class="n">uselib</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span>
@@ -452,7 +456,9 @@
 				<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;a c compiler is required&#39;</span><span class="p">)</span>
 
 	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;compile_mode&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
-		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;compile_mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;compiler&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;cxx&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="s">&#39;cxx&#39;</span> <span class="ow">or</span> <span class="s">&#39;c&#39;</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;compile_mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;c&#39;</span>
+		<span class="k">if</span> <span class="s">&#39;cxx&#39;</span> <span class="ow">in</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;features&#39;</span><span class="p">,[]))</span> <span class="ow">or</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;compiler&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;cxx&#39;</span><span class="p">:</span>
+			<span class="n">kw</span><span class="p">[</span><span class="s">&#39;compile_mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;cxx&#39;</span>
 
 	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;type&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
 		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;cprogram&#39;</span>
@@ -581,6 +587,9 @@
 
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;success&#39;</span><span class="p">):</span> <span class="n">kw</span><span class="p">[</span><span class="s">&#39;success&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
 
+	<span class="k">if</span> <span class="s">&#39;define_name&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">undefine</span><span class="p">(</span><span class="n">kw</span><span class="p">[</span><span class="s">&#39;define_name&#39;</span><span class="p">])</span>
+
 	<span class="k">assert</span> <span class="s">&#39;msg&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">,</span> <span class="s">&#39;invalid parameters, read http://freehackers.org/~tnagy/wafbook/single.html#config_helpers_c&#39;</span>
 </div>
 <span class="nd">@conf</span>
@@ -597,16 +606,16 @@
 	<span class="k">else</span><span class="p">:</span>
 		<span class="n">is_success</span> <span class="o">=</span> <span class="p">(</span><span class="n">kw</span><span class="p">[</span><span class="s">&#39;success&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
 
-	<span class="k">def</span> <span class="nf">define_or_stuff</span><span class="p">():</span>
-		<span class="n">nm</span> <span class="o">=</span> <span class="n">kw</span><span class="p">[</span><span class="s">&#39;define_name&#39;</span><span class="p">]</span>
-		<span class="k">if</span> <span class="n">kw</span><span class="p">[</span><span class="s">&#39;execute&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;define_ret&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">is_success</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-			<span class="bp">self</span><span class="o">.</span><span class="n">define</span><span class="p">(</span><span class="n">kw</span><span class="p">[</span><span class="s">&#39;define_name&#39;</span><span class="p">],</span> <span class="n">is_success</span><span class="p">,</span> <span class="n">quote</span><span class="o">=</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;quote&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+	<span class="k">if</span> <span class="s">&#39;define_name&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="c"># TODO simplify?</span>
+		<span class="k">if</span> <span class="s">&#39;header_name&#39;</span> <span class="ow">in</span> <span class="n">kw</span> <span class="ow">or</span> <span class="s">&#39;function_name&#39;</span> <span class="ow">in</span> <span class="n">kw</span> <span class="ow">or</span> <span class="s">&#39;type_name&#39;</span> <span class="ow">in</span> <span class="n">kw</span> <span class="ow">or</span> <span class="s">&#39;fragment&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+			<span class="n">nm</span> <span class="o">=</span> <span class="n">kw</span><span class="p">[</span><span class="s">&#39;define_name&#39;</span><span class="p">]</span>
+			<span class="k">if</span> <span class="n">kw</span><span class="p">[</span><span class="s">&#39;execute&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;define_ret&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">is_success</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">define</span><span class="p">(</span><span class="n">kw</span><span class="p">[</span><span class="s">&#39;define_name&#39;</span><span class="p">],</span> <span class="n">is_success</span><span class="p">,</span> <span class="n">quote</span><span class="o">=</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;quote&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">define_cond</span><span class="p">(</span><span class="n">kw</span><span class="p">[</span><span class="s">&#39;define_name&#39;</span><span class="p">],</span> <span class="n">is_success</span><span class="p">)</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">define_cond</span><span class="p">(</span><span class="n">kw</span><span class="p">[</span><span class="s">&#39;define_name&#39;</span><span class="p">],</span> <span class="n">is_success</span><span class="p">)</span>
-
-	<span class="k">if</span> <span class="s">&#39;define_name&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
-		<span class="k">if</span> <span class="s">&#39;header_name&#39;</span> <span class="ow">in</span> <span class="n">kw</span> <span class="ow">or</span> <span class="s">&#39;function_name&#39;</span> <span class="ow">in</span> <span class="n">kw</span> <span class="ow">or</span> <span class="s">&#39;type_name&#39;</span> <span class="ow">in</span> <span class="n">kw</span> <span class="ow">or</span> <span class="s">&#39;fragment&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
-			<span class="n">define_or_stuff</span><span class="p">()</span>
 
 	<span class="k">if</span> <span class="s">&#39;header_name&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
 		<span class="k">if</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;auto_add_header_name&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
@@ -631,6 +640,7 @@
 				<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
 					<span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span>
 				<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="s">&#39;_&#39;</span> <span class="o">+</span> <span class="n">kw</span><span class="p">[</span><span class="s">&#39;uselib_store&#39;</span><span class="p">],</span> <span class="n">val</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">is_success</span>
 </div>
 <span class="nd">@conf</span>
 <div class="viewcode-block" id="check"><a class="viewcode-back" href="../../../tools/c_config.html#waflib.Tools.c_config.check">[docs]</a><span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
@@ -654,12 +664,12 @@
 		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;success&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ret_msg</span><span class="p">(</span><span class="n">kw</span><span class="p">[</span><span class="s">&#39;okmsg&#39;</span><span class="p">],</span> <span class="n">kw</span><span class="p">))</span>
 
-	<span class="bp">self</span><span class="o">.</span><span class="n">post_check</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
-	<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-		<span class="k">return</span> <span class="n">ret</span> <span class="o">==</span> <span class="mi">0</span>
+	<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post_check</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;The configuration failed </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">ret</span><span class="p">)</span>
 	<span class="k">return</span> <span class="n">ret</span>
 </div>
-<div class="viewcode-block" id="test_exec_task"><a class="viewcode-back" href="../../../tools/c_config.html#waflib.Tools.c_config.test_exec_task">[docs]</a><span class="k">class</span> <span class="nc">test_exec_task</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+<div class="viewcode-block" id="test_exec"><a class="viewcode-back" href="../../../tools/c_config.html#waflib.Tools.c_config.test_exec">[docs]</a><span class="k">class</span> <span class="nc">test_exec</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	A task for executing a programs after they are built. See :py:func:`waflib.Tools.c_config.test_exec_fun`.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
@@ -671,16 +681,17 @@
 			<span class="k">else</span><span class="p">:</span>
 				<span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">retval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">exec_command</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">abspath</span><span class="p">()])</span>
 		<span class="k">else</span><span class="p">:</span>
-			<span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
+			<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span> <span class="ow">or</span> <span class="p">{}</span>
 			<span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">))</span>
-			<span class="n">env</span><span class="p">[</span><span class="s">&#39;LD_LIBRARY_PATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+			<span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;LD_LIBRARY_PATH&#39;</span><span class="p">,</span> <span class="s">&#39;DYLD_LIBRARY_PATH&#39;</span><span class="p">,</span> <span class="s">&#39;PATH&#39;</span><span class="p">):</span>
+				<span class="n">env</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">pathsep</span> <span class="o">+</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
 			<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="p">,</span> <span class="s">&#39;define_ret&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
 				<span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">retval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">abspath</span><span class="p">()],</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">)</span>
 			<span class="k">else</span><span class="p">:</span>
 				<span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">retval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">exec_command</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">abspath</span><span class="p">()],</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">)</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;test_exec&#39;</span><span class="p">)</span>
-<span class="nd">@after</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="test_exec_fun"><a class="viewcode-back" href="../../../tools/c_config.html#waflib.Tools.c_config.test_exec_fun">[docs]</a><span class="k">def</span> <span class="nf">test_exec_fun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	The feature **test_exec** is used to create a task that will to execute the binary</span>
@@ -701,7 +712,7 @@
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Create a temporary build context to execute a build. A reference to that build</span>
 <span class="sd">	context is kept on self.test_bld for debugging purposes.</span>
-<span class="sd">	The parameters given in the arguments to this function are passes as arguments for</span>
+<span class="sd">	The parameters given in the arguments to this function are passed as arguments for</span>
 <span class="sd">	a single task generator created in the build. Only three parameters are obligatory:</span>
 
 <span class="sd">	:param features: features to pass to a task generator created in the build</span>
@@ -728,7 +739,7 @@
 
 	<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span> <span class="o">!=</span> <span class="s">&#39;env&#39;</span><span class="p">]</span>
 	<span class="n">h</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">h_list</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
-	<span class="nb">dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">!=</span> <span class="s">&#39;win32&#39;</span> <span class="ow">and</span> <span class="s">&#39;.&#39;</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;conf_check_&#39;</span> <span class="o">+</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+	<span class="nb">dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="p">(</span><span class="ow">not</span> <span class="n">Utils</span><span class="o">.</span><span class="n">is_win32</span> <span class="ow">and</span> <span class="s">&#39;.&#39;</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;conf_check_&#39;</span> <span class="o">+</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
 
 	<span class="k">try</span><span class="p">:</span>
 		<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>
@@ -1047,14 +1058,14 @@
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">cmd</span> <span class="o">=</span> <span class="n">cc</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;-dM&#39;</span><span class="p">,</span> <span class="s">&#39;-E&#39;</span><span class="p">,</span> <span class="s">&#39;-&#39;</span><span class="p">]</span>
 	<span class="k">try</span><span class="p">:</span>
-		<span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+		<span class="n">p</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
 		<span class="n">p</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
 		<span class="n">out</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
 	<span class="k">except</span><span class="p">:</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not determine the compiler version </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">cmd</span><span class="p">)</span>
 
 	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-		<span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+		<span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
 
 	<span class="k">if</span> <span class="n">gcc</span><span class="p">:</span>
 		<span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;__INTEL_COMPILER&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
@@ -1115,8 +1126,30 @@
 				<span class="k">break</span>
 
 		<span class="n">Logs</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;ccroot: dest platform: &#39;</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="ow">or</span> <span class="s">&#39;?&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;DEST_OS&#39;</span><span class="p">,</span> <span class="s">&#39;DEST_BINFMT&#39;</span><span class="p">,</span> <span class="s">&#39;DEST_CPU&#39;</span><span class="p">)]))</span>
-		<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;CC_VERSION&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="s">&#39;__GNUC__&#39;</span><span class="p">],</span> <span class="n">k</span><span class="p">[</span><span class="s">&#39;__GNUC_MINOR__&#39;</span><span class="p">],</span> <span class="n">k</span><span class="p">[</span><span class="s">&#39;__GNUC_PATCHLEVEL__&#39;</span><span class="p">])</span>
+		<span class="k">if</span> <span class="n">icc</span><span class="p">:</span>
+			<span class="n">ver</span> <span class="o">=</span> <span class="n">k</span><span class="p">[</span><span class="s">&#39;__INTEL_COMPILER&#39;</span><span class="p">]</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;CC_VERSION&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ver</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">ver</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">ver</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;CC_VERSION&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="s">&#39;__GNUC__&#39;</span><span class="p">],</span> <span class="n">k</span><span class="p">[</span><span class="s">&#39;__GNUC_MINOR__&#39;</span><span class="p">],</span> <span class="n">k</span><span class="p">[</span><span class="s">&#39;__GNUC_PATCHLEVEL__&#39;</span><span class="p">])</span>
 	<span class="k">return</span> <span class="n">k</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="get_xlc_version"><a class="viewcode-back" href="../../../tools/c_config.html#waflib.Tools.c_config.get_xlc_version">[docs]</a><span class="k">def</span> <span class="nf">get_xlc_version</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">cc</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Get the compiler version&quot;&quot;&quot;</span>
+
+	<span class="n">version_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&quot;IBM XL C/C\+\+.*, V(?P&lt;major&gt;\d*)\.(?P&lt;minor&gt;\d*)&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">)</span><span class="o">.</span><span class="n">search</span>
+	<span class="n">cmd</span> <span class="o">=</span> <span class="n">cc</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;-qversion&#39;</span><span class="p">]</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+	<span class="k">except</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;Could not find xlc </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">cmd</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">out</span><span class="p">:</span> <span class="n">match</span> <span class="o">=</span> <span class="n">version_re</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span> <span class="n">match</span> <span class="o">=</span> <span class="n">version_re</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;Could not determine the XLC version.&#39;</span><span class="p">)</span>
+	<span class="n">k</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groupdict</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;CC_VERSION&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="s">&#39;major&#39;</span><span class="p">],</span> <span class="n">k</span><span class="p">[</span><span class="s">&#39;minor&#39;</span><span class="p">])</span>
 
 <span class="c"># ============ the --as-needed flag should added during the configuration, not at runtime =========</span>
 </div>
@@ -1127,6 +1160,83 @@
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">DEST_BINFMT</span> <span class="o">==</span> <span class="s">&#39;elf&#39;</span> <span class="ow">and</span> <span class="s">&#39;gcc&#39;</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CXX_NAME</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CC_NAME</span><span class="p">):</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;--as-needed&#39;</span><span class="p">)</span>
+
+<span class="c"># ============ parallel configuration</span>
+</div>
+<div class="viewcode-block" id="cfgtask"><a class="viewcode-back" href="../../../tools/c_config.html#waflib.Tools.c_config.cfgtask">[docs]</a><span class="k">class</span> <span class="nc">cfgtask</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">TaskBase</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	A task that executes configuration tests</span>
+<span class="sd">	make sure that the checks write to conf.env in a thread-safe manner</span>
+
+<span class="sd">	for the moment it only executes conf.check</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="s">&#39;&#39;</span>
+
+	<span class="k">def</span> <span class="nf">runnable_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">RUN_ME</span>
+
+	<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">conf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span>
+		<span class="n">bld</span> <span class="o">=</span> <span class="n">Build</span><span class="o">.</span><span class="n">BuildContext</span><span class="p">(</span><span class="n">top_dir</span><span class="o">=</span><span class="n">conf</span><span class="o">.</span><span class="n">srcnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">(),</span> <span class="n">out_dir</span><span class="o">=</span><span class="n">conf</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+		<span class="n">bld</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+		<span class="n">bld</span><span class="o">.</span><span class="n">init_dirs</span><span class="p">()</span>
+		<span class="n">bld</span><span class="o">.</span><span class="n">in_msg</span> <span class="o">=</span> <span class="mi">1</span> <span class="c"># suppress top-level start_msg</span>
+		<span class="n">bld</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">bld</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="k">return</span> <span class="mi">1</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="multicheck"><a class="viewcode-back" href="../../../tools/c_config.html#waflib.Tools.c_config.multicheck">[docs]</a><span class="k">def</span> <span class="nf">multicheck</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Use tuples to perform parallel configuration tests</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">start_msg</span><span class="p">(</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;msg&#39;</span><span class="p">,</span> <span class="s">&#39;Executing </span><span class="si">%d</span><span class="s"> configuration tests&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">k</span><span class="p">)))</span>
+
+	<span class="k">class</span> <span class="nc">par</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+		<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">keep</span> <span class="o">=</span> <span class="bp">False</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">cache_global</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">cache_global</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">nocache</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">nocache</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">returned_tasks</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">def</span> <span class="nf">total</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+			<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)</span>
+		<span class="k">def</span> <span class="nf">to_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+			<span class="k">return</span>
+
+	<span class="n">bld</span> <span class="o">=</span> <span class="n">par</span><span class="p">()</span>
+	<span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">for</span> <span class="n">dct</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+		<span class="n">x</span> <span class="o">=</span> <span class="n">cfgtask</span><span class="p">(</span><span class="n">bld</span><span class="o">=</span><span class="n">bld</span><span class="p">)</span>
+		<span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+		<span class="n">x</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">dct</span>
+		<span class="n">x</span><span class="o">.</span><span class="n">bld</span> <span class="o">=</span> <span class="n">bld</span>
+		<span class="n">x</span><span class="o">.</span><span class="n">conf</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="n">x</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">dct</span>
+
+		<span class="c"># bind a logger that will keep the info in memory</span>
+		<span class="n">x</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">Logs</span><span class="o">.</span><span class="n">make_mem_logger</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">it</span><span class="p">():</span>
+		<span class="k">yield</span> <span class="n">tasks</span>
+		<span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+			<span class="k">yield</span> <span class="p">[]</span>
+	<span class="n">p</span> <span class="o">=</span> <span class="n">Runner</span><span class="o">.</span><span class="n">Parallel</span><span class="p">(</span><span class="n">bld</span><span class="p">,</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">jobs</span><span class="p">)</span>
+	<span class="n">p</span><span class="o">.</span><span class="n">biter</span> <span class="o">=</span> <span class="n">it</span><span class="p">()</span>
+	<span class="n">p</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+	<span class="c"># flush the logs in order into the config.log</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+		<span class="n">x</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">memhandler</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">hasrun</span> <span class="o">!=</span> <span class="n">Task</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;errmsg&#39;</span><span class="p">,</span> <span class="s">&#39;no&#39;</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;YELLOW&#39;</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;fatalmsg&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="s">&#39;One of the tests has failed, see the config.log for more information&#39;</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="s">&#39;ok&#39;</span><span class="p">)</span>
 </pre></div></div>
 
           </div>
@@ -1163,7 +1273,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Logs &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Logs &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="copyright" title="Copyright" href="../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -56,14 +56,17 @@
 <span class="sd">logging, colors, terminal width and pretty-print</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">logging</span><span class="o">,</span> <span class="nn">traceback</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">traceback</span><span class="o">,</span> <span class="nn">sys</span>
 
+<span class="n">_nocolor</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;NOCOLOR&#39;</span><span class="p">,</span> <span class="s">&#39;no&#39;</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;no&#39;</span><span class="p">,</span> <span class="s">&#39;0&#39;</span><span class="p">,</span> <span class="s">&#39;false&#39;</span><span class="p">)</span>
 <span class="k">try</span><span class="p">:</span>
-	<span class="k">if</span> <span class="s">&#39;NOCOLOR&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">_nocolor</span><span class="p">:</span>
 		<span class="kn">import</span> <span class="nn">waflib.ansiterm</span>
 <span class="k">except</span><span class="p">:</span>
 	<span class="c"># optional module for colors on win32, just ignore if it cannot be imported</span>
 	<span class="k">pass</span>
+
+<span class="kn">import</span> <span class="nn">logging</span> <span class="c"># do it after</span>
 
 <span class="n">LOG_FORMAT</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%(asctime)s</span><span class="s"> </span><span class="si">%(c1)s%(zone)s%(c2)s</span><span class="s"> </span><span class="si">%(message)s</span><span class="s">&quot;</span>
 <span class="n">HOUR_FORMAT</span> <span class="o">=</span> <span class="s">&quot;%H:%M:%S&quot;</span>
@@ -92,7 +95,7 @@
 	<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
 		<span class="n">got_tty</span> <span class="o">=</span> <span class="bp">False</span>
 
-<span class="k">if</span> <span class="ow">not</span> <span class="n">got_tty</span> <span class="ow">or</span> <span class="s">&#39;NOCOLOR&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+<span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">got_tty</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;TERM&#39;</span><span class="p">,</span> <span class="s">&#39;dumb&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s">&#39;msys&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_nocolor</span><span class="p">:</span>
 	<span class="n">colors_lst</span><span class="p">[</span><span class="s">&#39;USE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
 
 <div class="viewcode-block" id="get_term_cols"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.get_term_cols">[docs]</a><span class="k">def</span> <span class="nf">get_term_cols</span><span class="p">():</span>
@@ -129,10 +132,6 @@
 <span class="s">	:return: the number of characters per line</span>
 <span class="s">	:rtype: int</span>
 <span class="s">	&quot;&quot;&quot;</span>
-
-<span class="c"># test</span>
-<span class="c">#if sys.platform == &#39;win32&#39;:</span>
-<span class="c">#	colors_lst[&#39;USE&#39;] = True</span>
 
 <span class="k">def</span> <span class="nf">get_color</span><span class="p">(</span><span class="n">cl</span><span class="p">):</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">colors_lst</span><span class="p">[</span><span class="s">&#39;USE&#39;</span><span class="p">]:</span> <span class="k">return</span> <span class="s">&#39;&#39;</span>
@@ -185,10 +184,9 @@
 				<span class="n">rec</span><span class="o">.</span><span class="n">c1</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">GREEN</span>
 			<span class="k">return</span> <span class="bp">True</span>
 
-		<span class="n">zone</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
 		<span class="n">m</span> <span class="o">=</span> <span class="n">re_log</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span>
 		<span class="k">if</span> <span class="n">m</span><span class="p">:</span>
-			<span class="n">zone</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">zone</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+			<span class="n">rec</span><span class="o">.</span><span class="n">zone</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 			<span class="n">rec</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 
 		<span class="k">if</span> <span class="n">zones</span><span class="p">:</span>
@@ -206,9 +204,10 @@
 		<span class="sd">&quot;&quot;&quot;Messages in warning, error or info mode are displayed in color by default&quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="n">rec</span><span class="o">.</span><span class="n">levelno</span> <span class="o">&gt;=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span> <span class="ow">or</span> <span class="n">rec</span><span class="o">.</span><span class="n">levelno</span> <span class="o">==</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span>
 			<span class="k">try</span><span class="p">:</span>
-				<span class="k">return</span> <span class="s">&#39;</span><span class="si">%s%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">c1</span><span class="p">,</span> <span class="n">rec</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">),</span> <span class="n">rec</span><span class="o">.</span><span class="n">c2</span><span class="p">)</span>
+				<span class="n">msg</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
 			<span class="k">except</span><span class="p">:</span>
-				<span class="k">return</span> <span class="n">rec</span><span class="o">.</span><span class="n">c1</span><span class="o">+</span><span class="n">rec</span><span class="o">.</span><span class="n">msg</span><span class="o">+</span><span class="n">rec</span><span class="o">.</span><span class="n">c2</span>
+				<span class="n">msg</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">msg</span>
+			<span class="k">return</span> <span class="s">&#39;</span><span class="si">%s%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">c1</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">rec</span><span class="o">.</span><span class="n">c2</span><span class="p">)</span>
 		<span class="k">return</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">)</span>
 </div></div>
 <span class="n">log</span> <span class="o">=</span> <span class="bp">None</span>
@@ -291,6 +290,20 @@
 	<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
 	<span class="k">return</span> <span class="n">logger</span>
 </div>
+<div class="viewcode-block" id="make_mem_logger"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.make_mem_logger">[docs]</a><span class="k">def</span> <span class="nf">make_mem_logger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">to_log</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10000</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create a memory logger to avoid writing concurrently to the main logger</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">logging.handlers</span> <span class="kn">import</span> <span class="n">MemoryHandler</span>
+	<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+	<span class="n">hdlr</span> <span class="o">=</span> <span class="n">MemoryHandler</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">to_log</span><span class="p">)</span>
+	<span class="n">formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">)</span>
+	<span class="n">hdlr</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">hdlr</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">memhandler</span> <span class="o">=</span> <span class="n">hdlr</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">logger</span>
+</div>
 <div class="viewcode-block" id="pprint"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.pprint">[docs]</a><span class="k">def</span> <span class="nf">pprint</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Print messages in color immediately on stderr::</span>
@@ -344,7 +357,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

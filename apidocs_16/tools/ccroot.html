@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>ccroot &mdash; Waf v1.6.4 documentation</title>
+    <title>ccroot &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,10 +24,10 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="copyright" title="Copyright" href="../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../index.html" />
     <link rel="up" title="Waf Tools" href="../tools.html" />
     <link rel="next" title="c" href="c.html" />
-    <link rel="prev" title="winres" href="winres.html" /> 
+    <link rel="prev" title="irixcc" href="irixcc.html" /> 
   </head>
   <body>
     <div class="related">
@@ -43,9 +43,9 @@
           <a href="c.html" title="c"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="winres.html" title="winres"
+          <a href="irixcc.html" title="irixcc"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
       </ul>
     </div>  
@@ -101,7 +101,7 @@ in which case they are searched from the top-level directory (<tt class="docutil
 The folders are simply assumed to be existing.</p>
 <p>The node objects in the list are returned in the output list. The strings are converted
 into node objects if possible. The node is searched from the source directory, and if a match is found,
-the equivalent build directory is added in the returned list too.  When a folder cannot be found, it is ignored.</p>
+the equivalent build directory is created and added to the returned list too. When a folder cannot be found, it is ignored.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -150,26 +150,26 @@ and the list of include paths in <tt class="docutils literal"><span class="pre">
 <dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
 <p>Base class for all link tasks. A task generator is supposed to have at most one link task bound in the attribute <em>link_task</em>. See <a class="reference internal" href="#waflib.Tools.ccroot.apply_link" title="waflib.Tools.ccroot.apply_link"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Tools.ccroot.apply_link()</span></tt></a>.</p>
 <p class="graphviz">
-<img src="../_images/inheritance-5f0553bf66950044c4d8acd8178cd683b3bc6388.png" alt="Inheritance diagram of waflib.Tools.ccroot.stlink_task, waflib.Tools.c.cprogram, waflib.Tools.c.cshlib, waflib.Tools.cxx.cxxstlib, waflib.Tools.cxx.cxxprogram, waflib.Tools.cxx.cxxshlib, waflib.Tools.d.dprogram, waflib.Tools.d.dshlib, waflib.Tools.d.dstlib, waflib.Tools.ccroot.fake_shlib, waflib.Tools.ccroot.fake_stlib, waflib.Tools.asm.asmprogram, waflib.Tools.asm.asmshlib, waflib.Tools.asm.asmstlib" usemap="#inheritance733d6de23e" class="inheritance"/>
+<img src="../_images/inheritance-3830f22274d5455e3b305fef3e2376940bee5045.png" alt="Inheritance diagram of waflib.Tools.ccroot.stlink_task, waflib.Tools.c.cprogram, waflib.Tools.c.cshlib, waflib.Tools.cxx.cxxstlib, waflib.Tools.cxx.cxxprogram, waflib.Tools.cxx.cxxshlib, waflib.Tools.d.dprogram, waflib.Tools.d.dshlib, waflib.Tools.d.dstlib, waflib.Tools.ccroot.fake_shlib, waflib.Tools.ccroot.fake_stlib, waflib.Tools.asm.asmprogram, waflib.Tools.asm.asmshlib, waflib.Tools.asm.asmstlib" usemap="#inheritance733d6de23e" class="inheritance"/>
 <map id="inheritance733d6de23e" name="inheritance733d6de23e">
 <area shape="rect" id="node1" href="#waflib.Tools.ccroot.stlink_task" title="waflib.Tools.ccroot.stlink_task" alt="" coords="487,69,613,87"/>
-<area shape="rect" id="node7" href="d.html#waflib.Tools.d.dstlib" title="waflib.Tools.d.dstlib" alt="" coords="661,3,747,21"/>
-<area shape="rect" id="node9" href="asm.html#waflib.Tools.asm.asmstlib" title="waflib.Tools.asm.asmstlib" alt="" coords="649,36,759,54"/>
-<area shape="rect" id="node20" href="#waflib.Tools.ccroot.fake_stlib" title="waflib.Tools.ccroot.fake_stlib" alt="" coords="644,69,765,87"/>
-<area shape="rect" id="node25" href="cxx.html#waflib.Tools.cxx.cxxstlib" title="waflib.Tools.cxx.cxxstlib" alt="" coords="652,101,757,120"/>
+<area shape="rect" id="node22" href="#waflib.Tools.ccroot.fake_stlib" title="waflib.Tools.ccroot.fake_stlib" alt="" coords="644,3,765,21"/>
+<area shape="rect" id="node29" href="asm.html#waflib.Tools.asm.asmstlib" title="waflib.Tools.asm.asmstlib" alt="" coords="649,36,759,54"/>
+<area shape="rect" id="node31" href="cxx.html#waflib.Tools.cxx.cxxstlib" title="waflib.Tools.cxx.cxxstlib" alt="" coords="652,69,757,87"/>
+<area shape="rect" id="node34" href="d.html#waflib.Tools.d.dstlib" title="waflib.Tools.d.dstlib" alt="" coords="661,101,747,120"/>
 <area shape="rect" id="node2" href="#waflib.Tools.ccroot.link_task" title="waflib.Tools.ccroot.link_task" alt="" coords="337,183,456,201"/>
-<area shape="rect" id="node13" href="cxx.html#waflib.Tools.cxx.cxxprogram" title="waflib.Tools.cxx.cxxprogram" alt="" coords="490,134,609,152"/>
-<area shape="rect" id="node16" href="d.html#waflib.Tools.d.dprogram" title="waflib.Tools.d.dprogram" alt="" coords="499,167,601,185"/>
-<area shape="rect" id="node22" href="#waflib.Tools.ccroot.fake_shlib" title="waflib.Tools.ccroot.fake_shlib" alt="" coords="488,200,611,218"/>
-<area shape="rect" id="node28" href="c.html#waflib.Tools.c.cprogram" title="waflib.Tools.c.cprogram" alt="" coords="499,233,601,251"/>
-<area shape="rect" id="node31" href="asm.html#waflib.Tools.asm.asmprogram" title="waflib.Tools.asm.asmprogram" alt="" coords="488,265,612,283"/>
-<area shape="rect" id="node4" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task" alt="" coords="230,183,305,201"/>
-<area shape="rect" id="node5" href="../Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase" alt="" coords="104,183,198,201"/>
-<area shape="rect" id="node11" href="../Task.html#waflib.Task.evil" title="waflib.Task.evil" alt="" coords="3,183,72,201"/>
-<area shape="rect" id="node12" href="cxx.html#waflib.Tools.cxx.cxxshlib" title="waflib.Tools.cxx.cxxshlib" alt="" coords="651,134,758,152"/>
-<area shape="rect" id="node15" href="d.html#waflib.Tools.d.dshlib" title="waflib.Tools.d.dshlib" alt="" coords="660,167,748,185"/>
-<area shape="rect" id="node27" href="c.html#waflib.Tools.c.cshlib" title="waflib.Tools.c.cshlib" alt="" coords="660,233,748,251"/>
-<area shape="rect" id="node30" href="asm.html#waflib.Tools.asm.asmshlib" title="waflib.Tools.asm.asmshlib" alt="" coords="648,265,760,283"/>
+<area shape="rect" id="node4" href="c.html#waflib.Tools.c.cprogram" title="waflib.Tools.c.cprogram" alt="" coords="499,134,601,152"/>
+<area shape="rect" id="node7" href="d.html#waflib.Tools.d.dprogram" title="waflib.Tools.d.dprogram" alt="" coords="499,167,601,185"/>
+<area shape="rect" id="node10" href="cxx.html#waflib.Tools.cxx.cxxprogram" title="waflib.Tools.cxx.cxxprogram" alt="" coords="490,200,609,218"/>
+<area shape="rect" id="node13" href="#waflib.Tools.ccroot.fake_shlib" title="waflib.Tools.ccroot.fake_shlib" alt="" coords="488,233,611,251"/>
+<area shape="rect" id="node26" href="asm.html#waflib.Tools.asm.asmprogram" title="waflib.Tools.asm.asmprogram" alt="" coords="488,265,612,283"/>
+<area shape="rect" id="node20" href="c.html#waflib.Tools.c.cshlib" title="waflib.Tools.c.cshlib" alt="" coords="660,134,748,152"/>
+<area shape="rect" id="node6" href="d.html#waflib.Tools.d.dshlib" title="waflib.Tools.d.dshlib" alt="" coords="660,167,748,185"/>
+<area shape="rect" id="node9" href="cxx.html#waflib.Tools.cxx.cxxshlib" title="waflib.Tools.cxx.cxxshlib" alt="" coords="651,200,758,218"/>
+<area shape="rect" id="node15" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task" alt="" coords="230,183,305,201"/>
+<area shape="rect" id="node16" href="../Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase" alt="" coords="104,183,198,201"/>
+<area shape="rect" id="node18" href="../Task.html#waflib.Task.evil" title="waflib.Task.evil" alt="" coords="3,183,72,201"/>
+<area shape="rect" id="node25" href="asm.html#waflib.Tools.asm.asmshlib" title="waflib.Tools.asm.asmshlib" alt="" coords="648,265,760,283"/>
 </map>
 </p>
 <dl class="attribute">
@@ -227,14 +227,7 @@ matching a name from the attribute <em>features</em>, for example:</p>
 <dt id="waflib.Tools.ccroot.use_rec">
 <tt class="descclassname">waflib.Tools.ccroot.</tt><tt class="descname">use_rec</tt><big>(</big><em>self</em>, <em>name</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/ccroot.html#use_rec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.ccroot.use_rec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Task generator method</p>
-<p>Processes the <tt class="docutils literal"><span class="pre">use</span></tt> keyword recursively. The processing is complicated by the following scenarios:</p>
-<ul class="simple">
-<li>dependent shared libraries must be linked to all targets</li>
-<li>static libraries must not be linked twice</li>
-<li>static libraries may depend on other static libraries to propagate include paths</li>
-<li>empty libraries may be used to propagate include paths</li>
-<li>there are object-only targets (no link task)</li>
-</ul>
+<p>Processes the <tt class="docutils literal"><span class="pre">use</span></tt> keyword recursively. This method is kind of private and only meant to be used from <tt class="docutils literal"><span class="pre">process_use</span></tt></p>
 </dd></dl>
 
 <dl class="function">
@@ -312,7 +305,7 @@ It must be installed as it is required for linking the library.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Feature :</th><td class="field-body"><a class="reference external" href="../featuremap.html#feature-cshlib">cshlib</a>, <a class="reference external" href="../featuremap.html#feature-cxxshlib">cxxshlib</a></td>
+<tr class="field"><th class="field-name">Feature :</th><td class="field-body"><a class="reference external" href="../featuremap.html#feature-cshlib">cshlib</a>, <a class="reference external" href="../featuremap.html#feature-cxxshlib">cxxshlib</a>, <a class="reference external" href="../featuremap.html#feature-fcshlib">fcshlib</a></td>
 </tr>
 </tbody>
 </table>
@@ -344,7 +337,7 @@ It must be installed as it is required for linking the library.</p>
 
 <dl class="class">
 <dt id="waflib.Tools.ccroot.vnum">
-<em class="property">class </em><tt class="descclassname">waflib.Tools.ccroot.</tt><tt class="descname">vnum</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.ccroot.vnum" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">waflib.Tools.ccroot.</tt><tt class="descname">vnum</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/ccroot.html#vnum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.ccroot.vnum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
 <p>Create the symbolic links for a versioned shared library. Instances are created by <a class="reference internal" href="#waflib.Tools.ccroot.apply_vnum" title="waflib.Tools.ccroot.apply_vnum"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Tools.ccroot.apply_vnum()</span></tt></a></p>
 </dd></dl>
@@ -373,6 +366,28 @@ It must be installed as it is required for linking the library.</p>
         <span class="n">bld</span><span class="o">.</span><span class="n">program</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;main.c&#39;</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s">&#39;m&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.ccroot.read_stlib">
+<tt class="descclassname">waflib.Tools.ccroot.</tt><tt class="descname">read_stlib</tt><big>(</big><em>self</em>, <em>name</em>, <em>paths=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/ccroot.html#read_stlib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.ccroot.read_stlib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
+<p>Read a system static library, enabling a use as a local library. Will trigger a rebuild if the file changes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.ccroot.process_lib">
+<tt class="descclassname">waflib.Tools.ccroot.</tt><tt class="descname">process_lib</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/ccroot.html#process_lib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.ccroot.process_lib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Task generator method</p>
+<p>Find the location of a foreign library. Used by <a class="reference internal" href="#waflib.Tools.ccroot.read_shlib" title="waflib.Tools.ccroot.read_shlib"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.ccroot.read_shlib</span></tt></a> and <a class="reference internal" href="#waflib.Tools.ccroot.read_stlib" title="waflib.Tools.ccroot.read_stlib"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.ccroot.read_stlib</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Feature :</th><td class="field-body"><a class="reference external" href="../featuremap.html#feature-fake_lib">fake_lib</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -518,10 +533,20 @@ after the functions of given name(s):</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="waflib.Tools.ccroot.read_stlib">
-<tt class="descclassname">waflib.Tools.ccroot.</tt><tt class="descname">read_stlib</tt><big>(</big><em>self</em>, <em>name</em>, <em>paths=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/ccroot.html#read_stlib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.ccroot.read_stlib" title="Permalink to this definition">¶</a></dt>
-<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
-<p>Read a system static library, enabling a use as a local library. Will trigger a rebuild if the file changes.</p>
+<dt id="waflib.Tools.ccroot.extension">
+<tt class="descclassname">waflib.Tools.ccroot.</tt><tt class="descname">extension</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.ccroot.extension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method which will be invoked during
+the processing of source files for the extension given:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span>
+<span class="k">class</span> <span class="nc">mytask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+        <span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;cp ${SRC} ${TGT}&#39;</span>
+<span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.moo&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">create_maa_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;mytask&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.maa&#39;</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;foo.moo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -534,21 +559,6 @@ after the functions of given name(s):</p>
 <dt id="waflib.Tools.ccroot.debug">
 <tt class="descclassname">waflib.Tools.ccroot.</tt><tt class="descname">debug</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.ccroot.debug" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrap logging.debug, the output is filtered for performance reasons</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="waflib.Tools.ccroot.process_lib">
-<tt class="descclassname">waflib.Tools.ccroot.</tt><tt class="descname">process_lib</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/ccroot.html#process_lib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.ccroot.process_lib" title="Permalink to this definition">¶</a></dt>
-<dd><p>Task generator method</p>
-<p>Find the location of a foreign library. Used by <a class="reference internal" href="#waflib.Tools.ccroot.read_shlib" title="waflib.Tools.ccroot.read_shlib"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.ccroot.read_shlib</span></tt></a> and <a class="reference internal" href="#waflib.Tools.ccroot.read_stlib" title="waflib.Tools.ccroot.read_stlib"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.ccroot.read_stlib</span></tt></a>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field"><th class="field-name">Feature :</th><td class="field-body"><a class="reference external" href="../featuremap.html#feature-fake_lib">fake_lib</a></td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <p>Features defined in this module:</p>
@@ -583,8 +593,8 @@ after the functions of given name(s):</p>
               <img class="logo" src="../_static/waf-64x64.png" alt="Logo"/>
             </a></p>
   <h4>Previous topic</h4>
-  <p class="topless"><a href="winres.html"
-                        title="previous chapter">winres</a></p>
+  <p class="topless"><a href="irixcc.html"
+                        title="previous chapter">irixcc</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="c.html"
                         title="next chapter">c</a></p>
@@ -623,9 +633,9 @@ after the functions of given name(s):</p>
           <a href="c.html" title="c"
              >next</a> |</li>
         <li class="right" >
-          <a href="winres.html" title="winres"
+          <a href="irixcc.html" title="irixcc"
              >previous</a> |</li>
-        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
       </ul>
     </div>

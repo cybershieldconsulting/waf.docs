@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.tex &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.tex &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -71,11 +71,15 @@
 <span class="sd">			deps     = &#39;crossreferencing.lst&#39;, # to give dependencies directly</span>
 <span class="sd">			prompt   = 1, # 0 for the batch mode</span>
 <span class="sd">			)</span>
+
+<span class="sd">To configure with a special program use::</span>
+
+<span class="sd">	$ PDFLATEX=luatex waf configure</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Runner</span><span class="p">,</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Errors</span>
-<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before_method</span>
 <span class="kn">from</span> <span class="nn">waflib.Logs</span> <span class="kn">import</span> <span class="n">error</span><span class="p">,</span> <span class="n">warn</span><span class="p">,</span> <span class="n">debug</span>
 
 <span class="n">re_bibunit</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;</span><span class="se">\\</span><span class="s">(?P&lt;type&gt;putbib)\[(?P&lt;file&gt;[^\[\]]*)\]&#39;</span><span class="p">,</span><span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
@@ -163,26 +167,25 @@
 		<span class="k">def</span> <span class="nf">parse_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
 			<span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
 				<span class="k">return</span>
-			<span class="n">seen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span>
-<span class="p">)</span>
+			<span class="n">seen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 			<span class="n">code</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 			<span class="k">global</span> <span class="n">re_tex</span>
 			<span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">re_tex</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
-				<span class="n">path</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;file&#39;</span><span class="p">)</span>
-				<span class="k">if</span> <span class="n">path</span><span class="p">:</span>
-					<span class="n">add_name</span> <span class="o">=</span> <span class="bp">True</span>
-					<span class="n">found</span> <span class="o">=</span> <span class="bp">None</span>
-					<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">exts_deps_tex</span><span class="p">:</span>
-						<span class="n">debug</span><span class="p">(</span><span class="s">&#39;tex: trying </span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
-						<span class="n">found</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span>
-						<span class="k">if</span> <span class="n">found</span><span class="p">:</span>
-							<span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
-							<span class="n">add_name</span> <span class="o">=</span> <span class="bp">False</span>
-							<span class="k">if</span> <span class="n">found</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.tex&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">found</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.ltx&#39;</span><span class="p">):</span>
-								<span class="n">parse_node</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
-						<span class="c"># no break, people are crazy</span>
-					<span class="k">if</span> <span class="n">add_name</span><span class="p">:</span>
-						<span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+				<span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;file&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">):</span>
+					<span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+						<span class="n">add_name</span> <span class="o">=</span> <span class="bp">True</span>
+						<span class="n">found</span> <span class="o">=</span> <span class="bp">None</span>
+						<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">exts_deps_tex</span><span class="p">:</span>
+							<span class="n">debug</span><span class="p">(</span><span class="s">&#39;tex: trying </span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+							<span class="n">found</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span>
+							<span class="k">if</span> <span class="n">found</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">found</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+								<span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+								<span class="n">add_name</span> <span class="o">=</span> <span class="bp">False</span>
+								<span class="k">if</span> <span class="n">found</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.tex&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">found</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.ltx&#39;</span><span class="p">):</span>
+									<span class="n">parse_node</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+							<span class="c"># no break, people are crazy</span>
+						<span class="k">if</span> <span class="n">add_name</span><span class="p">:</span>
+							<span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 		<span class="n">parse_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
 		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
@@ -286,7 +289,9 @@
 
 		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 		<span class="n">srcfile</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">TEXINPUTS</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_src</span><span class="p">()</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span>
+
+		<span class="n">texinputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">TEXINPUTS</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">TEXINPUTS</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_src</span><span class="p">()</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span> <span class="o">+</span> <span class="n">texinputs</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span>
 
 		<span class="bp">self</span><span class="o">.</span><span class="n">aux_node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.aux&#39;</span><span class="p">)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">idx_node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.idx&#39;</span><span class="p">)</span>
@@ -352,7 +357,7 @@
 	<span class="n">after</span>   <span class="o">=</span> <span class="p">[</span><span class="s">&#39;latex&#39;</span><span class="p">,</span> <span class="s">&#39;pdflatex&#39;</span><span class="p">,</span> <span class="s">&#39;xelatex&#39;</span><span class="p">]</span>
 
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;tex&#39;</span><span class="p">)</span>
-<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="apply_tex"><a class="viewcode-back" href="../../../tools/tex.html#waflib.Tools.tex.apply_tex">[docs]</a><span class="k">def</span> <span class="nf">apply_tex</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Create :py:class:`waflib.Tools.tex.tex` objects, and dvips/dvipdf/pdf2ps tasks if necessary (outs=&#39;ps&#39;, etc).</span>
@@ -455,7 +460,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

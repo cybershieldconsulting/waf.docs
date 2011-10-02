@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>msvc &mdash; Waf v1.6.4 documentation</title>
+    <title>msvc &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="copyright" title="Copyright" href="../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../index.html" />
     <link rel="up" title="Waf Tools" href="../tools.html" />
     <link rel="next" title="winres" href="winres.html" />
     <link rel="prev" title="xlcxx" href="xlcxx.html" /> 
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="xlcxx.html" title="xlcxx"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
       </ul>
     </div>  
@@ -59,8 +59,11 @@
 <span id="msvc"></span><h1>msvc<a class="headerlink" href="#module-waflib.Tools.msvc" title="Permalink to this headline">¶</a></h1>
 <p>Microsoft Visual C++/Intel C++ compiler support</p>
 <p>Usage:</p>
+<div class="highlight-python"><pre>$ waf configure --msvc_version="msvc 10.0,msvc 9.0" --msvc_target="x64"</pre>
+</div>
+<p>or:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
-        <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;MSVC_VERSIONS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;msvc 9.0&#39;</span><span class="p">,</span> <span class="s">&#39;msvc 8.0&#39;</span><span class="p">,</span> <span class="s">&#39;wsdk 7.0&#39;</span><span class="p">,</span> <span class="s">&#39;intel 11&#39;</span><span class="p">,</span> <span class="s">&#39;PocketPC 9.0&#39;</span><span class="p">,</span> <span class="s">&#39;Smartphone 8.0&#39;</span><span class="p">]</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;MSVC_VERSIONS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;msvc 10.0&#39;</span><span class="p">,</span> <span class="s">&#39;msvc 9.0&#39;</span><span class="p">,</span> <span class="s">&#39;msvc 8.0&#39;</span><span class="p">,</span> <span class="s">&#39;msvc 7.1&#39;</span><span class="p">,</span> <span class="s">&#39;msvc 7.0&#39;</span><span class="p">,</span> <span class="s">&#39;msvc 6.0&#39;</span><span class="p">,</span> <span class="s">&#39;wsdk 7.0&#39;</span><span class="p">,</span> <span class="s">&#39;intel 11&#39;</span><span class="p">,</span> <span class="s">&#39;PocketPC 9.0&#39;</span><span class="p">,</span> <span class="s">&#39;Smartphone 8.0&#39;</span><span class="p">]</span>
         <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;MSVC_TARGETS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;x64&#39;</span><span class="p">]</span>
         <span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;msvc&#39;</span><span class="p">)</span>
 </pre></div>
@@ -79,7 +82,7 @@ the first good configuration will be used.
 Supported platforms: ia64, x64, x86, x86_amd64, x86_ia64</p>
 <p>Compilers supported:</p>
 <ul class="simple">
-<li>msvc       =&gt; Visual Studio, versions 7.0 (VC .NET 2002) to 10.0 (Visual Studio 2010)</li>
+<li>msvc       =&gt; Visual Studio, versions 6.0 (VC 98, VC .NET 2002) to 10.0 (Visual Studio 2010)</li>
 <li>wsdk       =&gt; Windows SDK, versions 6.0, 6.1, 7.0</li>
 <li>icl        =&gt; Intel compiler, versions 9,10,11</li>
 <li>Smartphone =&gt; Compiler/SDK for Smartphone devices (armv4/v4i)</li>
@@ -166,10 +169,9 @@ Setting PYTHONUNBUFFERED gives the unbuffered output.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="waflib.Tools.msvc.gather_msvc_versions">
-<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">gather_msvc_versions</tt><big>(</big><em>conf</em>, <em>versions</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#gather_msvc_versions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.gather_msvc_versions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
-<p>Checks SmartPhones SDKs</p>
+<dt id="waflib.Tools.msvc.gather_wince_supported_platforms">
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">gather_wince_supported_platforms</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#gather_wince_supported_platforms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.gather_wince_supported_platforms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks SmartPhones SDKs</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -181,6 +183,24 @@ Setting PYTHONUNBUFFERED gives the unbuffered output.</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.msvc.gather_msvc_targets">
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">gather_msvc_targets</tt><big>(</big><em>conf</em>, <em>versions</em>, <em>version</em>, <em>vc_path</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#gather_msvc_targets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.gather_msvc_targets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.msvc.gather_wince_targets">
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">gather_wince_targets</tt><big>(</big><em>conf</em>, <em>versions</em>, <em>version</em>, <em>vc_path</em>, <em>vsvars</em>, <em>supported_platforms</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#gather_wince_targets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.gather_wince_targets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.msvc.gather_msvc_versions">
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">gather_msvc_versions</tt><big>(</big><em>conf</em>, <em>versions</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#gather_msvc_versions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.gather_msvc_versions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
 </dd></dl>
 
 <dl class="function">
@@ -225,6 +245,12 @@ Setting PYTHONUNBUFFERED gives the unbuffered output.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="waflib.Tools.msvc.detect_msvc">
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">detect_msvc</tt><big>(</big><em>conf</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#detect_msvc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.detect_msvc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
 <dt id="waflib.Tools.msvc.find_lt_names_msvc">
 <tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">find_lt_names_msvc</tt><big>(</big><em>self</em>, <em>libname</em>, <em>is_static=False</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#find_lt_names_msvc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.find_lt_names_msvc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
@@ -255,7 +281,7 @@ This is ok since msvc doesn&#8217;t have any special linker flag to select stati
 
 <dl class="function">
 <dt id="waflib.Tools.msvc.configure">
-<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">configure</tt><big>(</big><em>conf</em><big>)</big><a class="headerlink" href="#waflib.Tools.msvc.configure" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">configure</tt><big>(</big><em>conf</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.configure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configuration methods to call for detecting msvc</p>
 </dd></dl>
 
@@ -276,6 +302,13 @@ This is ok since msvc doesn&#8217;t have any special linker flag to select stati
 <tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">find_msvc</tt><big>(</big><em>conf</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#find_msvc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.find_msvc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a>
 Due to path format limitations, limit operation only to native Win32. Yeah it sucks.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.msvc.visual_studio_add_flags">
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">visual_studio_add_flags</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#visual_studio_add_flags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.visual_studio_add_flags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a>
+visual studio flags found in the system environment</p>
 </dd></dl>
 
 <dl class="function">
@@ -544,7 +577,7 @@ Instead of quoting all the paths and keep using the shell, we can just join the 
         <li class="right" >
           <a href="xlcxx.html" title="xlcxx"
              >previous</a> |</li>
-        <li><a href="../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
       </ul>
     </div>

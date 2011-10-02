@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Context &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Context &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="copyright" title="Copyright" href="../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -56,18 +56,18 @@
 <span class="sd">Classes and functions required for waf commands</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">traceback</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">imp</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">imp</span><span class="o">,</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Errors</span><span class="p">,</span> <span class="n">Logs</span>
 <span class="kn">import</span> <span class="nn">waflib.Node</span>
 
 <span class="c"># the following 3 constants are updated on each new release (do not touch)</span>
-<span class="n">HEXVERSION</span><span class="o">=</span><span class="mh">0x1060200</span>
+<span class="n">HEXVERSION</span><span class="o">=</span><span class="mh">0x1060800</span>
 <span class="sd">&quot;&quot;&quot;Constant updated on new releases&quot;&quot;&quot;</span>
 
-<span class="n">WAFVERSION</span><span class="o">=</span><span class="s">&quot;1.6.2&quot;</span>
+<span class="n">WAFVERSION</span><span class="o">=</span><span class="s">&quot;1.6.8&quot;</span>
 <span class="sd">&quot;&quot;&quot;Constant updated on new releases&quot;&quot;&quot;</span>
 
-<span class="n">WAFREVISION</span><span class="o">=</span><span class="s">&quot;10513&quot;</span>
+<span class="n">WAFREVISION</span><span class="o">=</span><span class="s">&quot;516a253cbdbb4eef3165c4d47c2074a0fb5dce95&quot;</span>
 <span class="sd">&quot;&quot;&quot;Constant updated on new releases&quot;&quot;&quot;</span>
 
 <span class="n">ABI</span> <span class="o">=</span> <span class="mi">98</span>
@@ -105,7 +105,7 @@
 
 <span class="n">local_repo</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
 <span class="sd">&quot;&quot;&quot;Local repository containing additional Waf tools (plugins)&quot;&quot;&quot;</span>
-<span class="n">remote_repo</span> <span class="o">=</span> <span class="s">&#39;http://waf.googlecode.com/svn/&#39;</span>
+<span class="n">remote_repo</span> <span class="o">=</span> <span class="s">&#39;http://waf.googlecode.com/git/&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Remote directory containing downloadable waf tools. The missing tools can be downloaded by using::</span>
 
@@ -254,7 +254,7 @@
 
 		<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tools</span><span class="p">:</span>
 			<span class="n">module</span> <span class="o">=</span> <span class="n">load_tool</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
-			<span class="n">fun</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fun</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+			<span class="n">fun</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fun</span><span class="p">),</span> <span class="bp">None</span><span class="p">)</span>
 			<span class="k">if</span> <span class="n">fun</span><span class="p">:</span>
 				<span class="n">fun</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 </div>
@@ -289,7 +289,7 @@
 		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cur_script</span><span class="p">:</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cur_script</span><span class="o">.</span><span class="n">parent</span>
 </div>
-<div class="viewcode-block" id="Context.recurse"><a class="viewcode-back" href="../../Context.html#waflib.Context.Context.recurse">[docs]</a>	<span class="k">def</span> <span class="nf">recurse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Context.recurse"><a class="viewcode-back" href="../../Context.html#waflib.Context.Context.recurse">[docs]</a>	<span class="k">def</span> <span class="nf">recurse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">once</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">		Run user code from the supplied list of directories.</span>
 <span class="sd">		The directories can be either absolute, or relative to the directory</span>
@@ -302,7 +302,14 @@
 <span class="sd">		:type  name: string</span>
 <span class="sd">		:param mandatory: whether sub wscript files are required to exist</span>
 <span class="sd">		:type  mandatory: bool</span>
+<span class="sd">		:param once: read the script file once for a particular context</span>
+<span class="sd">		:type once: bool</span>
 <span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recurse_cache</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recurse_cache</span> <span class="o">=</span> <span class="p">{}</span>
+
 		<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">dirs</span><span class="p">):</span>
 
 			<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
@@ -313,31 +320,33 @@
 			<span class="n">WSCRIPT_FUN</span> <span class="o">=</span> <span class="n">WSCRIPT</span> <span class="o">+</span> <span class="s">&#39;_&#39;</span> <span class="o">+</span> <span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">fun</span><span class="p">)</span>
 
 			<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">WSCRIPT_FUN</span><span class="p">)</span>
-			<span class="k">if</span> <span class="n">node</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">node</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">once</span> <span class="ow">or</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">):</span>
+				<span class="n">cache</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
 				<span class="bp">self</span><span class="o">.</span><span class="n">pre_recurse</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 				<span class="k">try</span><span class="p">:</span>
 					<span class="n">function_code</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s">&#39;rU&#39;</span><span class="p">)</span>
 					<span class="k">exec</span><span class="p">(</span><span class="nb">compile</span><span class="p">(</span><span class="n">function_code</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">(),</span> <span class="s">&#39;exec&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">exec_dict</span><span class="p">)</span>
 				<span class="k">finally</span><span class="p">:</span>
 					<span class="bp">self</span><span class="o">.</span><span class="n">post_recurse</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-
-			<span class="k">else</span><span class="p">:</span>
+			<span class="k">elif</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
 				<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">WSCRIPT</span><span class="p">)</span>
-				<span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">node</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">once</span> <span class="ow">or</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">):</span>
+					<span class="n">cache</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">pre_recurse</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+					<span class="k">try</span><span class="p">:</span>
+						<span class="n">wscript_module</span> <span class="o">=</span> <span class="n">load_module</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+						<span class="n">user_function</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">wscript_module</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">fun</span><span class="p">),</span> <span class="bp">None</span><span class="p">)</span>
+						<span class="k">if</span> <span class="ow">not</span> <span class="n">user_function</span><span class="p">:</span>
+							<span class="k">if</span> <span class="ow">not</span> <span class="n">mandatory</span><span class="p">:</span>
+								<span class="k">continue</span>
+							<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;No function </span><span class="si">%s</span><span class="s"> defined in </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">fun</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()))</span>
+						<span class="n">user_function</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+					<span class="k">finally</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">post_recurse</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+				<span class="k">elif</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
 					<span class="k">if</span> <span class="ow">not</span> <span class="n">mandatory</span><span class="p">:</span>
 						<span class="k">continue</span>
 					<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;No wscript file in directory </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">d</span><span class="p">)</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">pre_recurse</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-				<span class="k">try</span><span class="p">:</span>
-					<span class="n">wscript_module</span> <span class="o">=</span> <span class="n">load_module</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
-					<span class="n">user_function</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">wscript_module</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">fun</span><span class="p">),</span> <span class="bp">None</span><span class="p">)</span>
-					<span class="k">if</span> <span class="ow">not</span> <span class="n">user_function</span><span class="p">:</span>
-						<span class="k">if</span> <span class="ow">not</span> <span class="n">mandatory</span><span class="p">:</span>
-							<span class="k">continue</span>
-						<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;No function </span><span class="si">%s</span><span class="s"> defined in </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">fun</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()))</span>
-					<span class="n">user_function</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-				<span class="k">finally</span><span class="p">:</span>
-					<span class="bp">self</span><span class="o">.</span><span class="n">post_recurse</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="Context.exec_command"><a class="viewcode-back" href="../../Context.html#waflib.Context.Context.exec_command">[docs]</a>	<span class="k">def</span> <span class="nf">exec_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
@@ -359,40 +368,25 @@
 		<span class="n">Logs</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;runner: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">cmd</span><span class="p">)</span>
 		<span class="n">Logs</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;runner_env: kw=</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">kw</span><span class="p">)</span>
 
-		<span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span>
-		<span class="n">tmp</span> <span class="o">=</span> <span class="bp">None</span>
 		<span class="k">try</span><span class="p">:</span>
-			<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;win&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="mi">8192</span><span class="p">:</span>
-				<span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">()</span>
-				<span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="n">x</span> <span class="ow">or</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cmd</span><span class="p">]</span>
-				<span class="n">os</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
-				<span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmd</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;@&#39;</span> <span class="o">+</span> <span class="n">tmp</span><span class="p">]</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+				<span class="c"># warning: may deadlock with a lot of output (subprocess limitation)</span>
 
-			<span class="k">try</span><span class="p">:</span>
-				<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
-					<span class="c"># warning: may deadlock with a lot of output (subprocess limitation)</span>
-					<span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
 
-					<span class="n">kw</span><span class="p">[</span><span class="s">&#39;stdout&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kw</span><span class="p">[</span><span class="s">&#39;stderr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span>
-
-					<span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
-					<span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
-
-					<span class="k">if</span> <span class="n">out</span><span class="p">:</span>
-						<span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;out: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">out</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))</span>
-					<span class="k">if</span> <span class="n">err</span><span class="p">:</span>
-						<span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;err: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">err</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))</span>
-					<span class="n">ret</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span>
-				<span class="k">else</span><span class="p">:</span>
-					<span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
-					<span class="n">ret</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-			<span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-				<span class="n">ret</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-		<span class="k">finally</span><span class="p">:</span>
-			<span class="k">if</span> <span class="n">tmp</span><span class="p">:</span>
-				<span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
-				<span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
-		<span class="k">return</span> <span class="n">ret</span>
+				<span class="n">kw</span><span class="p">[</span><span class="s">&#39;stdout&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kw</span><span class="p">[</span><span class="s">&#39;stderr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span>
+				<span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+				<span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+				<span class="k">if</span> <span class="n">out</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;out: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">out</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">encoding</span> <span class="ow">or</span> <span class="s">&#39;iso8859-1&#39;</span><span class="p">))</span>
+				<span class="k">if</span> <span class="n">err</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;err: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">err</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">encoding</span> <span class="ow">or</span> <span class="s">&#39;iso8859-1&#39;</span><span class="p">))</span>
+				<span class="k">return</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+				<span class="k">return</span> <span class="n">p</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+		<span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+			<span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
 </div>
 <div class="viewcode-block" id="Context.cmd_and_log"><a class="viewcode-back" href="../../Context.html#waflib.Context.Context.cmd_and_log">[docs]</a>	<span class="k">def</span> <span class="nf">cmd_and_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
@@ -406,7 +400,7 @@
 <span class="sd">				try:</span>
 <span class="sd">					conf.cmd_and_log([&#39;which&#39;, &#39;someapp&#39;], output=waflib.Context.BOTH)</span>
 <span class="sd">				except Exception as e:</span>
-<span class="sd">					print(e.out, e.err)</span>
+<span class="sd">					print(e.stdout, e.stderr)</span>
 
 <span class="sd">		:param cmd: args for subprocess.Popen</span>
 <span class="sd">		:param kw: keyword arguments for subprocess.Popen</span>
@@ -434,16 +428,12 @@
 			<span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
 			<span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
 		<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-			<span class="k">try</span><span class="p">:</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
-			<span class="k">except</span><span class="p">:</span>
-				<span class="k">pass</span>
-			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;Execution failure&#39;</span><span class="p">,</span> <span class="n">ex</span><span class="o">=</span><span class="n">e</span><span class="p">)</span>
+			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;Execution failure: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">ex</span><span class="o">=</span><span class="n">e</span><span class="p">)</span>
 
 		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-			<span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+			<span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">encoding</span> <span class="ow">or</span> <span class="s">&#39;iso8859-1&#39;</span><span class="p">)</span>
 		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-			<span class="n">err</span> <span class="o">=</span> <span class="n">err</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+			<span class="n">err</span> <span class="o">=</span> <span class="n">err</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">encoding</span> <span class="ow">or</span> <span class="s">&#39;iso8859-1&#39;</span><span class="p">)</span>
 
 		<span class="k">if</span> <span class="n">out</span> <span class="ow">and</span> <span class="n">quiet</span> <span class="o">!=</span> <span class="n">STDOUT</span> <span class="ow">and</span> <span class="n">quiet</span> <span class="o">!=</span> <span class="n">BOTH</span><span class="p">:</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&#39;out: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">out</span><span class="p">)</span>
@@ -451,7 +441,7 @@
 			<span class="bp">self</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&#39;err: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">err</span><span class="p">)</span>
 
 		<span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span><span class="p">:</span>
-			<span class="n">e</span> <span class="o">=</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;command </span><span class="si">%r</span><span class="s"> returned </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span><span class="p">))</span>
+			<span class="n">e</span> <span class="o">=</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;Command </span><span class="si">%r</span><span class="s"> returned </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span><span class="p">))</span>
 			<span class="n">e</span><span class="o">.</span><span class="n">returncode</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span>
 			<span class="n">e</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="n">err</span>
 			<span class="n">e</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">out</span>
@@ -491,6 +481,8 @@
 <span class="sd">			def build(bld):</span>
 <span class="sd">				bld.to_log(&#39;starting the build&#39;)</span>
 
+<span class="sd">		When in doubt, override this method, or provide a logger on the context class.</span>
+
 <span class="sd">		:param msg: message</span>
 <span class="sd">		:type msg: string</span>
 <span class="sd">		&quot;&quot;&quot;</span>
@@ -500,6 +492,7 @@
 			<span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">msg</span><span class="p">))</span>
+			<span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
 </div>
 <div class="viewcode-block" id="Context.msg"><a class="viewcode-back" href="../../Context.html#waflib.Context.Context.msg">[docs]</a>	<span class="k">def</span> <span class="nf">msg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -565,7 +558,14 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 		<span class="n">Logs</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">color</span> <span class="ow">or</span> <span class="n">defcolor</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
 
-</div></div>
+</div>
+	<span class="k">def</span> <span class="nf">load_special_tools</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">ban</span><span class="o">=</span><span class="p">[]):</span>
+		<span class="k">global</span> <span class="n">waf_dir</span>
+		<span class="n">lst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">waf_dir</span><span class="p">)</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="s">&#39;waflib/extras&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">ant_glob</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">ban</span><span class="p">:</span>
+				<span class="n">load_tool</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;.py&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">))</span>
+</div>
 <span class="n">cache_modules</span> <span class="o">=</span> <span class="p">{}</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Dictionary holding already loaded modules, keyed by their absolute path.</span>
@@ -678,7 +678,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

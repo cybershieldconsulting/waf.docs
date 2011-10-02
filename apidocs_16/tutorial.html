@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Waf tutorial &mdash; Waf v1.6.4 documentation</title>
+    <title>Waf tutorial &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="copyright" title="Copyright" href="copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="index.html" />
     <link rel="next" title="About this documentation" href="about.html" />
     <link rel="prev" title="lua" href="tools/lua.html" /> 
   </head>
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="tools/lua.html" title="lua"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Waf v1.6.8 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -148,7 +148,7 @@ similar to wscript files and provide functions such as <em>configure</em> or <em
         <span class="n">opt</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;compiler_c compiler_cxx&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">cnf</span><span class="p">):</span>
         <span class="n">cnf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;compiler_c compiler_cxx&#39;</span><span class="p">)</span>
-        <span class="n">cnf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;cxx cxxprogram&#39;</span><span class="p">,</span> <span class="n">lib</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;m&#39;</span><span class="p">],</span> <span class="n">cflags</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;-Wall&#39;</span><span class="p">],</span> <span class="n">defines</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;var=foo&#39;</span><span class="p">],</span> <span class="n">uselib_store</span><span class="o">=</span><span class="s">&#39;M&#39;</span><span class="p">)</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;cxx cxxprogram&#39;</span><span class="p">,</span> <span class="n">lib</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;m&#39;</span><span class="p">],</span> <span class="n">cflags</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;-Wall&#39;</span><span class="p">],</span> <span class="n">defines</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;var=foo&#39;</span><span class="p">],</span> <span class="n">uselib_store</span><span class="o">=</span><span class="s">&#39;M&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
         <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;c cshlib&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;b.c&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;mylib&#39;</span><span class="p">)</span>
         <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;c cxx cxxprogram&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;a.c main.cpp&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;M&#39;</span><span class="p">,</span><span class="s">&#39;mylib&#39;</span><span class="p">],</span> <span class="n">lib</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;dl&#39;</span><span class="p">])</span>
@@ -282,7 +282,7 @@ To ease the deployment, the new Waf tool can even be added to the waf file (see 
         <li class="right" >
           <a href="tools/lua.html" title="lua"
              >previous</a> |</li>
-        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Waf v1.6.8 documentation</a> &raquo;</li> 
       </ul>
     </div>
 

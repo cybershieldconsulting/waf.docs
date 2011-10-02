@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.Tools.fc_config &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.Tools.fc_config &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="copyright" title="Copyright" href="../../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -59,9 +59,8 @@
 
 <span class="kn">import</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">shutil</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">string</span><span class="o">,</span> <span class="nn">shlex</span>
 <span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
-<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">before</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after_method</span><span class="p">,</span> <span class="n">before_method</span>
 <span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Utils</span>
-<span class="kn">from</span> <span class="nn">waflib.Utils</span> <span class="kn">import</span> <span class="n">subprocess</span>
 
 <span class="n">FC_FRAGMENT</span> <span class="o">=</span> <span class="s">&#39;        program main</span><span class="se">\n</span><span class="s">        end     program main</span><span class="se">\n</span><span class="s">&#39;</span>
 <span class="n">FC_FRAGMENT2</span> <span class="o">=</span> <span class="s">&#39;        PROGRAM MAIN</span><span class="se">\n</span><span class="s">        END</span><span class="se">\n</span><span class="s">&#39;</span> <span class="c"># what&#39;s the actual difference between these?</span>
@@ -106,6 +105,23 @@
 		<span class="n">compile_filename</span> <span class="o">=</span> <span class="s">&#39;test.f&#39;</span><span class="p">,</span>
 		<span class="n">features</span>         <span class="o">=</span> <span class="s">&#39;fc fcprogram&#39;</span><span class="p">,</span>
 		<span class="n">msg</span>              <span class="o">=</span> <span class="s">&#39;Compiling a simple fortran app&#39;</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_fc"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.check_fc">[docs]</a><span class="k">def</span> <span class="nf">check_fc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Same as :py:func:`waflib.Tools.c_config.check` but default to the *Fortran* programming language</span>
+<span class="sd">	(Overriding the C defaults in :py:func:`waflib.Tools.c_config.validate_c` here)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">kw</span><span class="p">[</span><span class="s">&#39;compiler&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;fc&#39;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;compile_mode&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;compile_mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;fc&#39;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;type&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;fcprogram&#39;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;compile_filename&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;compile_filename&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;test.f90&#39;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;code&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;code&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">FC_FRAGMENT</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
 
 <span class="c"># ------------------------------------------------------------------------</span>
 <span class="c"># --- These are the default platform modifiers, refactored here for</span>
@@ -135,13 +151,13 @@
 <div class="viewcode-block" id="fortran_modifier_win32"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.fortran_modifier_win32">[docs]</a><span class="k">def</span> <span class="nf">fortran_modifier_win32</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Define fortran flags for the windows platforms&quot;&quot;&quot;</span>
 	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;fcprogram_PATTERN&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.exe&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;fcprogram_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;fcprogram_test_PATTERN&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.exe&#39;</span>
 
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;fcshlib_PATTERN&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.dll&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;implib_PATTERN&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.dll.a&#39;</span>
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;IMPLIB_ST&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;-Wl,--out-implib,</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;fcshlib_PATTERN&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.dll&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;implib_PATTERN&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.dll.a&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;IMPLIB_ST&#39;</span><span class="p">]</span>         <span class="o">=</span> <span class="s">&#39;-Wl,--out-implib,</span><span class="si">%s</span><span class="s">&#39;</span>
 
-	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCFLAGS_fcshlib&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCFLAGS_fcshlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[]</span>
 
 	<span class="n">v</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;FCFLAGS_fcshlib&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-DDLL_EXPORT&#39;</span><span class="p">])</span> <span class="c"># TODO adding nonstandard defines like this DLL_EXPORT is not a good idea</span>
 
@@ -211,9 +227,6 @@
 <span class="nd">@conf</span>
 <div class="viewcode-block" id="is_link_verbose"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.is_link_verbose">[docs]</a><span class="k">def</span> <span class="nf">is_link_verbose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Return True if &#39;useful&#39; link options can be found in txt&quot;&quot;&quot;</span>
-	<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&#39;win32&#39;</span><span class="p">:</span>
-		<span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;FIXME: not implemented on win32&quot;</span><span class="p">)</span>
-
 	<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
 	<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">txt</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
 		<span class="k">if</span> <span class="ow">not</span> <span class="n">GCC_DRIVER_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
@@ -239,8 +252,8 @@
 		<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
 			<span class="k">pass</span>
 		<span class="k">else</span><span class="p">:</span>
-			<span class="c"># output is on stderr</span>
-			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_link_verbose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_bld</span><span class="o">.</span><span class="n">err</span><span class="p">):</span>
+			<span class="c"># output is on stderr or stdout (for xlf)</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_link_verbose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_bld</span><span class="o">.</span><span class="n">err</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_link_verbose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_bld</span><span class="o">.</span><span class="n">out</span><span class="p">):</span>
 				<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 				<span class="k">break</span>
 	<span class="k">else</span><span class="p">:</span>
@@ -366,10 +379,10 @@
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="k">try</span><span class="p">:</span>
 		<span class="k">if</span> <span class="n">stdin</span><span class="p">:</span>
-			<span class="n">stdin</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span>
+			<span class="n">stdin</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="n">stdin</span> <span class="o">=</span> <span class="bp">None</span>
-		<span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="n">stdin</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+		<span class="n">p</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="n">stdin</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
 		<span class="k">if</span> <span class="n">stdin</span><span class="p">:</span>
 			<span class="n">p</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
 		<span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
@@ -377,9 +390,9 @@
 		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not determine the compiler version </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">cmd</span><span class="p">)</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-			<span class="n">stdout</span> <span class="o">=</span> <span class="n">stdout</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+			<span class="n">stdout</span> <span class="o">=</span> <span class="n">stdout</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
 		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-			<span class="n">stderr</span> <span class="o">=</span> <span class="n">stderr</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+			<span class="n">stderr</span> <span class="o">=</span> <span class="n">stderr</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
 		<span class="k">return</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span>
 
 <span class="c"># ------------------------------------------------------------------------</span>
@@ -404,7 +417,7 @@
 <span class="s">&quot;&quot;&quot;</span>
 
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;link_main_routines_func&#39;</span><span class="p">)</span>
-<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="link_main_routines_tg_method"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.link_main_routines_tg_method">[docs]</a><span class="k">def</span> <span class="nf">link_main_routines_tg_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	The configuration test declares a unique task generator,</span>
@@ -473,7 +486,7 @@
 	<span class="k">return</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">du</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
 </div>
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;pyext&#39;</span><span class="p">)</span>
-<span class="nd">@before</span><span class="p">(</span><span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">,</span> <span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">,</span> <span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="set_lib_pat"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat">[docs]</a><span class="k">def</span> <span class="nf">set_lib_pat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Set the fortran flags for linking with the python library&quot;&quot;&quot;</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;fcshlib_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;pyext_PATTERN&#39;</span><span class="p">]</span>
@@ -513,7 +526,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

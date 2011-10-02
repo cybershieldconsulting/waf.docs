@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>waflib.ConfigSet &mdash; Waf v1.6.4 documentation</title>
+    <title>waflib.ConfigSet &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="copyright" title="Copyright" href="../../copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="../../index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -59,7 +59,7 @@
 <span class="sd">The values put in :py:class:`ConfigSet` must be lists</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">copy</span><span class="o">,</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">copy</span><span class="o">,</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Utils</span>
 <span class="n">re_imp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^(#)*?([^#=]*?)\ =\ (.*?)$&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
 
@@ -98,8 +98,8 @@
 		<span class="k">try</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">__contains__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="k">return</span> <span class="bp">False</span> <span class="c"># parent may not exist</span>
 </div>
-<div class="viewcode-block" id="ConfigSet.__str__"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.__str__">[docs]</a>	<span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-		<span class="sd">&quot;&quot;&quot;Text representation of the ConfigSet (for debugging purposes)&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ConfigSet.keys"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.keys">[docs]</a>	<span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Dict interface (unknown purpose)&quot;&quot;&quot;</span>
 		<span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 		<span class="n">cur</span> <span class="o">=</span> <span class="bp">self</span>
 		<span class="k">while</span> <span class="n">cur</span><span class="p">:</span>
@@ -107,7 +107,11 @@
 			<span class="n">cur</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s">&#39;parent&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
 		<span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
 		<span class="n">keys</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
-		<span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&quot;</span><span class="si">%r</span><span class="s"> </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__getitem__</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">])</span>
+		<span class="k">return</span> <span class="n">keys</span>
+</div>
+<div class="viewcode-block" id="ConfigSet.__str__"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.__str__">[docs]</a>	<span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Text representation of the ConfigSet (for debugging purposes)&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&quot;</span><span class="si">%r</span><span class="s"> </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__getitem__</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
 </div>
 <div class="viewcode-block" id="ConfigSet.__getitem__"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.__getitem__">[docs]</a>	<span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
@@ -132,11 +136,11 @@
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 </div>
-<div class="viewcode-block" id="ConfigSet.__delitem__"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.__delitem__">[docs]</a>	<span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="ConfigSet.__delitem__"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.__delitem__">[docs]</a>	<span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">		Dictionary interface: get value from key</span>
 <span class="sd">		&quot;&quot;&quot;</span>
-		<span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+		<span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 </div>
 <div class="viewcode-block" id="ConfigSet.__getattr__"><a class="viewcode-back" href="../../ConfigSet.html#waflib.ConfigSet.ConfigSet.__getattr__">[docs]</a>	<span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
@@ -253,7 +257,7 @@
 <span class="sd">		Appends a value to the specified config key::</span>
 
 <span class="sd">			def build(bld):</span>
-<span class="sd">				bld.env.append_unique(&#39;CFLAGS&#39;, [&#39;-O2&#39;])</span>
+<span class="sd">				bld.env.append_value(&#39;CFLAGS&#39;, [&#39;-O2&#39;])</span>
 
 <span class="sd">		The value must be a list or a tuple</span>
 <span class="sd">		&quot;&quot;&quot;</span>
@@ -280,9 +284,9 @@
 <span class="sd">		Append a value to the specified item only if it&#39;s not already present::</span>
 
 <span class="sd">			def build(bld):</span>
-<span class="sd">				bld.env.append_value(&#39;CFLAGS&#39;, [&#39;-O2&#39;, &#39;-g&#39;])</span>
+<span class="sd">				bld.env.append_unique(&#39;CFLAGS&#39;, [&#39;-O2&#39;, &#39;-g&#39;])</span>
 
-<span class="sd">		Note that there is no prepend_unique</span>
+<span class="sd">		The value must be a list or a tuple</span>
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
 			<span class="n">val</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span><span class="p">]</span>
@@ -411,7 +415,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">Waf v1.6.4 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">Waf v1.6.8 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

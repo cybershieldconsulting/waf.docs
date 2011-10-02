@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Build &mdash; Waf v1.6.4 documentation</title>
+    <title>Build &mdash; Waf v1.6.8 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.6.4',
+        VERSION:     '1.6.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="copyright" title="Copyright" href="copyright.html" />
-    <link rel="top" title="Waf v1.6.4 documentation" href="index.html" />
+    <link rel="top" title="Waf v1.6.8 documentation" href="index.html" />
     <link rel="next" title="ConfigSet" href="ConfigSet.html" />
     <link rel="prev" title="Feature reference" href="featuremap.html" /> 
   </head>
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="featuremap.html" title="Feature reference"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Waf v1.6.8 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -591,7 +591,7 @@ The value <tt class="xref py py-attr docutils literal"><span class="pre">waflib.
 
 <dl class="class">
 <dt id="waflib.Build.inst">
-<em class="property">class </em><tt class="descclassname">waflib.Build.</tt><tt class="descname">inst</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Build.inst" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">waflib.Build.</tt><tt class="descname">inst</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#inst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.inst" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
 <dl class="docutils">
 <dt>Special task used for installing files and symlinks, it behaves both like a task</dt>
@@ -599,44 +599,44 @@ The value <tt class="xref py py-attr docutils literal"><span class="pre">waflib.
 </dl>
 <dl class="method">
 <dt id="waflib.Build.inst.post">
-<tt class="descname">post</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Build.inst.post" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">post</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#inst.post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.inst.post" title="Permalink to this definition">¶</a></dt>
 <dd><p>Same interface as in <a class="reference internal" href="TaskGen.html#waflib.TaskGen.task_gen.post" title="waflib.TaskGen.task_gen.post"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.TaskGen.task_gen.post()</span></tt></a></p>
 </dd></dl>
 
 <dl class="method">
 <dt id="waflib.Build.inst.runnable_status">
-<tt class="descname">runnable_status</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Build.inst.runnable_status" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">runnable_status</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#inst.runnable_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.inst.runnable_status" title="Permalink to this definition">¶</a></dt>
 <dd><p>Installation tasks are always executed, so this method returns either <a class="reference internal" href="Task.html#waflib.Task.ASK_LATER" title="waflib.Task.ASK_LATER"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Task.ASK_LATER</span></tt></a> or <a class="reference internal" href="Task.html#waflib.Task.RUN_ME" title="waflib.Task.RUN_ME"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Task.RUN_ME</span></tt></a>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="waflib.Build.inst.__str__">
-<tt class="descname">__str__</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Build.inst.__str__" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">__str__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#inst.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.inst.__str__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return an empty string to disable the display</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="waflib.Build.inst.get_install_path">
-<tt class="descname">get_install_path</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Build.inst.get_install_path" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_install_path</tt><big>(</big><em>destdir=True</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#inst.get_install_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.inst.get_install_path" title="Permalink to this definition">¶</a></dt>
 <dd><p>Installation path obtained from <tt class="docutils literal"><span class="pre">self.dest</span></tt> and prefixed by the destdir.
 The variables such as &#8216;${PREFIX}/bin&#8217; are substituted.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="waflib.Build.inst.exec_install_files">
-<tt class="descname">exec_install_files</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Build.inst.exec_install_files" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">exec_install_files</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#inst.exec_install_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.inst.exec_install_files" title="Permalink to this definition">¶</a></dt>
 <dd><p>Predefined method for installing files</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="waflib.Build.inst.exec_install_as">
-<tt class="descname">exec_install_as</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Build.inst.exec_install_as" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">exec_install_as</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#inst.exec_install_as"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.inst.exec_install_as" title="Permalink to this definition">¶</a></dt>
 <dd><p>Predefined method for installing one file with a given name</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="waflib.Build.inst.exec_symlink_as">
-<tt class="descname">exec_symlink_as</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Build.inst.exec_symlink_as" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">exec_symlink_as</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#inst.exec_symlink_as"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.inst.exec_symlink_as" title="Permalink to this definition">¶</a></dt>
 <dd><p>Predefined method for installing a symlink</p>
 </dd></dl>
 
@@ -904,7 +904,7 @@ $ waf step --files=in:foo.cpp.1.o # link task only</pre>
         <li class="right" >
           <a href="featuremap.html" title="Feature reference"
              >previous</a> |</li>
-        <li><a href="index.html">Waf v1.6.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Waf v1.6.8 documentation</a> &raquo;</li> 
       </ul>
     </div>
 

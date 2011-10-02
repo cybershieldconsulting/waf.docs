@@ -1,0 +1,8 @@
+c_config
+========
+
+.. automodule:: waflib.Tools.c_config
+
+Features defined in this module:
+
+* `test_exec <../featuremap.html#feature-test_exec>`_
