@@ -629,10 +629,10 @@ The current Waf version requires an interpreter for the Python programming langu
 by Lorenzo Bettini
 http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
-<pre><tt><span style="font-weight: bold"><span style="color: #993399">$ wget http://waf.googlecode.com/files/waf-1.6.8</span></span>
-<span style="font-weight: bold"><span style="color: #993399">$ mv waf-1.6.8 waf</span></span>
+<pre><tt><span style="font-weight: bold"><span style="color: #993399">$ wget http://waf.googlecode.com/files/waf-1.6.11</span></span>
+<span style="font-weight: bold"><span style="color: #993399">$ mv waf-1.6.11 waf</span></span>
 <span style="font-weight: bold"><span style="color: #993399">$ python waf --version</span></span>
-<span style="color: #000000">waf 1.6.8 (11500)</span></tt></pre></div></div>
+<span style="color: #000000">waf 1.6.11 (54dc13ba5f51bfe2ae277451ec5ac1d0a91c7aaf)</span></tt></pre></div></div>
 <div class="paragraph"><p>The <tt>waf</tt> file has its own library compressed in a binary stream in the same file. Upon execution, the library is uncompressed in a hidden folder in the current directory. The folder will be re-created if removed. This scheme enables different Waf versions to be executed from the same folders:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
@@ -640,7 +640,7 @@ by Lorenzo Bettini
 http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="font-weight: bold"><span style="color: #993399">$ ls -ld .waf*</span></span>
-<span style="color: #000000">.waf-1.6.8-2c924e3f453eb715218b9cc852291170</span></tt></pre></div></div>
+<span style="color: #000000">.waf-1.6.11-2c924e3f453eb715218b9cc852291170</span></tt></pre></div></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -656,18 +656,18 @@ http://www.gnu.org/software/src-highlite -->
 by Lorenzo Bettini
 http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
-<pre><tt><span style="font-weight: bold"><span style="color: #993399">$ wget http://waf.googlecode.com/files/waf-1.6.8.tar.bz2</span></span>
-<span style="font-weight: bold"><span style="color: #993399">$ tar xjvf waf-1.6.8.tar.bz2</span></span>
-<span style="font-weight: bold"><span style="color: #993399">$ cd waf-1.6.8</span></span>
+<pre><tt><span style="font-weight: bold"><span style="color: #993399">$ wget http://waf.googlecode.com/files/waf-1.6.11.tar.bz2</span></span>
+<span style="font-weight: bold"><span style="color: #993399">$ tar xjvf waf-1.6.11.tar.bz2</span></span>
+<span style="font-weight: bold"><span style="color: #993399">$ cd waf-1.6.11</span></span>
 <span style="font-weight: bold"><span style="color: #993399">$ python waf-light</span></span>
 <span style="color: #000000">Configuring the project</span>
 <span style="color: #000000">'build' finished successfully (0.001s)</span>
 <span style="color: #000000">Checking for program python              : /usr/bin/python</span>
 <span style="color: #000000">Checking for python version              : (2, 6, 5, 'final', 0)</span>
 <span style="color: #000000">'configure' finished successfully (0.176s)</span>
-<span style="color: #000000">Waf: Entering directory `/waf-1.6.8/build'</span>
+<span style="color: #000000">Waf: Entering directory `/waf-1.6.11/build'</span>
 <span style="color: #000000">[1/1] create_waf:  -&gt; waf</span>
-<span style="color: #000000">Waf: Leaving directory `/waf-1.6.8/build'</span>
+<span style="color: #000000">Waf: Leaving directory `/waf-1.6.11/build'</span>
 <span style="color: #000000">'build' finished successfully (2.050s)</span></tt></pre></div></div>
 <div class="paragraph"><p>For older interpreters, it is possible to build the <tt>waf</tt> file with gzip compression instead of bzip2:</p></div>
 <div class="listingblock">
@@ -709,13 +709,13 @@ http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="font-weight: bold"><span style="color: #993399">$ python waf-light --make-waf --tools=compat15,$PWD/aba.py</span></span>
 <span style="color: #000000">   --prelude=$'\tfrom waflib.extras import aba\n\taba.foo()'</span>
 <span style="font-weight: bold"><span style="color: #993399">$ ./waf --help</span></span>
-<span style="color: #000000">This is Waf 1.6.8</span>
+<span style="color: #000000">This is Waf 1.6.11</span>
 <span style="color: #000000">[...]</span></tt></pre></div></div>
 <div class="paragraph"><p>Foreign files to add into the folder <em>extras</em> must be given by absolute paths in the <em>--tools</em> switch.
 Such files do not have to be Python files, yet, a typical scenario is to add an initializer to modify existing
 functions and classes from the Waf modules. Various from the <a href="http://code.google.com/p/waf/source/browse/trunk/build_system_kit/">build system kit</a> illustrate how to create custom
 build systems derived from Waf.</p></div>
-<h3 id="_using_the_waf_file">1.2. Using the waf file</h3><div style="clear:left"></div>
+<h3 id="_using_the_waf_file">1.2. Using the Waf file</h3><div style="clear:left"></div>
 <h4 id="_permissions_and_aliases">1.2.1. Permissions and aliases</h4>
 <div class="paragraph"><p>Because the waf script is a python script, it is usually executed by calling <tt>python</tt> on it:</p></div>
 <div class="listingblock">
@@ -732,7 +732,7 @@ http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="font-weight: bold"><span style="color: #993399">$ chmod 755 waf</span></span>
 <span style="font-weight: bold"><span style="color: #993399">$ ./waf --version</span></span>
-<span style="color: #000000">waf 1.6.8 (11500)</span></tt></pre></div></div>
+<span style="color: #000000">waf 1.6.11 (54dc13ba5f51bfe2ae277451ec5ac1d0a91c7aaf)</span></tt></pre></div></div>
 <div class="paragraph"><p>If the command-line interpreter supports aliases, it is recommended to set the alias once:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
@@ -741,7 +741,7 @@ http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="font-weight: bold"><span style="color: #993399">$ alias waf=$PWD/waf</span></span>
 <span style="font-weight: bold"><span style="color: #993399">$ waf --version</span></span>
-<span style="color: #000000">waf 1.6.8 (11500)</span></tt></pre></div></div>
+<span style="color: #000000">waf 1.6.11 (54dc13ba5f51bfe2ae277451ec5ac1d0a91c7aaf)</span></tt></pre></div></div>
 <div class="paragraph"><p>Or, the execution path may be modified to point at the location of the waf binary:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
@@ -750,7 +750,7 @@ http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="font-weight: bold"><span style="color: #993399">$ export PATH=$PWD:$PATH</span></span>
 <span style="font-weight: bold"><span style="color: #993399">$ waf --version</span></span>
-<span style="color: #000000">waf 1.6.8 (11500)</span></tt></pre></div></div>
+<span style="color: #000000">waf 1.6.11 (54dc13ba5f51bfe2ae277451ec5ac1d0a91c7aaf)</span></tt></pre></div></div>
 <div class="paragraph"><p>In the next sections of the book, we assume that either an alias or the execution path have been set in a way that <tt>waf</tt> may be called directly.</p></div>
 <h4 id="_local_waflib_folders">1.2.2. Local waflib folders</h4>
 <div class="paragraph"><p>Although the waf library is unpacked automatically from the waf binary file, it is sometimes necessary to keep the files in a visible folder, which may even be kept in a source control tool (subversion, git, etc). For example, the <tt>waf-light</tt> script does not contain the waf library, yet it is used to create the <tt>waf</tt> script by using the directory <tt>waflib</tt>.</p></div>
@@ -1660,7 +1660,7 @@ http://www.gnu.org/software/src-highlite -->
 
 <span style="color: #000080">def</span><span style="color: #000000"> </span><span style="color: #000000">configure</span><span style="color: #000000">(</span><span style="color: #000000">ctx</span><span style="color: #000000">):</span>
 <span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">find_program</span><span style="color: #000000">(</span><span style="color: #009900">'touch'</span><span style="color: #000000">,</span><span style="color: #000000"> var</span><span style="color: #000000">=</span><span style="color: #009900">'TOUCH'</span><span style="color: #000000">)</span>
-<span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">check_waf_version</span><span style="color: #000000">(</span><span style="color: #000000">mini</span><span style="color: #000000">=</span><span style="color: #009900">'1.6.8'</span><span style="color: #000000">)</span>
+<span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">check_waf_version</span><span style="color: #000000">(</span><span style="color: #000000">mini</span><span style="color: #000000">=</span><span style="color: #009900">'1.6.11'</span><span style="color: #000000">)</span>
 <span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">find_file</span><span style="color: #000000">(</span><span style="color: #009900">'fstab'</span><span style="color: #000000">,</span><span style="color: #000000"> </span><span style="color: #000000">[</span><span style="color: #009900">'/opt'</span><span style="color: #000000">,</span><span style="color: #000000"> </span><span style="color: #009900">'/etc'</span><span style="color: #000000">])</span></tt></pre></div></div>
 <div class="paragraph"><p>Although these methods are provided by the context class <em>waflib.Configure.ConfigurationContext</em>, they will not appear on it in <a href="http://docs.waf.googlecode.com/git/apidocs_16/index.html">API documentation</a>. For modularity reasons, they are defined as simple functions and then bound dynamically:</p></div>
 <div class="listingblock">
@@ -1914,7 +1914,7 @@ http://www.gnu.org/software/src-highlite -->
 
 <span style="font-weight: bold"><span style="color: #993399">$ cat build/config.log <img src="./callouts/2.png" alt="2" /></span></span>
 <span style="font-weight: bold"><span style="color: #993399"># project  configured on Tue Jul 13 19:15:04 2010 by</span></span>
-<span style="font-weight: bold"><span style="color: #993399"># waf 1.6.8 (abi 98, python 20605f0 on linux2)</span></span>
+<span style="font-weight: bold"><span style="color: #993399"># waf 1.6.11 (abi 98, python 20605f0 on linux2)</span></span>
 <span style="font-weight: bold"><span style="color: #993399"># using /home/waf/bin/waf configure</span></span>
 <span style="font-weight: bold"><span style="color: #993399">#</span></span>
 <span style="color: #000000">Checking for program some_app</span>
@@ -1989,7 +1989,7 @@ http://www.gnu.org/software/src-highlite -->
 <h3 id="_essential_build_concepts">4.1. Essential build concepts</h3><div style="clear:left"></div>
 <h4 id="_build_order_and_dependencies">4.1.1. Build order and dependencies</h4>
 <div class="paragraph"><p>To illustrate the various concepts that are part of the build process, we are now going to use a new example.
-The files <tt>foo.txt</tt> and <tt>bar.txt</tt> will be created by copying the file <tt>wscript</tt>, and the file <tt>foobar.txt</tt> will be created from the concatenation of the generated files. Here is a summary: <span class="footnote"><br />[The examples are provided for demonstration purposes. It is actually considered a best practice to avoid copying files]<br /></span></p></div>
+The files <tt>foo.txt</tt> and <tt>bar.txt</tt> will be created by copying the file <tt>wscript</tt>, and the file <tt>foobar.txt</tt> will be created from the concatenation of the generated files. Here is a summary: <span class="footnote"><br />[It is actually considered a best practice to avoid copying files. When this is required, consider installing files or re-using the examples provided under the folder <tt>demos/subst</tt> of the source ditribution.]<br /></span></p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
 by Lorenzo Bettini
@@ -2725,7 +2725,7 @@ Call <em>ant_glob</em> from the parent directory
 </td></tr>
 </table></div>
 <h4 id="_path_manipulation_abspath_path_from">5.2.3. Path manipulation: abspath, path_from</h4>
-<div class="paragraph"><p>The method <em>abspath</em> is used to obtain the absolute path for a node. In the following example, three nodes are used:</p></div>
+<div class="paragraph"><p>The following example illustrates a few ways of obtaining absolute and relative paths:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
 by Lorenzo Bettini
@@ -2742,22 +2742,26 @@ http://www.gnu.org/software/src-highlite -->
 <span style="color: #000000">        src </span><span style="color: #000000">=</span><span style="color: #000000"> ctx</span><span style="color: #000000">.</span><span style="color: #000000">path</span><span style="color: #000000">.</span><span style="color: #000000">find_resource</span><span style="color: #000000">(</span><span style="color: #009900">'wscript'</span><span style="color: #000000">)</span>
 <span style="color: #000000">        bld </span><span style="color: #000000">=</span><span style="color: #000000"> ctx</span><span style="color: #000000">.</span><span style="color: #000000">path</span><span style="color: #000000">.</span><span style="color: #000000">find_or_declare</span><span style="color: #000000">(</span><span style="color: #009900">'out.out'</span><span style="color: #000000">)</span>
 
-<span style="color: #000000">        </span><span style="color: #000080">print</span><span style="color: #000000">(</span><span style="color: #000000">src</span><span style="color: #000000">.</span><span style="color: #000000">abspath</span><span style="color: #000000">(</span><span style="color: #000000">ctx</span><span style="color: #000000">.</span><span style="color: #000000">env</span><span style="color: #000000">))</span><span style="color: #000000"> </span><span style="color: #000000"><img src="./callouts/2.png" alt="2" /></span>
-<span style="color: #000000">        </span><span style="color: #000080">print</span><span style="color: #000000">(</span><span style="color: #000000">bld</span><span style="color: #000000">.</span><span style="color: #000000">abspath</span><span style="color: #000000">(</span><span style="color: #000000">ctx</span><span style="color: #000000">.</span><span style="color: #000000">env</span><span style="color: #000000">))</span>
-<span style="color: #000000">        </span><span style="color: #000080">print</span><span style="color: #000000">(</span><span style="color: #000000">dir</span><span style="color: #000000">.</span><span style="color: #000000">abspath</span><span style="color: #000000">(</span><span style="color: #000000">ctx</span><span style="color: #000000">.</span><span style="color: #000000">env</span><span style="color: #000000">))</span><span style="color: #000000"> </span><span style="color: #000000"><img src="./callouts/3.png" alt="3" /></span>
-<span style="color: #000000">        </span><span style="color: #000080">print</span><span style="color: #000000">(</span><span style="color: #000000">dir</span><span style="color: #000000">.</span><span style="color: #000000">abspath</span><span style="color: #000000">())</span></tt></pre></div></div>
+<span style="color: #000000">        </span><span style="color: #000080">print</span><span style="color: #000000">(</span><span style="color: #000000">src</span><span style="color: #000000">.</span><span style="color: #000000">abspath</span><span style="color: #000000">())</span><span style="color: #000000"> </span><span style="color: #000000"><img src="./callouts/2.png" alt="2" /></span>
+<span style="color: #000000">        </span><span style="color: #000080">print</span><span style="color: #000000">(</span><span style="color: #000000">bld</span><span style="color: #000000">.</span><span style="color: #000000">abspath</span><span style="color: #000000">())</span>
+<span style="color: #000000">        </span><span style="color: #000080">print</span><span style="color: #000000">(</span><span style="color: #000000">dir</span><span style="color: #000000">.</span><span style="color: #000000">abspath</span><span style="color: #000000">())</span>
+<span style="color: #000000">        </span><span style="color: #000080">print</span><span style="color: #000000">(</span><span style="color: #000000">src</span><span style="color: #000000">.</span><span style="color: #000000">path_from</span><span style="color: #000000">(</span><span style="color: #000000">dir</span><span style="color: #000000">.</span><span style="color: #000000">parent</span><span style="color: #000000">))</span><span style="color: #000000"> </span><span style="color: #000000"><img src="./callouts/3.png" alt="3" /></span>
+<span style="color: #000000">        </span><span style="color: #000080">print</span><span style="color: #000000">(</span><span style="color: #000000">ctx</span><span style="color: #000000">.</span><span style="color: #000000">root</span><span style="color: #000000">.</span><span style="color: #000000">path_from</span><span style="color: #000000">(</span><span style="color: #000000">src</span><span style="color: #000000">))</span><span style="color: #000000"> </span><span style="color: #000000"><img src="./callouts/4.png" alt="4" /></span></tt></pre></div></div>
 <div class="colist arabic"><table>
 <tr><td><img src="./callouts/1.png" alt="1" /></td><td>
 Directory node, source node and build node
 </td></tr>
 <tr><td><img src="./callouts/2.png" alt="2" /></td><td>
-Computing the absolute path for source node or a build node takes a configuration set as parameter
+Print the absolute path
 </td></tr>
 <tr><td><img src="./callouts/3.png" alt="3" /></td><td>
-Computing the absolute path for a directory may use a configuration set or not
+Compute the path relative to another node
+</td></tr>
+<tr><td><img src="./callouts/4.png" alt="4" /></td><td>
+Compute the relative path in reverse order
 </td></tr>
 </table></div>
-<div class="paragraph"><p>Here is the execution trace:</p></div>
+<div class="paragraph"><p>Here is the execution trace on a unix-like system:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
 by Lorenzo Bettini
@@ -2767,34 +2771,14 @@ http://www.gnu.org/software/src-highlite -->
 <span style="color: #000000">'distclean' finished successfully (0.002s)</span>
 <span style="color: #000000">'configure' finished successfully (0.005s)</span>
 <span style="color: #000000">Waf: Entering directory `/tmp/nested/build'</span>
-<span style="color: #000000">/tmp/nested/wscript <img src="./callouts/1.png" alt="1" /></span>
-<span style="color: #000000">/tmp/nested/build/out.out <img src="./callouts/2.png" alt="2" /></span>
-<span style="color: #000000">/tmp/nested/build/ <img src="./callouts/3.png" alt="3" /></span>
-<span style="color: #000000">/tmp/nested <img src="./callouts/4.png" alt="4" /></span>
+<span style="color: #000000">/tmp/nested/wscript</span>
+<span style="color: #000000">/tmp/nested/build/out.out</span>
+<span style="color: #000000">/tmp/nested/build/</span>
+<span style="color: #000000">/tmp/nested</span>
+<span style="color: #000000">nested/wscript</span>
+<span style="color: #000000">../../../..</span>
 <span style="color: #000000">Waf: Leaving directory `/tmp/nested/build'</span>
 <span style="color: #000000">'build' finished successfully (0.003s)</span></tt></pre></div></div>
-<div class="colist arabic"><table>
-<tr><td><img src="./callouts/1.png" alt="1" /></td><td>
-Absolute path for the source node
-</td></tr>
-<tr><td><img src="./callouts/2.png" alt="2" /></td><td>
-The absolute path for the build node depends on the variant in use
-</td></tr>
-<tr><td><img src="./callouts/3.png" alt="3" /></td><td>
-When a configuration set is provided, the absolute path for a directory node is the build directory representation including the variant
-</td></tr>
-<tr><td><img src="./callouts/4.png" alt="4" /></td><td>
-When no configuration set is provided, the directory node absolute path is the one for the source directory
-</td></tr>
-</table></div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<img src="./note.png" alt="Note" />
-</td>
-<td class="content">Several other methods such as <em>relpath_gen</em> or <em>srcpath</em> are provided. See the <a href="http://docs.waf.googlecode.com/git/apidocs_16/index.html">API documentation</a></td>
-</tr></table>
-</div>
 <h3 id="_buildcontext_specific_methods">5.3. BuildContext-specific methods</h3><div style="clear:left"></div>
 <h4 id="_source_and_build_nodes">5.3.1. Source and build nodes</h4>
 <div class="paragraph"><p>Although the <em>sources</em> and <em>targets</em> in the <tt>wscript</tt> files are declared as if they were in the current directory, the target files are output into the build directory. To enable this behaviour, the directory structure below the <em>top</em> directory must be replicated in the <em>out</em> directory. For example, the folder <strong>program</strong> from <tt>demos/c</tt> has its equivalent in the build directory:</p></div>
@@ -2885,14 +2869,14 @@ Path separators are converted automatically according to the platform.
 <h4 id="_nodes_tasks_and_task_generators">5.3.3. Nodes, tasks, and task generators</h4>
 <div class="paragraph"><p>As seen in the previous chapter, Task objects can process files represented as lists of input and output nodes. The task generators
 will usually process the input files given as strings to obtain such nodes and bind them to the tasks.</p></div>
-<div class="paragraph"><p>Since the build directory can be enabled or disabled, the following file copy is invalid: <span class="footnote"><br />[When file copies cannot be avoided, the best practice is to change the file names]<br /></span></p></div>
+<div class="paragraph"><p>Because the build directory can be enabled or disabled, the following file copy would be ambiguous: <span class="footnote"><br />[When file copies cannot be avoided, the best practice is to change the file names]<br /></span></p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
 by Lorenzo Bettini
 http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="color: #000080">def</span><span style="color: #000000"> </span><span style="color: #000000">build</span><span style="color: #000000">(</span><span style="color: #000000">bld</span><span style="color: #000000">):</span>
-<span style="color: #000000">    </span><span style="color: #000000">bld</span><span style="color: #000000">(</span><span style="color: #000000">rule</span><span style="color: #000000">=</span><span style="color: #009900">'cp ${SRC}'</span><span style="color: #000000"> $</span><span style="color: #000000">{</span><span style="color: #000000">TGT</span><span style="color: #000000">},</span><span style="color: #000000"> source</span><span style="color: #000000">=</span><span style="color: #009900">'foo.txt'</span><span style="color: #000000">,</span><span style="color: #000000"> target</span><span style="color: #000000">=</span><span style="color: #009900">'foo.txt'</span><span style="color: #000000">)</span></tt></pre></div></div>
+<span style="color: #000000">    </span><span style="color: #000000">bld</span><span style="color: #000000">(</span><span style="color: #000000">rule</span><span style="color: #000000">=</span><span style="color: #009900">'cp ${SRC} ${TGT}'</span><span style="color: #000000">,</span><span style="color: #000000"> source</span><span style="color: #000000">=</span><span style="color: #009900">'foo.txt'</span><span style="color: #000000">,</span><span style="color: #000000"> target</span><span style="color: #000000">=</span><span style="color: #009900">'foo.txt'</span><span style="color: #000000">)</span></tt></pre></div></div>
 <div class="paragraph"><p>To actually copy a file into the corresponding build directory with the same name, the ambiguity must be removed:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
@@ -2901,7 +2885,7 @@ http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="color: #000080">def</span><span style="color: #000000"> </span><span style="color: #000000">build</span><span style="color: #000000">(</span><span style="color: #000000">bld</span><span style="color: #000000">):</span>
 <span style="color: #000000">    </span><span style="color: #000000">bld</span><span style="color: #000000">(</span>
-<span style="color: #000000">        rule   </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'cp ${SRC}'</span><span style="color: #000000"> $</span><span style="color: #000000">{</span><span style="color: #000000">TGT</span><span style="color: #000000">},</span>
+<span style="color: #000000">        rule   </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'cp ${SRC} ${TGT}'</span><span style="color: #000000">,</span>
 <span style="color: #000000">        source </span><span style="color: #000000">=</span><span style="color: #000000"> bld</span><span style="color: #000000">.</span><span style="color: #000000">path</span><span style="color: #000000">.</span><span style="color: #000000">make_node</span><span style="color: #000000">(</span><span style="color: #009900">'foo.txt'</span><span style="color: #000000">),</span>
 <span style="color: #000000">        target </span><span style="color: #000000">=</span><span style="color: #000000"> bld</span><span style="color: #000000">.</span><span style="color: #000000">path</span><span style="color: #000000">.</span><span style="color: #000000">get_bld</span><span style="color: #000000">().</span><span style="color: #000000">make_node</span><span style="color: #000000">(</span><span style="color: #009900">'foo.txt'</span><span style="color: #000000">)</span>
 <span style="color: #000000">    </span><span style="color: #000000">)</span></tt></pre></div></div>
@@ -3003,7 +2987,7 @@ http://www.gnu.org/software/src-highlite -->
 </tr></table>
 </div>
 <h4 id="_command_composition">6.1.2. Command composition</h4>
-<div class="paragraph"><p>To re-use existing commands that have incompatible context classes, insert them in the <em>command stack</em>:</p></div>
+<div class="paragraph"><p>To re-use commands that have context object of different base classes, insert them in the <em>command stack</em>:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
 by Lorenzo Bettini
@@ -3051,7 +3035,7 @@ http://www.gnu.org/software/src-highlite -->
 <span style="color: #000000">        Options</span><span style="color: #000000">.</span><span style="color: #000000">commands </span><span style="color: #000000">=</span><span style="color: #000000"> lst </span><span style="color: #000000">+</span><span style="color: #000000"> Options</span><span style="color: #000000">.</span><span style="color: #000000">commands</span></tt></pre></div></div>
 <div class="colist arabic"><table>
 <tr><td><img src="./callouts/1.png" alt="1" /></td><td>
-To share data between different commands, use a global variable
+A global variable may be used to share data between commands deriving from different classes
 </td></tr>
 <tr><td><img src="./callouts/2.png" alt="2" /></td><td>
 The test command is used to add more commands
@@ -3082,7 +3066,7 @@ http://www.gnu.org/software/src-highlite -->
 <span style="color: #000000">Waf: Leaving directory `/tmp/advbuild_testcase/build'</span>
 <span style="color: #000000">'build' finished successfully (0.125s)</span></tt></pre></div></div>
 <h4 id="_binding_a_command_from_a_waf_tool">6.1.3. Binding a command from a Waf tool</h4>
-<div class="paragraph"><p>When the top-level wscript is read, it is converted into a python module and kept in memory. Commands may be added dynamically by injecting the desired function into that module. We will now show how to load a waf tool to count the amount of task generators in the project.</p></div>
+<div class="paragraph"><p>When the top-level wscript is read, it is converted into a python module and kept in memory. Commands may be added dynamically by injecting the desired function into that module. We will now show how to bind a simple command from a Waf tool:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
 by Lorenzo Bettini
@@ -3104,11 +3088,19 @@ http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="font-weight: bold"><span style="color: #008080">from</span></span><span style="color: #000000"> waflib </span><span style="font-weight: bold"><span style="color: #008080">import</span></span><span style="color: #000000"> Context</span>
 
-<span style="color: #000080">def</span><span style="color: #000000"> </span><span style="color: #000000">cnt</span><span style="color: #000000">(</span><span style="color: #000000">ctx</span><span style="color: #000000">):</span>
+<span style="color: #000080">def</span><span style="color: #000000"> </span><span style="color: #000000">cnt</span><span style="color: #000000">(</span><span style="color: #000000">ctx</span><span style="color: #000000">):</span><span style="color: #000000"> </span><span style="color: #000000"><img src="./callouts/1.png" alt="1" /></span>
 <span style="color: #808080">        """do something"""</span>
 <span style="color: #000000">        </span><span style="color: #000080">print</span><span style="color: #000000">(</span><span style="color: #009900">'just a test'</span><span style="color: #000000">)</span>
 
-<span style="color: #000000">Context</span><span style="color: #000000">.</span><span style="color: #000000">g_module</span><span style="color: #000000">.</span><span style="color: #000000">__dict__</span><span style="color: #000000">[</span><span style="color: #009900">'cnt'</span><span style="color: #000000">]</span><span style="color: #000000"> </span><span style="color: #000000">=</span><span style="color: #000000"> cnt</span></tt></pre></div></div>
+<span style="color: #000000">Context</span><span style="color: #000000">.</span><span style="color: #000000">g_module</span><span style="color: #000000">.</span><span style="color: #000000">__dict__</span><span style="color: #000000">[</span><span style="color: #009900">'cnt'</span><span style="color: #000000">]</span><span style="color: #000000"> </span><span style="color: #000000">=</span><span style="color: #000000"> cnt </span><span style="color: #000000"><img src="./callouts/2.png" alt="2" /></span></tt></pre></div></div>
+<div class="colist arabic"><table>
+<tr><td><img src="./callouts/1.png" alt="1" /></td><td>
+The function to bind must accept a <tt>Context</tt> object as first argument
+</td></tr>
+<tr><td><img src="./callouts/2.png" alt="2" /></td><td>
+The main wscript file of the project is loaded as a python module and stored as <tt>Context.g_module</tt>
+</td></tr>
+</table></div>
 <div class="paragraph"><p>The execution output will be the following.</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
@@ -6250,7 +6242,7 @@ Use the feature special_test
 </td></tr>
 </table></div>
 <h4 id="_creating_configuration_headers">9.4.3. Creating configuration headers</h4>
-<div class="paragraph"><p>Adding lots of command-line define values increases the size of the command-line and conceals the useful information (differences). Some projects use headers which are generated during the configuration, they are not modified during the build and they are not installed or redistributed. This system is useful for huge projects, and has been made popular by autoconf-based projects.</p></div>
+<div class="paragraph"><p>Adding lots of command-line define values increases the size of the command-line and makes it harder to review the flags when errors occur. Besides that, the defines passed on the command-line may fail unexpectedly with different compilers and command execution contexts. For example, define values containing quotes may be misinterpreted in Visual Studio response files. It is therefore a best practice to use configuration headers whenever possible.</p></div>
 <div class="paragraph"><p>Writing configuration headers can be performed using the following methods:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
@@ -6361,7 +6353,7 @@ by Lorenzo Bettini
 http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="font-weight: bold"><span style="color: #993399"># project  configured on Tue Aug 31 17:30:21 2010 by</span></span>
-<span style="font-weight: bold"><span style="color: #993399"># waf 1.6.8 (abi 98, python 20605f0 on linux2)</span></span>
+<span style="font-weight: bold"><span style="color: #993399"># waf 1.6.11 (abi 98, python 20605f0 on linux2)</span></span>
 <span style="font-weight: bold"><span style="color: #993399"># using /home/waf/bin/waf configure</span></span>
 <span style="font-weight: bold"><span style="color: #993399">#</span></span>
 <span style="color: #000000">---</span>
