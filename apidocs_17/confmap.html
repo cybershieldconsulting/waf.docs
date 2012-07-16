@@ -1,0 +1,520 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Configuration methods &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Waf v1.7.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="configuration-methods">
+<span id="confmap"></span><h1>Configuration methods<a class="headerlink" href="#configuration-methods" title="Permalink to this headline">¶</a></h1>
+<p>The configuration methods <cite>&#64;conf</cite> are bound to the configuration context, and to the build context:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@waflib.Configure.conf</span>
+<span class="k">def</span> <span class="nf">find_program</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The object <cite>conf.env</cite> is usually modified during the execution. If several methods have to be called, then
+a transaction should be used, for example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">stash</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+                <span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;strip&#39;</span><span class="p">)</span>
+                <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;-O3&#39;</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+                <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">revert</span><span class="p">()</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.add_as_needed">add_as_needed</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="Configure.html#waflib.Configure.add_os_flags">add_os_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/msvc.html#waflib.Tools.msvc.autodetect">autodetect</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.cc_add_flags">cc_add_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.cc_load_tools">cc_load_tools</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.check">check</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.check_cc">check_cc</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.check_cfg">check_cfg</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.check_cxx">check_cxx</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/d_config.html#waflib.Tools.d_config.check_dlibrary">check_dlibrary</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/fc_config.html#waflib.Tools.fc_config.check_fortran">check_fortran</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/fc_config.html#waflib.Tools.fc_config.check_fortran_clib">check_fortran_clib</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/fc_config.html#waflib.Tools.fc_config.check_fortran_dummy_main">check_fortran_dummy_main</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/fc_config.html#waflib.Tools.fc_config.check_fortran_mangling">check_fortran_mangling</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/fc_config.html#waflib.Tools.fc_config.check_fortran_verbose_flag">check_fortran_verbose_flag</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_tests.html#waflib.Tools.c_tests.check_inline">check_inline</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/javaw.html#waflib.Tools.javaw.check_java_class">check_java_class</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/javaw.html#waflib.Tools.javaw.check_jni_headers">check_jni_headers</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_tests.html#waflib.Tools.c_tests.check_large_file">check_large_file</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/msvc.html#waflib.Tools.msvc.check_lib_msvc">check_lib_msvc</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_tests.html#waflib.Tools.c_tests.check_library">check_library</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/msvc.html#waflib.Tools.msvc.check_libs_msvc">check_libs_msvc</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/perl.html#waflib.Tools.perl.check_perl_ext_devel">check_perl_ext_devel</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/perl.html#waflib.Tools.perl.check_perl_module">check_perl_module</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/perl.html#waflib.Tools.perl.check_perl_version">check_perl_version</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/python.html#waflib.Tools.python.check_python_headers">check_python_headers</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/python.html#waflib.Tools.python.check_python_module">check_python_module</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/python.html#waflib.Tools.python.check_python_version">check_python_version</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/ruby.html#waflib.Tools.ruby.check_ruby_ext_devel">check_ruby_ext_devel</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/ruby.html#waflib.Tools.ruby.check_ruby_version">check_ruby_version</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/vala.html#waflib.Tools.vala.check_vala">check_vala</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/vala.html#waflib.Tools.vala.check_vala_deps">check_vala_deps</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="Configure.html#waflib.Configure.check_waf_version">check_waf_version</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="Configure.html#waflib.Configure.cmd_to_list">cmd_to_list</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/dmd.html#waflib.Tools.dmd.common_flags_dmd">common_flags_dmd</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gdc.html#waflib.Tools.gdc.common_flags_gdc">common_flags_gdc</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/dmd.html#waflib.Tools.dmd.common_flags_ldc">common_flags_ldc</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.cxx_add_flags">cxx_add_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.cxx_load_tools">cxx_load_tools</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/d_config.html#waflib.Tools.d_config.d_platform_flags">d_platform_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.define">define</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.define_cond">define_cond</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.exec_cfg">exec_cfg</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/fc_config.html#waflib.Tools.fc_config.fc_flags">fc_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/ar.html#waflib.Tools.ar.find_ar">find_ar</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/dmd.html#waflib.Tools.dmd.find_dmd">find_dmd</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="Configure.html#waflib.Configure.find_file">find_file</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/g95.html#waflib.Tools.g95.find_g95">find_g95</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gcc.html#waflib.Tools.gcc.find_gcc">find_gcc</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gdc.html#waflib.Tools.gdc.find_gdc">find_gdc</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gfortran.html#waflib.Tools.gfortran.find_gfortran">find_gfortran</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gxx.html#waflib.Tools.gxx.find_gxx">find_gxx</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/icc.html#waflib.Tools.icc.find_icc">find_icc</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/icpc.html#waflib.Tools.icpc.find_icpc">find_icpc</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/ifort.html#waflib.Tools.ifort.find_ifort">find_ifort</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/msvc.html#waflib.Tools.msvc.find_lt_names_msvc">find_lt_names_msvc</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/msvc.html#waflib.Tools.msvc.find_msvc">find_msvc</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="Configure.html#waflib.Configure.find_perl_program">find_perl_program</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="Configure.html#waflib.Configure.find_program">find_program</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/suncc.html#waflib.Tools.suncc.find_scc">find_scc</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/suncxx.html#waflib.Tools.suncxx.find_sxx">find_sxx</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/vala.html#waflib.Tools.vala.find_valac">find_valac</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/xlc.html#waflib.Tools.xlc.find_xlc">find_xlc</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/xlcxx.html#waflib.Tools.xlcxx.find_xlcxx">find_xlcxx</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/fc_config.html#waflib.Tools.fc_config.fortran_modifier_cygwin">fortran_modifier_cygwin</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/fc_config.html#waflib.Tools.fc_config.fortran_modifier_darwin">fortran_modifier_darwin</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/fc_config.html#waflib.Tools.fc_config.fortran_modifier_win32">fortran_modifier_win32</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/g95.html#waflib.Tools.g95.g95_flags">g95_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/g95.html#waflib.Tools.g95.g95_modifier_cygwin">g95_modifier_cygwin</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/g95.html#waflib.Tools.g95.g95_modifier_darwin">g95_modifier_darwin</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/g95.html#waflib.Tools.g95.g95_modifier_platform">g95_modifier_platform</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/g95.html#waflib.Tools.g95.g95_modifier_win32">g95_modifier_win32</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/msvc.html#waflib.Tools.msvc.gather_icl_versions">gather_icl_versions</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/msvc.html#waflib.Tools.msvc.gather_msvc_versions">gather_msvc_versions</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/msvc.html#waflib.Tools.msvc.gather_wsdk_versions">gather_wsdk_versions</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gcc.html#waflib.Tools.gcc.gcc_common_flags">gcc_common_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gcc.html#waflib.Tools.gcc.gcc_modifier_aix">gcc_modifier_aix</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gcc.html#waflib.Tools.gcc.gcc_modifier_cygwin">gcc_modifier_cygwin</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gcc.html#waflib.Tools.gcc.gcc_modifier_darwin">gcc_modifier_darwin</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gcc.html#waflib.Tools.gcc.gcc_modifier_hpux">gcc_modifier_hpux</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gcc.html#waflib.Tools.gcc.gcc_modifier_platform">gcc_modifier_platform</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gcc.html#waflib.Tools.gcc.gcc_modifier_win32">gcc_modifier_win32</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.get_cc_version">get_cc_version</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.get_config_header">get_config_header</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.get_define">get_define</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/g95.html#waflib.Tools.g95.get_g95_version">get_g95_version</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gfortran.html#waflib.Tools.gfortran.get_gfortran_version">get_gfortran_version</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/ifort.html#waflib.Tools.ifort.get_ifort_version">get_ifort_version</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/msvc.html#waflib.Tools.msvc.get_msvc_version">get_msvc_version</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/msvc.html#waflib.Tools.msvc.get_msvc_versions">get_msvc_versions</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/python.html#waflib.Tools.python.get_python_variables">get_python_variables</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gfortran.html#waflib.Tools.gfortran.gfortran_flags">gfortran_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gfortran.html#waflib.Tools.gfortran.gfortran_modifier_cygwin">gfortran_modifier_cygwin</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gfortran.html#waflib.Tools.gfortran.gfortran_modifier_darwin">gfortran_modifier_darwin</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gfortran.html#waflib.Tools.gfortran.gfortran_modifier_platform">gfortran_modifier_platform</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gfortran.html#waflib.Tools.gfortran.gfortran_modifier_win32">gfortran_modifier_win32</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gxx.html#waflib.Tools.gxx.gxx_common_flags">gxx_common_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gxx.html#waflib.Tools.gxx.gxx_modifier_aix">gxx_modifier_aix</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gxx.html#waflib.Tools.gxx.gxx_modifier_cygwin">gxx_modifier_cygwin</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gxx.html#waflib.Tools.gxx.gxx_modifier_darwin">gxx_modifier_darwin</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gxx.html#waflib.Tools.gxx.gxx_modifier_hpux">gxx_modifier_hpux</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gxx.html#waflib.Tools.gxx.gxx_modifier_platform">gxx_modifier_platform</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/gxx.html#waflib.Tools.gxx.gxx_modifier_win32">gxx_modifier_win32</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.have_define">have_define</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/ifort.html#waflib.Tools.ifort.ifort_modifier_cygwin">ifort_modifier_cygwin</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/ifort.html#waflib.Tools.ifort.ifort_modifier_platform">ifort_modifier_platform</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.is_defined">is_defined</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/fc_config.html#waflib.Tools.fc_config.is_link_verbose">is_link_verbose</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/msvc.html#waflib.Tools.msvc.libname_msvc">libname_msvc</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.link_add_flags">link_add_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/msvc.html#waflib.Tools.msvc.msvc_common_flags">msvc_common_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.multicheck">multicheck</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/msvc.html#waflib.Tools.msvc.no_autodetect">no_autodetect</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_aliases.html#waflib.Tools.c_aliases.objects">objects</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.parse_flags">parse_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.post_check">post_check</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/msvc.html#waflib.Tools.msvc.print_all_msvc_detected">print_all_msvc_detected</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_aliases.html#waflib.Tools.c_aliases.program">program</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/cs.html#waflib.Tools.cs.read_csshlib">read_csshlib</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/ccroot.html#waflib.Tools.ccroot.read_shlib">read_shlib</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/ccroot.html#waflib.Tools.ccroot.read_stlib">read_stlib</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.ret_msg">ret_msg</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.run_c_code">run_c_code</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/suncc.html#waflib.Tools.suncc.scc_common_flags">scc_common_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_aliases.html#waflib.Tools.c_aliases.shlib">shlib</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_aliases.html#waflib.Tools.c_aliases.stlib">stlib</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/suncxx.html#waflib.Tools.suncxx.sxx_common_flags">sxx_common_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.undefine">undefine</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.validate_c">validate_c</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.validate_cfg">validate_cfg</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/c_config.html#waflib.Tools.c_config.write_config_header">write_config_header</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/xlc.html#waflib.Tools.xlc.xlc_common_flags">xlc_common_flags</a></li>
+</ul>
+<ul class="simple">
+<li><a class="reference external" href="tools/xlcxx.html#waflib.Tools.xlcxx.xlcxx_common_flags">xlcxx_common_flags</a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/confmap.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Waf v1.7.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

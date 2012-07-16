@@ -1,0 +1,5 @@
+g95
+===
+
+.. automodule:: waflib.Tools.g95
+

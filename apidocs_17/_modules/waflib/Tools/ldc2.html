@@ -1,0 +1,156 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.ldc2 &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.ldc2</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Alex Rønne Petersen, 2012 (alexrp/Zor)</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">ar</span><span class="p">,</span> <span class="n">d</span>
+<span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
+
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="find_ldc2"><a class="viewcode-back" href="../../../tools/ldc2.html#waflib.Tools.ldc2.find_ldc2">[docs]</a><span class="k">def</span> <span class="nf">find_ldc2</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Find the program *ldc2* and set the variable *D*</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">([</span><span class="s">&#39;ldc2&#39;</span><span class="p">],</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;D&#39;</span><span class="p">)</span>
+
+	<span class="n">out</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;-version&#39;</span><span class="p">])</span>
+	<span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;based on DMD v2.&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&quot;detected compiler is not ldc2&quot;</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="common_flags_ldc2"><a class="viewcode-back" href="../../../tools/ldc2.html#waflib.Tools.ldc2.common_flags_ldc2">[docs]</a><span class="k">def</span> <span class="nf">common_flags_ldc2</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Set the D flags required by *ldc2*</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;D_SRC_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;D_TGT_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;-of</span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;D_LINKER&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;D&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DLNK_SRC_F&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DLNK_TGT_F&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;-of</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DINC_ST&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;-I</span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DSHLIB_MARKER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;DSTLIB_MARKER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DSTLIB_ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;DSHLIB_ST&#39;</span><span class="p">]</span>         <span class="o">=</span> <span class="s">&#39;-L-l</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DSTLIBPATH_ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;DLIBPATH_ST&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;-L-L</span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_dshlib&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-L-shared&#39;</span><span class="p">]</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DHEADER_ext&#39;</span><span class="p">]</span>       <span class="o">=</span> <span class="s">&#39;.di&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DFLAGS_d_with_header&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-H&#39;</span><span class="p">,</span> <span class="s">&#39;-Hf&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;D_HDR_F&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DFLAGS_dshlib&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-relocation-model=pic&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/ldc2.html#waflib.Tools.ldc2.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Configuration for *ldc2*</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_ldc2</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;ar&#39;</span><span class="p">)</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;d&#39;</span><span class="p">)</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">common_flags_ldc2</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">d_platform_flags</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

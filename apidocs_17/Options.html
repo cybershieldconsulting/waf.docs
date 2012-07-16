@@ -1,0 +1,248 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Options &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="index.html" />
+    <link rel="next" title="Runner" href="Runner.html" />
+    <link rel="prev" title="Node" href="Node.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Runner.html" title="Runner"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Node.html" title="Node"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Waf v1.7.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Options">
+<span id="options"></span><h1>Options<a class="headerlink" href="#module-waflib.Options" title="Permalink to this headline">¶</a></h1>
+<p>Support for waf command-line options</p>
+<p>Provides default command-line options,
+as well as custom ones, used by the <tt class="docutils literal"><span class="pre">options</span></tt> wscript function.</p>
+<dl class="data">
+<dt id="waflib.Options.cmds">
+<tt class="descclassname">waflib.Options.</tt><tt class="descname">cmds</tt><a class="headerlink" href="#waflib.Options.cmds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constant representing the default waf commands displayed in:</p>
+<div class="highlight-python"><pre>$ waf --help</pre>
+</div>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Options.options">
+<tt class="descclassname">waflib.Options.</tt><tt class="descname">options</tt><a class="headerlink" href="#waflib.Options.options" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary representing the command-line options:</p>
+<div class="highlight-python"><pre>$ waf --foo=bar</pre>
+</div>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Options.commands">
+<tt class="descclassname">waflib.Options.</tt><tt class="descname">commands</tt><a class="headerlink" href="#waflib.Options.commands" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of commands to execute extracted from the command-line. This list is consumed during the execution, see <a class="reference internal" href="Scripting.html#waflib.Scripting.run_commands" title="waflib.Scripting.run_commands"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Scripting.run_commands()</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Options.opt_parser">
+<em class="property">class </em><tt class="descclassname">waflib.Options.</tt><tt class="descname">opt_parser</tt><big>(</big><em>ctx</em><big>)</big><a class="reference internal" href="_modules/waflib/Options.html#opt_parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Options.opt_parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">optparse.OptionParser</span></tt></p>
+<p>Command-line options parser.</p>
+<dl class="method">
+<dt id="waflib.Options.opt_parser.get_usage">
+<tt class="descname">get_usage</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Options.html#opt_parser.get_usage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Options.opt_parser.get_usage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the message to print on <tt class="docutils literal"><span class="pre">waf</span> <span class="pre">--help</span></tt></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Options.OptionsContext">
+<em class="property">class </em><tt class="descclassname">waflib.Options.</tt><tt class="descname">OptionsContext</tt><big>(</big><em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Options.html#OptionsContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Options.OptionsContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Context.html#waflib.Context.Context" title="waflib.Context.Context"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Context.Context</span></tt></a></p>
+<p>Collect custom options from wscript files and parses the command line.
+Set the global <a class="reference internal" href="#waflib.Options.commands" title="waflib.Options.commands"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Options.commands</span></tt></a> and <a class="reference internal" href="#waflib.Options.options" title="waflib.Options.options"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Options.options</span></tt></a> values.</p>
+<dl class="attribute">
+<dt id="waflib.Options.OptionsContext.parser">
+<tt class="descname">parser</tt><a class="headerlink" href="#waflib.Options.OptionsContext.parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instance of <a class="reference internal" href="#waflib.Options.opt_parser" title="waflib.Options.opt_parser"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Options.opt_parser</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Options.OptionsContext.jobs">
+<tt class="descname">jobs</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Options.html#OptionsContext.jobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Options.OptionsContext.jobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the amount of cpu cores to set the default amount of tasks executed in parallel. At
+runtime the options can be obtained from <a class="reference internal" href="#waflib.Options.options" title="waflib.Options.options"><tt class="xref py py-const docutils literal"><span class="pre">waflib.Options.options</span></tt></a></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.Options</span> <span class="kn">import</span> <span class="n">options</span>
+<span class="n">njobs</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">jobs</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">the amount of cpu cores</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Options.OptionsContext.add_option">
+<tt class="descname">add_option</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Options.html#OptionsContext.add_option"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Options.OptionsContext.add_option" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for optparse.add_option:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;-u&#39;</span><span class="p">,</span> <span class="s">&#39;--use&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;use&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="s">&#39;a boolean option&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Options.OptionsContext.add_option_group">
+<tt class="descname">add_option_group</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Options.html#OptionsContext.add_option_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Options.OptionsContext.add_option_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for optparse.add_option_group:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="n">gr</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">add_option_group</span><span class="p">(</span><span class="s">&#39;some options&#39;</span><span class="p">)</span>
+        <span class="n">gr</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;-u&#39;</span><span class="p">,</span> <span class="s">&#39;--use&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;use&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Options.OptionsContext.get_option_group">
+<tt class="descname">get_option_group</tt><big>(</big><em>opt_str</em><big>)</big><a class="reference internal" href="_modules/waflib/Options.html#OptionsContext.get_option_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Options.OptionsContext.get_option_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for optparse.get_option_group:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="n">gr</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">get_option_group</span><span class="p">(</span><span class="s">&#39;configure options&#39;</span><span class="p">)</span>
+        <span class="n">gr</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;-o&#39;</span><span class="p">,</span> <span class="s">&#39;--out&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="s">&#39;build dir for the project&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;out&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Options.OptionsContext.parse_args">
+<tt class="descname">parse_args</tt><big>(</big><em>_args=None</em><big>)</big><a class="reference internal" href="_modules/waflib/Options.html#OptionsContext.parse_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Options.OptionsContext.parse_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse arguments from a list (not bound to the command-line).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>_args</strong> (<em>list of strings</em>) &#8211; arguments</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Options.OptionsContext.execute">
+<tt class="descname">execute</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Options.html#OptionsContext.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Options.OptionsContext.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="Context.html#waflib.Context.Context.execute" title="waflib.Context.Context.execute"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Context.Context.execute()</span></tt></a></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Node.html"
+                        title="previous chapter">Node</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Runner.html"
+                        title="next chapter">Runner</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/Options.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Runner.html" title="Runner"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Node.html" title="Node"
+             >previous</a> |</li>
+        <li><a href="index.html">Waf v1.7.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

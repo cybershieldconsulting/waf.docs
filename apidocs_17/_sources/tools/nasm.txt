@@ -1,0 +1,8 @@
+nasm
+====
+
+.. automodule:: waflib.Tools.nasm
+
+Features defined in this module:
+
+* `asm <../featuremap.html#feature-asm>`_

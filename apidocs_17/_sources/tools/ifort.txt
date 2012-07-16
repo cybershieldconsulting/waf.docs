@@ -1,0 +1,5 @@
+ifort
+=====
+
+.. automodule:: waflib.Tools.ifort
+

@@ -1,0 +1,314 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.c_tests &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.c_tests</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Various configuration tests.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span>
+<span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before_method</span><span class="p">,</span> <span class="n">after_method</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="n">LIB_CODE</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">#ifdef _MSC_VER</span>
+<span class="s">#define testEXPORT __declspec(dllexport)</span>
+<span class="s">#else</span>
+<span class="s">#define testEXPORT</span>
+<span class="s">#endif</span>
+<span class="s">testEXPORT int lib_func(void) { return 9; }</span>
+<span class="s">&#39;&#39;&#39;</span>
+
+<span class="n">MAIN_CODE</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">#ifdef _MSC_VER</span>
+<span class="s">#define testEXPORT __declspec(dllimport)</span>
+<span class="s">#else</span>
+<span class="s">#define testEXPORT</span>
+<span class="s">#endif</span>
+<span class="s">testEXPORT int lib_func(void);</span>
+<span class="s">int main(void) {return !(lib_func() == 9);}</span>
+<span class="s">&#39;&#39;&#39;</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;link_lib_test&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="link_lib_test_fun"><a class="viewcode-back" href="../../../tools/c_tests.html#waflib.Tools.c_tests.link_lib_test_fun">[docs]</a><span class="k">def</span> <span class="nf">link_lib_test_fun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	The configuration test :py:func:`waflib.Tools.ccroot.run_c_code` declares a unique task generator,</span>
+<span class="sd">	so we need to create other task generators from here to check if the linker is able to link libraries.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">write_test_file</span><span class="p">(</span><span class="n">task</span><span class="p">):</span>
+		<span class="n">task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+
+	<span class="n">rpath</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;add_rpath&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+		<span class="n">rpath</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">get_bld</span><span class="p">()</span><span class="o">.</span><span class="n">abspath</span><span class="p">()]</span>
+
+	<span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
+	<span class="n">m</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+	<span class="n">ex</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_exec</span> <span class="ow">and</span> <span class="s">&#39;test_exec&#39;</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span>
+	<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span>
+	<span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="n">write_test_file</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;test.&#39;</span> <span class="o">+</span> <span class="n">mode</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="n">LIB_CODE</span><span class="p">)</span>
+	<span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="n">write_test_file</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;main.&#39;</span> <span class="o">+</span> <span class="n">mode</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="n">MAIN_CODE</span><span class="p">)</span>
+	<span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">shlib&#39;</span> <span class="o">%</span> <span class="n">m</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;test.&#39;</span> <span class="o">+</span> <span class="n">mode</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;test&#39;</span><span class="p">)</span>
+	<span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">program </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">ex</span><span class="p">),</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;main.&#39;</span> <span class="o">+</span> <span class="n">mode</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s">&#39;test&#39;</span><span class="p">,</span> <span class="n">rpath</span><span class="o">=</span><span class="n">rpath</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_library"><a class="viewcode-back" href="../../../tools/c_tests.html#waflib.Tools.c_tests.check_library">[docs]</a><span class="k">def</span> <span class="nf">check_library</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">test_exec</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Check if libraries can be linked with the current linker. Uses :py:func:`waflib.Tools.c_tests.link_lib_test_fun`.</span>
+
+<span class="sd">	:param mode: c or cxx or d</span>
+<span class="sd">	:type mode: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">mode</span><span class="p">:</span>
+		<span class="n">mode</span> <span class="o">=</span> <span class="s">&#39;c&#39;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CXX</span><span class="p">:</span>
+			<span class="n">mode</span> <span class="o">=</span> <span class="s">&#39;cxx&#39;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+		<span class="n">compile_filename</span> <span class="o">=</span> <span class="p">[],</span>
+		<span class="n">features</span> <span class="o">=</span> <span class="s">&#39;link_lib_test&#39;</span><span class="p">,</span>
+		<span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;Checking for libraries&#39;</span><span class="p">,</span>
+		<span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="p">,</span>
+		<span class="n">test_exec</span> <span class="o">=</span> <span class="n">test_exec</span><span class="p">,</span>
+		<span class="p">)</span>
+
+<span class="c">########################################################################################</span>
+</div>
+<span class="n">INLINE_CODE</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">typedef int foo_t;</span>
+<span class="s">static </span><span class="si">%s</span><span class="s"> foo_t static_foo () {return 0; }</span>
+<span class="si">%s</span><span class="s"> foo_t foo () {</span>
+<span class="s">	return 0;</span>
+<span class="s">}</span>
+<span class="s">&#39;&#39;&#39;</span>
+<span class="n">INLINE_VALUES</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;inline&#39;</span><span class="p">,</span> <span class="s">&#39;__inline__&#39;</span><span class="p">,</span> <span class="s">&#39;__inline&#39;</span><span class="p">]</span>
+
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_inline"><a class="viewcode-back" href="../../../tools/c_tests.html#waflib.Tools.c_tests.check_inline">[docs]</a><span class="k">def</span> <span class="nf">check_inline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Check for the right value for inline macro.</span>
+<span class="sd">	Define INLINE_MACRO to 1 if the define is found.</span>
+<span class="sd">	If the inline macro is not &#39;inline&#39;, add a define to the ``config.h`` (#define inline __inline__)</span>
+
+<span class="sd">	:param define_name: define INLINE_MACRO by default to 1 if the macro is defined</span>
+<span class="sd">	:type define_name: string</span>
+<span class="sd">	:param features: by default *c* or *cxx* depending on the compiler present</span>
+<span class="sd">	:type features: list of string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">start_msg</span><span class="p">(</span><span class="s">&#39;Checking for inline&#39;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;define_name&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;define_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;INLINE_MACRO&#39;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;features&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CXX</span><span class="p">:</span>
+			<span class="n">kw</span><span class="p">[</span><span class="s">&#39;features&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;cxx&#39;</span><span class="p">]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">kw</span><span class="p">[</span><span class="s">&#39;features&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;c&#39;</span><span class="p">]</span>
+
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">INLINE_VALUES</span><span class="p">:</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;fragment&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">INLINE_CODE</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+		<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+			<span class="k">continue</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="s">&#39;inline&#39;</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">define</span><span class="p">(</span><span class="s">&#39;inline&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">quote</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+			<span class="k">return</span> <span class="n">x</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not use inline functions&#39;</span><span class="p">)</span>
+
+<span class="c">########################################################################################</span>
+</div>
+<span class="n">LARGE_FRAGMENT</span> <span class="o">=</span> <span class="s">&#39;#include &lt;unistd.h&gt;</span><span class="se">\n</span><span class="s">int main() { return !(sizeof(off_t) &gt;= 8); }</span><span class="se">\n</span><span class="s">&#39;</span>
+
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_large_file"><a class="viewcode-back" href="../../../tools/c_tests.html#waflib.Tools.c_tests.check_large_file">[docs]</a><span class="k">def</span> <span class="nf">check_large_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Check for large file support and define the macro HAVE_LARGEFILE</span>
+<span class="sd">	The test is skipped on win32 systems (DEST_BINFMT == pe).</span>
+
+<span class="sd">	:param define_name: define to set, by default *HAVE_LARGEFILE*</span>
+<span class="sd">	:type define_name: string</span>
+<span class="sd">	:param execute: execute the test (yes by default)</span>
+<span class="sd">	:type execute: bool</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;define_name&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;define_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;HAVE_LARGEFILE&#39;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;execute&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;execute&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;features&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CXX</span><span class="p">:</span>
+			<span class="n">kw</span><span class="p">[</span><span class="s">&#39;features&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;cxx&#39;</span><span class="p">,</span> <span class="s">&#39;cxxprogram&#39;</span><span class="p">]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">kw</span><span class="p">[</span><span class="s">&#39;features&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="s">&#39;cprogram&#39;</span><span class="p">]</span>
+
+	<span class="n">kw</span><span class="p">[</span><span class="s">&#39;fragment&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">LARGE_FRAGMENT</span>
+
+	<span class="n">kw</span><span class="p">[</span><span class="s">&#39;msg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;Checking for large file support&#39;</span>
+	<span class="n">ret</span> <span class="o">=</span> <span class="bp">True</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">DEST_BINFMT</span> <span class="o">!=</span> <span class="s">&#39;pe&#39;</span><span class="p">:</span>
+			<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+	<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+		<span class="k">pass</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">True</span>
+
+	<span class="n">kw</span><span class="p">[</span><span class="s">&#39;msg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;Checking for -D_FILE_OFFSET_BITS=64&#39;</span>
+	<span class="n">kw</span><span class="p">[</span><span class="s">&#39;defines&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;_FILE_OFFSET_BITS=64&#39;</span><span class="p">]</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+	<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+		<span class="k">pass</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">define</span><span class="p">(</span><span class="s">&#39;_FILE_OFFSET_BITS&#39;</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">ret</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;There is no support for large files&#39;</span><span class="p">)</span>
+
+<span class="c">########################################################################################</span>
+</div>
+<span class="n">ENDIAN_FRAGMENT</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">short int ascii_mm[] = { 0x4249, 0x4765, 0x6E44, 0x6961, 0x6E53, 0x7953, 0 };</span>
+<span class="s">short int ascii_ii[] = { 0x694C, 0x5454, 0x656C, 0x6E45, 0x6944, 0x6E61, 0 };</span>
+<span class="s">int use_ascii (int i) {</span>
+<span class="s">	return ascii_mm[i] + ascii_ii[i];</span>
+<span class="s">}</span>
+<span class="s">short int ebcdic_ii[] = { 0x89D3, 0xE3E3, 0x8593, 0x95C5, 0x89C4, 0x9581, 0 };</span>
+<span class="s">short int ebcdic_mm[] = { 0xC2C9, 0xC785, 0x95C4, 0x8981, 0x95E2, 0xA8E2, 0 };</span>
+<span class="s">int use_ebcdic (int i) {</span>
+<span class="s">	return ebcdic_mm[i] + ebcdic_ii[i];</span>
+<span class="s">}</span>
+<span class="s">extern int foo;</span>
+<span class="s">&#39;&#39;&#39;</span>
+
+<span class="k">class</span> <span class="nc">grep_for_endianness</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="n">color</span> <span class="o">=</span> <span class="s">&#39;PINK&#39;</span>
+	<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">txt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">flags</span><span class="o">=</span><span class="s">&#39;rb&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;iso8859-1&#39;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">txt</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;LiTTleEnDian&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;little&#39;</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="n">txt</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;BIGenDianSyS&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;big&#39;</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;grep_for_endianness&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="grep_for_endianness_fun"><a class="viewcode-back" href="../../../tools/c_tests.html#waflib.Tools.c_tests.grep_for_endianness_fun">[docs]</a><span class="k">def</span> <span class="nf">grep_for_endianness_fun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;grep_for_endianness&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">compiled_tasks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_endianness"><a class="viewcode-back" href="../../../tools/c_tests.html#waflib.Tools.c_tests.check_endianness">[docs]</a><span class="k">def</span> <span class="nf">check_endianness</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Execute a configuration test to determine the endianness</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">def</span> <span class="nf">check_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">fragment</span><span class="o">=</span><span class="n">ENDIAN_FRAGMENT</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="s">&#39;c grep_for_endianness&#39;</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s">&quot;Checking for endianness&quot;</span><span class="p">,</span> <span class="n">define</span><span class="o">=</span><span class="s">&#39;ENDIANNESS&#39;</span><span class="p">,</span> <span class="n">tmp</span><span class="o">=</span><span class="n">tmp</span><span class="p">,</span> <span class="n">okmsg</span><span class="o">=</span><span class="n">check_msg</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

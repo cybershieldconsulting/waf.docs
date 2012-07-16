@@ -1,0 +1,368 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Scripting &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="index.html" />
+    <link rel="next" title="Task" href="Task.html" />
+    <link rel="prev" title="Runner" href="Runner.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Task.html" title="Task"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Runner.html" title="Runner"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Waf v1.7.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Scripting">
+<span id="scripting"></span><h1>Scripting<a class="headerlink" href="#module-waflib.Scripting" title="Permalink to this headline">¶</a></h1>
+<p>Module called for configuring, compiling and installing targets</p>
+<dl class="function">
+<dt id="waflib.Scripting.waf_entry_point">
+<tt class="descclassname">waflib.Scripting.</tt><tt class="descname">waf_entry_point</tt><big>(</big><em>current_directory</em>, <em>version</em>, <em>wafdir</em><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#waf_entry_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.waf_entry_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the main entry point, all Waf execution starts here.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>current_directory</strong> (<em>string</em>) &#8211; absolute path representing the current directory</li>
+<li><strong>version</strong> (<em>string</em>) &#8211; version number</li>
+<li><strong>wafdir</strong> (<em>string</em>) &#8211; absolute path representing the directory of the waf library</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Scripting.set_main_module">
+<tt class="descclassname">waflib.Scripting.</tt><tt class="descname">set_main_module</tt><big>(</big><em>file_path</em><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#set_main_module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.set_main_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the main wscript file into <tt class="xref py py-const docutils literal"><span class="pre">waflib.Context.Context.g_module</span></tt> and
+bind default functions such as <tt class="docutils literal"><span class="pre">init</span></tt>, <tt class="docutils literal"><span class="pre">dist</span></tt>, <tt class="docutils literal"><span class="pre">distclean</span></tt> if not defined.
+Called by <a class="reference internal" href="#waflib.Scripting.waf_entry_point" title="waflib.Scripting.waf_entry_point"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Scripting.waf_entry_point()</span></tt></a> during the initialization.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>file_path</strong> (<em>string</em>) &#8211; absolute path representing the top-level wscript file</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Scripting.parse_options">
+<tt class="descclassname">waflib.Scripting.</tt><tt class="descname">parse_options</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#parse_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.parse_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the command-line options and initialize the logging system.
+Called by <a class="reference internal" href="#waflib.Scripting.waf_entry_point" title="waflib.Scripting.waf_entry_point"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Scripting.waf_entry_point()</span></tt></a> during the initialization.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Scripting.run_command">
+<tt class="descclassname">waflib.Scripting.</tt><tt class="descname">run_command</tt><big>(</big><em>cmd_name</em><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#run_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.run_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute a single command. Called by <a class="reference internal" href="#waflib.Scripting.run_commands" title="waflib.Scripting.run_commands"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Scripting.run_commands()</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cmd_name</strong> (<em>string</em>) &#8211; command to execute, like <tt class="docutils literal"><span class="pre">build</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Scripting.run_commands">
+<tt class="descclassname">waflib.Scripting.</tt><tt class="descname">run_commands</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#run_commands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.run_commands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the commands that were given on the command-line, and the other options
+Called by <a class="reference internal" href="#waflib.Scripting.waf_entry_point" title="waflib.Scripting.waf_entry_point"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Scripting.waf_entry_point()</span></tt></a> during the initialization, and executed
+after <a class="reference internal" href="#waflib.Scripting.parse_options" title="waflib.Scripting.parse_options"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Scripting.parse_options()</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Scripting.distclean_dir">
+<tt class="descclassname">waflib.Scripting.</tt><tt class="descname">distclean_dir</tt><big>(</big><em>dirname</em><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#distclean_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.distclean_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Distclean function called in the particular case when:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">top</span> <span class="o">==</span> <span class="n">out</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dirname</strong> (<em>string</em>) &#8211; absolute path of the folder to clean</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Scripting.distclean">
+<tt class="descclassname">waflib.Scripting.</tt><tt class="descname">distclean</tt><big>(</big><em>ctx</em><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#distclean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.distclean" title="Permalink to this definition">¶</a></dt>
+<dd><p>removes the build directory</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Scripting.Dist">
+<em class="property">class </em><tt class="descclassname">waflib.Scripting.</tt><tt class="descname">Dist</tt><big>(</big><em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#Dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.Dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="Context.html#waflib.Context.Context" title="waflib.Context.Context"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Context.Context</span></tt></a></p>
+<p>Create an archive containing the project source code:</p>
+<div class="highlight-python"><pre>$ waf dist</pre>
+</div>
+<dl class="method">
+<dt id="waflib.Scripting.Dist.execute">
+<tt class="descname">execute</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#Dist.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.Dist.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="Context.html#waflib.Context.Context.execute" title="waflib.Context.Context.execute"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Context.Context.execute()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Scripting.Dist.archive">
+<tt class="descname">archive</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#Dist.archive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.Dist.archive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the archive.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Scripting.Dist.get_tar_path">
+<tt class="descname">get_tar_path</tt><big>(</big><em>node</em><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#Dist.get_tar_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.Dist.get_tar_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the path to use for a node in the tar archive, the purpose of this
+is to let subclases resolve symbolic links or to change file names</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Scripting.Dist.add_tar_file">
+<tt class="descname">add_tar_file</tt><big>(</big><em>x</em>, <em>tar</em><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#Dist.add_tar_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.Dist.add_tar_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a file to the tar archive. Transform symlinks into files if the files lie out of the project tree.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Scripting.Dist.get_arch_name">
+<tt class="descname">get_arch_name</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#Dist.get_arch_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.Dist.get_arch_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the name of the archive to create. Change the default value by setting <em>arch_name</em>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">arch_name</span> <span class="o">=</span> <span class="s">&#39;ctx.tar.bz2&#39;</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Scripting.Dist.get_base_name">
+<tt class="descname">get_base_name</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#Dist.get_base_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.Dist.get_base_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the default name of the main directory in the archive, which is set to <em>appname-version</em>.
+Set the attribute <em>base_name</em> to change the default value:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">base_name</span> <span class="o">=</span> <span class="s">&#39;files&#39;</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Scripting.Dist.get_excl">
+<tt class="descname">get_excl</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#Dist.get_excl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.Dist.get_excl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the patterns to exclude for finding the files in the top-level directory. Set the attribute <em>excl</em>
+to change the default value:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">excl</span> <span class="o">=</span> <span class="s">&#39;build **/*.o **/*.class&#39;</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Scripting.Dist.get_files">
+<tt class="descname">get_files</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#Dist.get_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.Dist.get_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>The files to package are searched automatically by <a class="reference internal" href="Node.html#waflib.Node.Node.ant_glob" title="waflib.Node.Node.ant_glob"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Node.Node.ant_glob()</span></tt></a>. Set
+<em>files</em> to prevent this behaviour:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="s">&#39;wscript&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The files are searched from the directory &#8216;base_path&#8217;, to change it, set:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">base_path</span> <span class="o">=</span> <span class="n">path</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">list of <a class="reference internal" href="Node.html#waflib.Node.Node" title="waflib.Node.Node"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Node.Node</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Scripting.dist">
+<tt class="descclassname">waflib.Scripting.</tt><tt class="descname">dist</tt><big>(</big><em>ctx</em><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>makes a tarball for redistributing the sources</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Scripting.DistCheck">
+<em class="property">class </em><tt class="descclassname">waflib.Scripting.</tt><tt class="descname">DistCheck</tt><big>(</big><em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#DistCheck"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.DistCheck" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#waflib.Scripting.Dist" title="waflib.Scripting.Dist"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Scripting.Dist</span></tt></a></p>
+<p>Create an archive of the project, and try to build the project in a temporary directory:</p>
+<div class="highlight-python"><pre>$ waf distcheck</pre>
+</div>
+<dl class="method">
+<dt id="waflib.Scripting.DistCheck.execute">
+<tt class="descname">execute</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#DistCheck.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.DistCheck.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="Context.html#waflib.Context.Context.execute" title="waflib.Context.Context.execute"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Context.Context.execute()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Scripting.DistCheck.check">
+<tt class="descname">check</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#DistCheck.check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.DistCheck.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the archive, uncompress it and try to build the project</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Scripting.distcheck">
+<tt class="descclassname">waflib.Scripting.</tt><tt class="descname">distcheck</tt><big>(</big><em>ctx</em><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#distcheck"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.distcheck" title="Permalink to this definition">¶</a></dt>
+<dd><p>checks if the project compiles (tarball from &#8216;dist&#8217;)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Scripting.update">
+<tt class="descclassname">waflib.Scripting.</tt><tt class="descname">update</tt><big>(</big><em>ctx</em><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>updates the plugins from the <em>waflib/extras</em> directory</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Scripting.autoconfigure">
+<tt class="descclassname">waflib.Scripting.</tt><tt class="descname">autoconfigure</tt><big>(</big><em>execute_method</em><big>)</big><a class="reference internal" href="_modules/waflib/Scripting.html#autoconfigure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Scripting.autoconfigure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator used to set the commands that can be configured automatically</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Runner.html"
+                        title="previous chapter">Runner</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Task.html"
+                        title="next chapter">Task</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/Scripting.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Task.html" title="Task"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Runner.html" title="Runner"
+             >previous</a> |</li>
+        <li><a href="index.html">Waf v1.7.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

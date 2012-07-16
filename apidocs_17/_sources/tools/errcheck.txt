@@ -1,0 +1,5 @@
+errcheck
+========
+
+.. automodule:: waflib.Tools.errcheck
+

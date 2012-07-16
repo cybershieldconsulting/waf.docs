@@ -1,0 +1,8 @@
+ruby
+====
+
+.. automodule:: waflib.Tools.ruby
+
+Features defined in this module:
+
+* `rubyext <../featuremap.html#feature-rubyext>`_

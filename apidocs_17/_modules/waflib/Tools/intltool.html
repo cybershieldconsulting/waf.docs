@@ -1,0 +1,272 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.intltool &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.intltool</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2006-2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Support for translation tools such as msgfmt and intltool</span>
+
+<span class="sd">Usage::</span>
+
+<span class="sd">	def configure(conf):</span>
+<span class="sd">		conf.load(&#39;gnu_dirs intltool&#39;)</span>
+
+<span class="sd">	def build(bld):</span>
+<span class="sd">		# process the .po files into .gmo files, and install them in LOCALEDIR</span>
+<span class="sd">		bld(features=&#39;intltool_po&#39;, appname=&#39;myapp&#39;, podir=&#39;po&#39;, install_path=&quot;${LOCALEDIR}&quot;)</span>
+
+<span class="sd">		# process an input file, substituting the translations from the po dir</span>
+<span class="sd">		bld(</span>
+<span class="sd">			features  = &quot;intltool_in&quot;,</span>
+<span class="sd">			podir     = &quot;../po&quot;,</span>
+<span class="sd">			flags     = [&quot;-d&quot;, &quot;-q&quot;, &quot;-u&quot;, &quot;-c&quot;],</span>
+<span class="sd">			source    = &#39;kupfer.desktop.in&#39;,</span>
+<span class="sd">			install_path = &quot;${DATADIR}/applications&quot;,</span>
+<span class="sd">		)</span>
+
+<span class="sd">Usage of the :py:mod:`waflib.Tools.gnu_dirs` is recommended, but not obligatory.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Configure</span><span class="p">,</span> <span class="n">TaskGen</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Runner</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Logs</span>
+<span class="kn">import</span> <span class="nn">waflib.Tools.ccroot</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">before_method</span>
+<span class="kn">from</span> <span class="nn">waflib.Logs</span> <span class="kn">import</span> <span class="n">error</span>
+
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;intltool_in&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="apply_intltool_in_f"><a class="viewcode-back" href="../../../tools/intltool.html#waflib.Tools.intltool.apply_intltool_in_f">[docs]</a><span class="k">def</span> <span class="nf">apply_intltool_in_f</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create tasks to translate files by intltool-merge::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld(</span>
+<span class="sd">				features  = &quot;intltool_in&quot;,</span>
+<span class="sd">				podir     = &quot;../po&quot;,</span>
+<span class="sd">				flags     = [&quot;-d&quot;, &quot;-q&quot;, &quot;-u&quot;, &quot;-c&quot;],</span>
+<span class="sd">				source    = &#39;kupfer.desktop.in&#39;,</span>
+<span class="sd">				install_path = &quot;${DATADIR}/applications&quot;,</span>
+<span class="sd">			)</span>
+
+<span class="sd">	:param podir: location of the .po files</span>
+<span class="sd">	:type podir: string</span>
+<span class="sd">	:param source: source files to process</span>
+<span class="sd">	:type source: list of string</span>
+<span class="sd">	:param flags: compilation flags (&quot;-quc&quot; by default)</span>
+<span class="sd">	:type flags: list of string</span>
+<span class="sd">	:param install_path: installation path</span>
+<span class="sd">	:type install_path: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">try</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">meths</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+	<span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> <span class="k">pass</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LOCALEDIR</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LOCALEDIR</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">PREFIX</span> <span class="o">+</span> <span class="s">&#39;/share/locale&#39;</span>
+
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">):</span>
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+		<span class="n">podir</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;podir&#39;</span><span class="p">,</span> <span class="s">&#39;po&#39;</span><span class="p">)</span>
+		<span class="n">podirnode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_dir</span><span class="p">(</span><span class="n">podir</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">podirnode</span><span class="p">:</span>
+			<span class="n">error</span><span class="p">(</span><span class="s">&quot;could not find the podir </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">podir</span><span class="p">)</span>
+			<span class="k">continue</span>
+
+		<span class="n">cache</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;intlcache&#39;</span><span class="p">,</span> <span class="s">&#39;.intlcache&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;INTLCACHE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">bldpath</span><span class="p">(),</span> <span class="n">podir</span><span class="p">,</span> <span class="n">cache</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;INTLPODIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">podirnode</span><span class="o">.</span><span class="n">bldpath</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;INTLFLAGS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;flags&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-q&#39;</span><span class="p">,</span> <span class="s">&#39;-u&#39;</span><span class="p">,</span> <span class="s">&#39;-c&#39;</span><span class="p">])</span>
+
+		<span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;intltool&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">))</span>
+		<span class="n">inst</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;install_path&#39;</span><span class="p">,</span> <span class="s">&#39;${LOCALEDIR}&#39;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">inst</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
+</div>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;intltool_po&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="apply_intltool_po"><a class="viewcode-back" href="../../../tools/intltool.html#waflib.Tools.intltool.apply_intltool_po">[docs]</a><span class="k">def</span> <span class="nf">apply_intltool_po</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create tasks to process po files::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld(features=&#39;intltool_po&#39;, appname=&#39;myapp&#39;, podir=&#39;po&#39;, install_path=&quot;${LOCALEDIR}&quot;)</span>
+
+<span class="sd">	The relevant task generator arguments are:</span>
+
+<span class="sd">	:param podir: directory of the .po files</span>
+<span class="sd">	:type podir: string</span>
+<span class="sd">	:param appname: name of the application</span>
+<span class="sd">	:type appname: string</span>
+<span class="sd">	:param install_path: installation directory</span>
+<span class="sd">	:type install_path: string</span>
+
+<span class="sd">	The file LINGUAS must be present in the directory pointed by *podir* and list the translation files to process.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">try</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">meths</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+	<span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> <span class="k">pass</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LOCALEDIR</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LOCALEDIR</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">PREFIX</span> <span class="o">+</span> <span class="s">&#39;/share/locale&#39;</span>
+
+	<span class="n">appname</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;appname&#39;</span><span class="p">,</span> <span class="s">&#39;set_your_app_name&#39;</span><span class="p">)</span>
+	<span class="n">podir</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;podir&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+	<span class="n">inst</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;install_path&#39;</span><span class="p">,</span> <span class="s">&#39;${LOCALEDIR}&#39;</span><span class="p">)</span>
+
+	<span class="n">linguas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">podir</span><span class="p">,</span> <span class="s">&#39;LINGUAS&#39;</span><span class="p">))</span>
+	<span class="k">if</span> <span class="n">linguas</span><span class="p">:</span>
+		<span class="c"># scan LINGUAS file for locales to process</span>
+		<span class="nb">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">linguas</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+		<span class="n">langs</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+			<span class="c"># ignore lines containing comments</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;#&#39;</span><span class="p">):</span>
+				<span class="n">langs</span> <span class="o">+=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+		<span class="nb">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+		<span class="n">re_linguas</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;[-a-zA-Z_@.]+&#39;</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">langs</span><span class="p">:</span>
+			<span class="c"># Make sure that we only process lines which contain locales</span>
+			<span class="k">if</span> <span class="n">re_linguas</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">lang</span><span class="p">):</span>
+				<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">podir</span><span class="p">,</span> <span class="n">re_linguas</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">lang</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">()</span> <span class="o">+</span> <span class="s">&#39;.po&#39;</span><span class="p">))</span>
+				<span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;po&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.mo&#39;</span><span class="p">))</span>
+
+				<span class="k">if</span> <span class="n">inst</span><span class="p">:</span>
+					<span class="n">filename</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+					<span class="p">(</span><span class="n">langname</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+					<span class="n">inst_file</span> <span class="o">=</span> <span class="n">inst</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">langname</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="s">&#39;LC_MESSAGES&#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">appname</span> <span class="o">+</span> <span class="s">&#39;.mo&#39;</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_as</span><span class="p">(</span><span class="n">inst_file</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">chmod</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;chmod&#39;</span><span class="p">,</span> <span class="n">Utils</span><span class="o">.</span><span class="n">O644</span><span class="p">),</span> <span class="n">env</span><span class="o">=</span><span class="n">task</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">Logs</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="s">&#39;RED&#39;</span><span class="p">,</span> <span class="s">&quot;Error no LINGUAS file found in po directory&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="po"><a class="viewcode-back" href="../../../tools/intltool.html#waflib.Tools.intltool.po">[docs]</a><span class="k">class</span> <span class="nc">po</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Compile .po files into .gmo files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${MSGFMT} -o ${TGT} ${SRC}&#39;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+</div>
+<div class="viewcode-block" id="intltool"><a class="viewcode-back" href="../../../tools/intltool.html#waflib.Tools.intltool.intltool">[docs]</a><span class="k">class</span> <span class="nc">intltool</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Let intltool-merge translate an input file</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${INTLTOOL} ${INTLFLAGS} ${INTLCACHE} ${INTLPODIR} ${SRC} ${TGT}&#39;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+</div>
+<div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/intltool.html#waflib.Tools.intltool.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Detect the program *msgfmt* and set *conf.env.MSGFMT*.</span>
+<span class="sd">	Detect the program *intltool-merge* and set *conf.env.INTLTOOL*.</span>
+<span class="sd">	It is possible to set INTLTOOL in the environment, but it must not have spaces in it::</span>
+
+<span class="sd">		$ INTLTOOL=&quot;/path/to/the program/intltool&quot; waf configure</span>
+
+<span class="sd">	If a C/C++ compiler is present, execute a compilation test to find the header *locale.h*.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;msgfmt&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;MSGFMT&#39;</span><span class="p">)</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_perl_program</span><span class="p">(</span><span class="s">&#39;intltool-merge&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;INTLTOOL&#39;</span><span class="p">)</span>
+
+	<span class="n">prefix</span>  <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">PREFIX</span>
+	<span class="n">datadir</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">DATADIR</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">datadir</span><span class="p">:</span>
+		<span class="n">datadir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span><span class="s">&#39;share&#39;</span><span class="p">)</span>
+
+	<span class="n">conf</span><span class="o">.</span><span class="n">define</span><span class="p">(</span><span class="s">&#39;LOCALEDIR&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span> <span class="s">&#39;locale&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\\\\</span><span class="s">&#39;</span><span class="p">))</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">define</span><span class="p">(</span><span class="s">&#39;DATADIR&#39;</span><span class="p">,</span> <span class="n">datadir</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\\\\</span><span class="s">&#39;</span><span class="p">))</span>
+
+	<span class="k">if</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CC</span> <span class="ow">or</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CXX</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">header_name</span><span class="o">=</span><span class="s">&#39;locale.h&#39;</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

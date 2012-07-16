@@ -1,0 +1,245 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.waf_unit_test &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.waf_unit_test</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Carlos Rafael Giani, 2006</span>
+<span class="c"># Thomas Nagy, 2010</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Unit testing system for C/C++/D providing test execution:</span>
+
+<span class="sd">* in parallel, by using ``waf -j``</span>
+<span class="sd">* partial (only the tests that have changed) or full (by using ``waf --alltests``)</span>
+
+<span class="sd">The tests are declared by adding the **test** feature to programs::</span>
+
+<span class="sd">	def options(opt):</span>
+<span class="sd">		opt.load(&#39;compiler_cxx waf_unit_test&#39;)</span>
+<span class="sd">	def configure(conf):</span>
+<span class="sd">		conf.load(&#39;compiler_cxx waf_unit_test&#39;)</span>
+<span class="sd">	def build(bld):</span>
+<span class="sd">		bld(features=&#39;cxx cxxprogram test&#39;, source=&#39;main.cpp&#39;, target=&#39;app&#39;)</span>
+<span class="sd">		# or</span>
+<span class="sd">		bld.program(features=&#39;test&#39;, source=&#39;main2.cpp&#39;, target=&#39;app2&#39;)</span>
+
+<span class="sd">When the build is executed, the program &#39;test&#39; will be built and executed without arguments.</span>
+<span class="sd">The success/failure is detected by looking at the return code. The status and the standard output/error</span>
+<span class="sd">are stored on the build context.</span>
+
+<span class="sd">The results can be displayed by registering a callback function. Here is how to call</span>
+<span class="sd">the predefined callback::</span>
+
+<span class="sd">	def build(bld):</span>
+<span class="sd">		bld(features=&#39;cxx cxxprogram test&#39;, source=&#39;main.c&#39;, target=&#39;app&#39;)</span>
+<span class="sd">		from waflib.Tools import waf_unit_test</span>
+<span class="sd">		bld.add_post_fun(waf_unit_test.summary)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after_method</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Options</span>
+<span class="n">testlock</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;test&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="make_test"><a class="viewcode-back" href="../../../tools/waf_unit_test.html#waflib.Tools.waf_unit_test.make_test">[docs]</a><span class="k">def</span> <span class="nf">make_test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Create the unit test task. There can be only one unit test task by task generator.&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;link_task&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;utest&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="utest"><a class="viewcode-back" href="../../../tools/waf_unit_test.html#waflib.Tools.waf_unit_test.utest">[docs]</a><span class="k">class</span> <span class="nc">utest</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Execute a unit test</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">color</span> <span class="o">=</span> <span class="s">&#39;PINK&#39;</span>
+	<span class="n">after</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;vnum&#39;</span><span class="p">,</span> <span class="s">&#39;inst&#39;</span><span class="p">]</span>
+	<span class="nb">vars</span> <span class="o">=</span> <span class="p">[]</span>
+<div class="viewcode-block" id="utest.runnable_status"><a class="viewcode-back" href="../../../tools/waf_unit_test.html#waflib.Tools.waf_unit_test.utest.runnable_status">[docs]</a>	<span class="k">def</span> <span class="nf">runnable_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Always execute the task if `waf --alltests` was used</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">utest</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">runnable_status</span><span class="p">()</span>
+		<span class="k">if</span> <span class="n">ret</span> <span class="o">==</span> <span class="n">Task</span><span class="o">.</span><span class="n">SKIP_ME</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="s">&#39;all_tests&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+				<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">RUN_ME</span>
+		<span class="k">return</span> <span class="n">ret</span>
+</div>
+	<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Execute the test. The execution is always successful, but the results</span>
+<span class="sd">		are stored on ``self.generator.bld.utest_results`` for postprocessing.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">ut_exec</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;ut_exec&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">filename</span><span class="p">])</span>
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="p">,</span> <span class="s">&#39;ut_fun&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">ut_fun</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">fu</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="p">,</span> <span class="s">&#39;all_test_paths&#39;</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="n">fu</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">all_test_paths</span> <span class="o">=</span> <span class="n">fu</span>
+
+			<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+			<span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
+				<span class="k">for</span> <span class="n">tg</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+					<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tg</span><span class="p">,</span> <span class="s">&#39;link_task&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+						<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tg</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+
+			<span class="k">def</span> <span class="nf">add_path</span><span class="p">(</span><span class="n">dct</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+				<span class="n">dct</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)])</span>
+
+			<span class="k">if</span> <span class="n">Utils</span><span class="o">.</span><span class="n">is_win32</span><span class="p">:</span>
+				<span class="n">add_path</span><span class="p">(</span><span class="n">fu</span><span class="p">,</span> <span class="n">lst</span><span class="p">,</span> <span class="s">&#39;PATH&#39;</span><span class="p">)</span>
+			<span class="k">elif</span> <span class="n">Utils</span><span class="o">.</span><span class="n">unversioned_sys_platform</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;darwin&#39;</span><span class="p">:</span>
+				<span class="n">add_path</span><span class="p">(</span><span class="n">fu</span><span class="p">,</span> <span class="n">lst</span><span class="p">,</span> <span class="s">&#39;DYLD_LIBRARY_PATH&#39;</span><span class="p">)</span>
+				<span class="n">add_path</span><span class="p">(</span><span class="n">fu</span><span class="p">,</span> <span class="n">lst</span><span class="p">,</span> <span class="s">&#39;LD_LIBRARY_PATH&#39;</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">add_path</span><span class="p">(</span><span class="n">fu</span><span class="p">,</span> <span class="n">lst</span><span class="p">,</span> <span class="s">&#39;LD_LIBRARY_PATH&#39;</span><span class="p">)</span>
+
+
+		<span class="n">cwd</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="p">,</span> <span class="s">&#39;ut_cwd&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+		<span class="n">proc</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ut_exec</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">fu</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+		<span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">)</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+
+		<span class="n">tup</span> <span class="o">=</span> <span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">utest_result</span> <span class="o">=</span> <span class="n">tup</span>
+
+		<span class="n">testlock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span>
+			<span class="n">Logs</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;ut: </span><span class="si">%r</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">tup</span><span class="p">)</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">bld</span><span class="o">.</span><span class="n">utest_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tup</span><span class="p">)</span>
+			<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+				<span class="n">bld</span><span class="o">.</span><span class="n">utest_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">tup</span><span class="p">]</span>
+		<span class="k">finally</span><span class="p">:</span>
+			<span class="n">testlock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="summary"><a class="viewcode-back" href="../../../tools/waf_unit_test.html#waflib.Tools.waf_unit_test.summary">[docs]</a><span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Display an execution summary::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld(features=&#39;cxx cxxprogram test&#39;, source=&#39;main.c&#39;, target=&#39;app&#39;)</span>
+<span class="sd">			from waflib.Tools import waf_unit_test</span>
+<span class="sd">			bld.add_post_fun(waf_unit_test.summary)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">lst</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">bld</span><span class="p">,</span> <span class="s">&#39;utest_results&#39;</span><span class="p">,</span> <span class="p">[])</span>
+	<span class="k">if</span> <span class="n">lst</span><span class="p">:</span>
+		<span class="n">Logs</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="s">&#39;CYAN&#39;</span><span class="p">,</span> <span class="s">&#39;execution summary&#39;</span><span class="p">)</span>
+
+		<span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+		<span class="n">tfail</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lst</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+
+		<span class="n">Logs</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="s">&#39;CYAN&#39;</span><span class="p">,</span> <span class="s">&#39;  tests that pass </span><span class="si">%d</span><span class="s">/</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">total</span><span class="o">-</span><span class="n">tfail</span><span class="p">,</span> <span class="n">total</span><span class="p">))</span>
+		<span class="k">for</span> <span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">code</span><span class="p">:</span>
+				<span class="n">Logs</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="s">&#39;CYAN&#39;</span><span class="p">,</span> <span class="s">&#39;    </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">f</span><span class="p">)</span>
+
+		<span class="n">Logs</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="s">&#39;CYAN&#39;</span><span class="p">,</span> <span class="s">&#39;  tests that fail </span><span class="si">%d</span><span class="s">/</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tfail</span><span class="p">,</span> <span class="n">total</span><span class="p">))</span>
+		<span class="k">for</span> <span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">code</span><span class="p">:</span>
+				<span class="n">Logs</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="s">&#39;CYAN&#39;</span><span class="p">,</span> <span class="s">&#39;    </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">f</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="options"><a class="viewcode-back" href="../../../tools/waf_unit_test.html#waflib.Tools.waf_unit_test.options">[docs]</a><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Provide the ``--alltests`` command-line option.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--alltests&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;Exec all unit tests&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;all_tests&#39;</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

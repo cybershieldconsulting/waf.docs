@@ -1,0 +1,10 @@
+fc_config
+=========
+
+.. automodule:: waflib.Tools.fc_config
+
+Features defined in this module:
+
+* `link_main_routines_func <../featuremap.html#feature-link_main_routines_func>`_
+
+* `pyext <../featuremap.html#feature-pyext>`_

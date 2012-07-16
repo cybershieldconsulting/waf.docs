@@ -1,0 +1,564 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.fc_config &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.fc_config</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># DC 2008</span>
+<span class="c"># Thomas Nagy 2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Fortran configuration helpers</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">shutil</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">string</span><span class="o">,</span> <span class="nn">shlex</span>
+<span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after_method</span><span class="p">,</span> <span class="n">before_method</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Utils</span>
+
+<span class="n">FC_FRAGMENT</span> <span class="o">=</span> <span class="s">&#39;        program main</span><span class="se">\n</span><span class="s">        end     program main</span><span class="se">\n</span><span class="s">&#39;</span>
+<span class="n">FC_FRAGMENT2</span> <span class="o">=</span> <span class="s">&#39;        PROGRAM MAIN</span><span class="se">\n</span><span class="s">        END</span><span class="se">\n</span><span class="s">&#39;</span> <span class="c"># what&#39;s the actual difference between these?</span>
+
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="fc_flags"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.fc_flags">[docs]</a><span class="k">def</span> <span class="nf">fc_flags</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Define common fortran configuration flags and file extensions</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FC_SRC_F&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FC_TGT_F&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;-o&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCINCPATH_ST&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="s">&#39;-I</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCDEFINES_ST&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="s">&#39;-D</span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;LINK_FC&#39;</span><span class="p">]:</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;LINK_FC&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;FC&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCLNK_SRC_F&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCLNK_TGT_F&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-o&#39;</span><span class="p">]</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCFLAGS_fcshlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fpic&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_fcshlib&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-shared&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;fcshlib_PATTERN&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.so&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;fcstlib_PATTERN&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.a&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCLIB_ST&#39;</span><span class="p">]</span>       <span class="o">=</span> <span class="s">&#39;-l</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCLIBPATH_ST&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;-L</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCSTLIB_ST&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="s">&#39;-l</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCSTLIBPATH_ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;-L</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCSTLIB_MARKER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;-Wl,-Bstatic&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCSHLIB_MARKER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;-Wl,-Bdynamic&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SONAME_ST&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="s">&#39;-Wl,-h,</span><span class="si">%s</span><span class="s">&#39;</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="fc_add_flags"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.fc_add_flags">[docs]</a><span class="k">def</span> <span class="nf">fc_add_flags</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	FCFLAGS?</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">add_os_flags</span><span class="p">(</span><span class="s">&#39;FCFLAGS&#39;</span><span class="p">)</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">add_os_flags</span><span class="p">(</span><span class="s">&#39;LDFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;LINKFLAGS&#39;</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_fortran"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.check_fortran">[docs]</a><span class="k">def</span> <span class="nf">check_fortran</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;See if the fortran compiler works by compiling a simple fortran program&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">check_cc</span><span class="p">(</span>
+		<span class="n">fragment</span>         <span class="o">=</span> <span class="n">FC_FRAGMENT</span><span class="p">,</span>
+		<span class="n">compile_filename</span> <span class="o">=</span> <span class="s">&#39;test.f&#39;</span><span class="p">,</span>
+		<span class="n">features</span>         <span class="o">=</span> <span class="s">&#39;fc fcprogram&#39;</span><span class="p">,</span>
+		<span class="n">msg</span>              <span class="o">=</span> <span class="s">&#39;Compiling a simple fortran app&#39;</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_fc"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.check_fc">[docs]</a><span class="k">def</span> <span class="nf">check_fc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Same as :py:func:`waflib.Tools.c_config.check` but default to the *Fortran* programming language</span>
+<span class="sd">	(Overriding the C defaults in :py:func:`waflib.Tools.c_config.validate_c` here)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">kw</span><span class="p">[</span><span class="s">&#39;compiler&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;fc&#39;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;compile_mode&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;compile_mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;fc&#39;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;type&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;fcprogram&#39;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;compile_filename&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;compile_filename&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;test.f90&#39;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;code&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;code&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">FC_FRAGMENT</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+<span class="c"># ------------------------------------------------------------------------</span>
+<span class="c"># --- These are the default platform modifiers, refactored here for</span>
+<span class="c">#     convenience.  gfortran and g95 have much overlap.</span>
+<span class="c"># ------------------------------------------------------------------------</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="fortran_modifier_darwin"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.fortran_modifier_darwin">[docs]</a><span class="k">def</span> <span class="nf">fortran_modifier_darwin</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Define fortran flags and extensions for the OSX systems</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCFLAGS_fcshlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fPIC&#39;</span><span class="p">,</span> <span class="s">&#39;-compatibility_version&#39;</span><span class="p">,</span> <span class="s">&#39;1&#39;</span><span class="p">,</span> <span class="s">&#39;-current_version&#39;</span><span class="p">,</span> <span class="s">&#39;1&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_fcshlib&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-dynamiclib&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;fcshlib_PATTERN&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.dylib&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FRAMEWORKPATH_ST&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="s">&#39;-F</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FRAMEWORK_ST&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="s">&#39;-framework </span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_fcstlib&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCSHLIB_MARKER&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCSTLIB_MARKER&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;SONAME_ST&#39;</span><span class="p">]</span>         <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="fortran_modifier_win32"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.fortran_modifier_win32">[docs]</a><span class="k">def</span> <span class="nf">fortran_modifier_win32</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Define fortran flags for the windows platforms&quot;&quot;&quot;</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;fcprogram_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;fcprogram_test_PATTERN&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.exe&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;fcshlib_PATTERN&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.dll&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;implib_PATTERN&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.dll.a&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;IMPLIB_ST&#39;</span><span class="p">]</span>         <span class="o">=</span> <span class="s">&#39;-Wl,--out-implib,</span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCFLAGS_fcshlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[]</span>
+
+	<span class="n">v</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;FCFLAGS_fcshlib&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-DDLL_EXPORT&#39;</span><span class="p">])</span> <span class="c"># TODO adding nonstandard defines like this DLL_EXPORT is not a good idea</span>
+
+	<span class="c"># Auto-import is enabled by default even without this option,</span>
+	<span class="c"># but enabling it explicitly has the nice effect of suppressing the rather boring, debug-level messages</span>
+	<span class="c"># that the linker emits otherwise.</span>
+	<span class="n">v</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-Wl,--enable-auto-import&#39;</span><span class="p">])</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="fortran_modifier_cygwin"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.fortran_modifier_cygwin">[docs]</a><span class="k">def</span> <span class="nf">fortran_modifier_cygwin</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Define fortran flags for use on cygwin&quot;&quot;&quot;</span>
+	<span class="n">fortran_modifier_win32</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;fcshlib_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;cyg</span><span class="si">%s</span><span class="s">.dll&#39;</span>
+	<span class="n">v</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;LINKFLAGS_fcshlib&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-Wl,--enable-auto-image-base&#39;</span><span class="p">])</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCFLAGS_fcshlib&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="c"># ------------------------------------------------------------------------</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_fortran_dummy_main"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.check_fortran_dummy_main">[docs]</a><span class="k">def</span> <span class="nf">check_fortran_dummy_main</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Guess if a main function is needed by compiling a code snippet with</span>
+<span class="sd">	the C compiler and link with the Fortran compiler</span>
+
+<span class="sd">	TODO: (DC)</span>
+<span class="sd">	- handling dialects (F77, F90, etc... -&gt; needs core support first)</span>
+<span class="sd">	- fix dummy main check (AC_FC_DUMMY_MAIN vs AC_FC_MAIN)</span>
+
+<span class="sd">	TODO: what does the above mean? (ita)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CC</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;A c compiler is required for check_fortran_dummy_main&#39;</span><span class="p">)</span>
+
+	<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;MAIN__&#39;</span><span class="p">,</span> <span class="s">&#39;__MAIN&#39;</span><span class="p">,</span> <span class="s">&#39;_MAIN&#39;</span><span class="p">,</span> <span class="s">&#39;MAIN_&#39;</span><span class="p">,</span> <span class="s">&#39;MAIN&#39;</span><span class="p">]</span>
+	<span class="n">lst</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">])</span>
+	<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">start_msg</span><span class="p">(</span><span class="s">&#39;Detecting whether we need a dummy main&#39;</span><span class="p">)</span>
+	<span class="k">for</span> <span class="n">main</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;fortran_main&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">main</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">check_cc</span><span class="p">(</span>
+				<span class="n">fragment</span> <span class="o">=</span> <span class="s">&#39;int </span><span class="si">%s</span><span class="s">() { return 0; }</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">main</span> <span class="ow">or</span> <span class="s">&#39;test&#39;</span><span class="p">),</span>
+				<span class="n">features</span> <span class="o">=</span> <span class="s">&#39;c fcprogram&#39;</span><span class="p">,</span>
+				<span class="n">mandatory</span> <span class="o">=</span> <span class="bp">True</span>
+			<span class="p">)</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">main</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">FC_MAIN</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="s">&#39;no&#39;</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">FC_MAIN</span> <span class="o">=</span> <span class="n">main</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="s">&#39;yes </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">main</span><span class="p">)</span>
+			<span class="k">break</span>
+		<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+			<span class="k">pass</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="s">&#39;not found&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not detect whether fortran requires a dummy main, see the config.log&#39;</span><span class="p">)</span>
+
+<span class="c"># ------------------------------------------------------------------------</span>
+</div>
+<span class="n">GCC_DRIVER_LINE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^Driving:&#39;</span><span class="p">)</span>
+<span class="n">POSIX_STATIC_EXT</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;\S+\.a&#39;</span><span class="p">)</span>
+<span class="n">POSIX_LIB_FLAGS</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;-l\S+&#39;</span><span class="p">)</span>
+
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="is_link_verbose"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.is_link_verbose">[docs]</a><span class="k">def</span> <span class="nf">is_link_verbose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Return True if &#39;useful&#39; link options can be found in txt&quot;&quot;&quot;</span>
+	<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+	<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">txt</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">GCC_DRIVER_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+			<span class="k">if</span> <span class="n">POSIX_STATIC_EXT</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="ow">or</span> <span class="n">POSIX_LIB_FLAGS</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+				<span class="k">return</span> <span class="bp">True</span>
+	<span class="k">return</span> <span class="bp">False</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_fortran_verbose_flag"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.check_fortran_verbose_flag">[docs]</a><span class="k">def</span> <span class="nf">check_fortran_verbose_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Check what kind of verbose (-v) flag works, then set it to env.FC_VERBOSE_FLAG</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">start_msg</span><span class="p">(</span><span class="s">&#39;fortran link verbose flag&#39;</span><span class="p">)</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;-v&#39;</span><span class="p">,</span> <span class="s">&#39;--verbose&#39;</span><span class="p">,</span> <span class="s">&#39;-verbose&#39;</span><span class="p">,</span> <span class="s">&#39;-V&#39;</span><span class="p">]:</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">check_cc</span><span class="p">(</span>
+				<span class="n">features</span> <span class="o">=</span> <span class="s">&#39;fc fcprogram_test&#39;</span><span class="p">,</span>
+				<span class="n">fragment</span> <span class="o">=</span> <span class="n">FC_FRAGMENT2</span><span class="p">,</span>
+				<span class="n">compile_filename</span> <span class="o">=</span> <span class="s">&#39;test.f&#39;</span><span class="p">,</span>
+				<span class="n">linkflags</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">],</span>
+				<span class="n">mandatory</span><span class="o">=</span><span class="bp">True</span>
+				<span class="p">)</span>
+		<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="c"># output is on stderr or stdout (for xlf)</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_link_verbose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_bld</span><span class="o">.</span><span class="n">err</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_link_verbose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_bld</span><span class="o">.</span><span class="n">out</span><span class="p">):</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+				<span class="k">break</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="s">&#39;failure&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;Could not obtain the fortran link verbose flag (see config.log)&#39;</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">FC_VERBOSE_FLAG</span> <span class="o">=</span> <span class="n">x</span>
+	<span class="k">return</span> <span class="n">x</span>
+
+<span class="c"># ------------------------------------------------------------------------</span>
+
+<span class="c"># linkflags which match those are ignored</span></div>
+<span class="n">LINKFLAGS_IGNORED</span> <span class="o">=</span> <span class="p">[</span><span class="s">r&#39;-lang*&#39;</span><span class="p">,</span> <span class="s">r&#39;-lcrt[a-zA-Z0-9\.]*\.o&#39;</span><span class="p">,</span> <span class="s">r&#39;-lc$&#39;</span><span class="p">,</span> <span class="s">r&#39;-lSystem&#39;</span><span class="p">,</span> <span class="s">r&#39;-libmil&#39;</span><span class="p">,</span> <span class="s">r&#39;-LIST:*&#39;</span><span class="p">,</span> <span class="s">r&#39;-LNO:*&#39;</span><span class="p">]</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&#39;nt&#39;</span><span class="p">:</span>
+	<span class="n">LINKFLAGS_IGNORED</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s">r&#39;-lfrt*&#39;</span><span class="p">,</span> <span class="s">r&#39;-luser32&#39;</span><span class="p">,</span> <span class="s">r&#39;-lkernel32&#39;</span><span class="p">,</span> <span class="s">r&#39;-ladvapi32&#39;</span><span class="p">,</span> <span class="s">r&#39;-lmsvcrt&#39;</span><span class="p">,</span> <span class="s">r&#39;-lshell32&#39;</span><span class="p">,</span> <span class="s">r&#39;-lmingw&#39;</span><span class="p">,</span> <span class="s">r&#39;-lmoldname&#39;</span><span class="p">])</span>
+<span class="k">else</span><span class="p">:</span>
+	<span class="n">LINKFLAGS_IGNORED</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">r&#39;-lgcc*&#39;</span><span class="p">)</span>
+<span class="n">RLINKFLAGS_IGNORED</span> <span class="o">=</span> <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">LINKFLAGS_IGNORED</span><span class="p">]</span>
+
+<div class="viewcode-block" id="_match_ignore"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config._match_ignore">[docs]</a><span class="k">def</span> <span class="nf">_match_ignore</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Returns True if the line should be ignored (fortran test for verbosity).&quot;&quot;&quot;</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">RLINKFLAGS_IGNORED</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">True</span>
+	<span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="parse_fortran_link"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.parse_fortran_link">[docs]</a><span class="k">def</span> <span class="nf">parse_fortran_link</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Given the output of verbose link of Fortran compiler, this returns a</span>
+<span class="sd">	list of flags necessary for linking using the standard linker.&quot;&quot;&quot;</span>
+	<span class="c"># TODO: On windows ?</span>
+	<span class="n">final_flags</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">GCC_DRIVER_LINE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+			<span class="n">_parse_flink_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">final_flags</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">final_flags</span>
+</div>
+<span class="n">SPACE_OPTS</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^-[LRuYz]$&#39;</span><span class="p">)</span>
+<span class="n">NOSPACE_OPTS</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^-[RL]&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="_parse_flink_line"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config._parse_flink_line">[docs]</a><span class="k">def</span> <span class="nf">_parse_flink_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">final_flags</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;private&quot;&quot;&quot;</span>
+	<span class="n">lexer</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">shlex</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">posix</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+	<span class="n">lexer</span><span class="o">.</span><span class="n">whitespace_split</span> <span class="o">=</span> <span class="bp">True</span>
+
+	<span class="n">t</span> <span class="o">=</span> <span class="n">lexer</span><span class="o">.</span><span class="n">get_token</span><span class="p">()</span>
+	<span class="n">tmp_flags</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">while</span> <span class="n">t</span><span class="p">:</span>
+		<span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+			<span class="c"># Here we go (convention for wildcard is shell, not regex !)</span>
+			<span class="c">#   1 TODO: we first get some root .a libraries</span>
+			<span class="c">#   2 TODO: take everything starting by -bI:*</span>
+			<span class="c">#   3 Ignore the following flags: -lang* | -lcrt*.o | -lc |</span>
+			<span class="c">#   -lgcc* | -lSystem | -libmil | -LANG:=* | -LIST:* | -LNO:*)</span>
+			<span class="c">#   4 take into account -lkernel32</span>
+			<span class="c">#   5 For options of the kind -[[LRuYz]], as they take one argument</span>
+			<span class="c">#   after, the actual option is the next token</span>
+			<span class="c">#   6 For -YP,*: take and replace by -Larg where arg is the old</span>
+			<span class="c">#   argument</span>
+			<span class="c">#   7 For -[lLR]*: take</span>
+
+			<span class="c"># step 3</span>
+			<span class="k">if</span> <span class="n">_match_ignore</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+				<span class="k">pass</span>
+			<span class="c"># step 4</span>
+			<span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;-lkernel32&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&#39;cygwin&#39;</span><span class="p">:</span>
+				<span class="n">tmp_flags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+			<span class="c"># step 5</span>
+			<span class="k">elif</span> <span class="n">SPACE_OPTS</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+				<span class="n">t</span> <span class="o">=</span> <span class="n">lexer</span><span class="o">.</span><span class="n">get_token</span><span class="p">()</span>
+				<span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;P,&#39;</span><span class="p">):</span>
+					<span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+				<span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">):</span>
+					<span class="n">tmp_flags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;-L</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">opt</span><span class="p">)</span>
+			<span class="c"># step 6</span>
+			<span class="k">elif</span> <span class="n">NOSPACE_OPTS</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+				<span class="n">tmp_flags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+			<span class="c"># step 7</span>
+			<span class="k">elif</span> <span class="n">POSIX_LIB_FLAGS</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+				<span class="n">tmp_flags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="c"># ignore anything not explicitely taken into account</span>
+				<span class="k">pass</span>
+
+			<span class="n">t</span> <span class="o">=</span> <span class="n">lexer</span><span class="o">.</span><span class="n">get_token</span><span class="p">()</span>
+			<span class="k">return</span> <span class="n">t</span>
+		<span class="n">t</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+	<span class="n">final_flags</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tmp_flags</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">final_flags</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_fortran_clib"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.check_fortran_clib">[docs]</a><span class="k">def</span> <span class="nf">check_fortran_clib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">autoadd</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Obtain the flags for linking with the C library</span>
+<span class="sd">	if this check works, add uselib=&#39;CLIB&#39; to your task generators</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">FC_VERBOSE_FLAG</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;env.FC_VERBOSE_FLAG is not set: execute check_fortran_verbose_flag?&#39;</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">start_msg</span><span class="p">(</span><span class="s">&#39;Getting fortran runtime link flags&#39;</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">check_cc</span><span class="p">(</span>
+			<span class="n">fragment</span> <span class="o">=</span> <span class="n">FC_FRAGMENT2</span><span class="p">,</span>
+			<span class="n">compile_filename</span> <span class="o">=</span> <span class="s">&#39;test.f&#39;</span><span class="p">,</span>
+			<span class="n">features</span> <span class="o">=</span> <span class="s">&#39;fc fcprogram_test&#39;</span><span class="p">,</span>
+			<span class="n">linkflags</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">FC_VERBOSE_FLAG</span><span class="p">]</span>
+		<span class="p">)</span>
+	<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;mandatory&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">):</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;Could not find the c library flags&#39;</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_bld</span><span class="o">.</span><span class="n">err</span>
+		<span class="n">flags</span> <span class="o">=</span> <span class="n">parse_fortran_link</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="s">&#39;ok (</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">flags</span><span class="p">))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LINKFLAGS_CLIB</span> <span class="o">=</span> <span class="n">flags</span>
+		<span class="k">return</span> <span class="n">flags</span>
+	<span class="k">return</span> <span class="p">[]</span>
+</div>
+<div class="viewcode-block" id="getoutput"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.getoutput">[docs]</a><span class="k">def</span> <span class="nf">getoutput</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	TODO a bit redundant, can be removed anytime</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="n">stdin</span><span class="p">:</span>
+		<span class="n">stdin</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">stdin</span> <span class="o">=</span> <span class="bp">None</span>
+	<span class="n">env</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span> <span class="ow">or</span> <span class="bp">None</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">p</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="n">stdin</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">stdin</span><span class="p">:</span>
+			<span class="n">p</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+		<span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+	<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not determine the compiler version </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">cmd</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+		<span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">encoding</span> <span class="ow">or</span> <span class="s">&#39;iso8859-1&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+		<span class="n">err</span> <span class="o">=</span> <span class="n">err</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">encoding</span> <span class="ow">or</span> <span class="s">&#39;iso8859-1&#39;</span><span class="p">)</span>
+	<span class="k">return</span> <span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+
+<span class="c"># ------------------------------------------------------------------------</span>
+</div>
+<span class="n">ROUTINES_CODE</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">      subroutine foobar()</span>
+<span class="s">      return</span>
+<span class="s">      end</span>
+<span class="s">      subroutine foo_bar()</span>
+<span class="s">      return</span>
+<span class="s">      end</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+<span class="n">MAIN_CODE</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">void </span><span class="si">%(dummy_func_nounder)s</span><span class="s">(void);</span>
+<span class="s">void </span><span class="si">%(dummy_func_under)s</span><span class="s">(void);</span>
+<span class="s">int </span><span class="si">%(main_func_name)s</span><span class="s">() {</span>
+<span class="s">  </span><span class="si">%(dummy_func_nounder)s</span><span class="s">();</span>
+<span class="s">  </span><span class="si">%(dummy_func_under)s</span><span class="s">();</span>
+<span class="s">  return 0;</span>
+<span class="s">}</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;link_main_routines_func&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="link_main_routines_tg_method"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.link_main_routines_tg_method">[docs]</a><span class="k">def</span> <span class="nf">link_main_routines_tg_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	The configuration test declares a unique task generator,</span>
+<span class="sd">	so we create other task generators from there for fortran link tests</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">write_test_file</span><span class="p">(</span><span class="n">task</span><span class="p">):</span>
+		<span class="n">task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+	<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span>
+	<span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="n">write_test_file</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;main.c&#39;</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="n">MAIN_CODE</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">)</span>
+	<span class="n">bld</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="n">write_test_file</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;test.f&#39;</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="n">ROUTINES_CODE</span><span class="p">)</span>
+	<span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;fc fcstlib&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;test.f&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;test&#39;</span><span class="p">)</span>
+	<span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;c fcprogram&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;main.c&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;app&#39;</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s">&#39;test&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="mangling_schemes"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.mangling_schemes">[docs]</a><span class="k">def</span> <span class="nf">mangling_schemes</span><span class="p">():</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Generate triplets for use with mangle_name</span>
+<span class="sd">	(used in check_fortran_mangling)</span>
+<span class="sd">	the order is tuned for gfortan</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;_&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]:</span>
+		<span class="k">for</span> <span class="n">du</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="p">]:</span>
+			<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&quot;lower&quot;</span><span class="p">,</span> <span class="s">&quot;upper&quot;</span><span class="p">]:</span>
+				<span class="k">yield</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">du</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="mangle_name"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.mangle_name">[docs]</a><span class="k">def</span> <span class="nf">mangle_name</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">du</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Mangle a name from a triplet (used in check_fortran_mangling)&quot;&quot;&quot;</span>
+	<span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">c</span><span class="p">)()</span> <span class="o">+</span> <span class="n">u</span> <span class="o">+</span> <span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">du</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_fortran_mangling"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.check_fortran_mangling">[docs]</a><span class="k">def</span> <span class="nf">check_fortran_mangling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Detect the mangling scheme, sets FORTRAN_MANGLING to the triplet found</span>
+
+<span class="sd">	This test will compile a fortran static library, then link a c app against it</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CC</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;A c compiler is required for link_main_routines&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">FC</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;A fortran compiler is required for link_main_routines&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">FC_MAIN</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;Checking for mangling requires self.env.FC_MAIN (execute &quot;check_fortran_dummy_main&quot; first?)&#39;</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">start_msg</span><span class="p">(</span><span class="s">&#39;Getting fortran mangling scheme&#39;</span><span class="p">)</span>
+	<span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">du</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="ow">in</span> <span class="n">mangling_schemes</span><span class="p">():</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">check_cc</span><span class="p">(</span>
+				<span class="n">compile_filename</span> <span class="o">=</span> <span class="p">[],</span>
+				<span class="n">features</span>         <span class="o">=</span> <span class="s">&#39;link_main_routines_func&#39;</span><span class="p">,</span>
+				<span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;nomsg&#39;</span><span class="p">,</span>
+				<span class="n">errmsg</span> <span class="o">=</span> <span class="s">&#39;nomsg&#39;</span><span class="p">,</span>
+				<span class="n">mandatory</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+				<span class="n">dummy_func_nounder</span> <span class="o">=</span> <span class="n">mangle_name</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">du</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="s">&quot;foobar&quot;</span><span class="p">),</span>
+				<span class="n">dummy_func_under</span>   <span class="o">=</span> <span class="n">mangle_name</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">du</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="s">&quot;foo_bar&quot;</span><span class="p">),</span>
+				<span class="n">main_func_name</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">FC_MAIN</span>
+			<span class="p">)</span>
+		<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="s">&quot;ok (&#39;</span><span class="si">%s</span><span class="s">&#39;, &#39;</span><span class="si">%s</span><span class="s">&#39;, &#39;</span><span class="si">%s</span><span class="s">-case&#39;)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">du</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">FORTRAN_MANGLING</span> <span class="o">=</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">du</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+			<span class="k">break</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;mangler not found&#39;</span><span class="p">)</span>
+
+	<span class="k">return</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">du</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+</div>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;pyext&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">,</span> <span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="set_lib_pat"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat">[docs]</a><span class="k">def</span> <span class="nf">set_lib_pat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Set the fortran flags for linking with the python library&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;fcshlib_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;pyext_PATTERN&#39;</span><span class="p">]</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="detect_openmp"><a class="viewcode-back" href="../../../tools/fc_config.html#waflib.Tools.fc_config.detect_openmp">[docs]</a><span class="k">def</span> <span class="nf">detect_openmp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;-fopenmp&#39;</span><span class="p">,</span><span class="s">&#39;-openmp&#39;</span><span class="p">,</span><span class="s">&#39;-mp&#39;</span><span class="p">,</span><span class="s">&#39;-xopenmp&#39;</span><span class="p">,</span><span class="s">&#39;-omp&#39;</span><span class="p">,</span><span class="s">&#39;-qsmp=omp&#39;</span><span class="p">]:</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">check_fc</span><span class="p">(</span>
+				<span class="n">msg</span><span class="o">=</span><span class="s">&#39;Checking for OpenMP flag </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span><span class="p">,</span>
+				<span class="n">fragment</span><span class="o">=</span><span class="s">&#39;program main</span><span class="se">\n</span><span class="s">  call omp_get_num_threads()</span><span class="se">\n</span><span class="s">end program main&#39;</span><span class="p">,</span>
+				<span class="n">fcflags</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+				<span class="n">linkflags</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+				<span class="n">uselib_store</span><span class="o">=</span><span class="s">&#39;OPENMP&#39;</span>
+			<span class="p">)</span>
+		<span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">break</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;Could not find OpenMP&#39;</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

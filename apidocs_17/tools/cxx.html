@@ -1,0 +1,266 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>cxx &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../index.html" />
+    <link rel="up" title="Waf Tools" href="../tools.html" />
+    <link rel="next" title="c_config" href="c_config.html" />
+    <link rel="prev" title="c" href="c.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="c_config.html" title="c_config"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="c.html" title="c"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Tools.cxx">
+<span id="cxx"></span><h1>cxx<a class="headerlink" href="#module-waflib.Tools.cxx" title="Permalink to this headline">¶</a></h1>
+<p>Base for c++ programs and libraries</p>
+<dl class="function">
+<dt id="waflib.Tools.cxx.cxx_hook">
+<tt class="descclassname">waflib.Tools.cxx.</tt><tt class="descname">cxx_hook</tt><big>(</big><em>self</em>, <em>node</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/cxx.html#cxx_hook"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.cxx.cxx_hook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bind the c++ file extensions to the creation of a <a class="reference internal" href="#waflib.Tools.cxx.cxx" title="waflib.Tools.cxx.cxx"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.cxx.cxx</span></tt></a> instance</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.cxx.cxx">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.cxx.</tt><tt class="descname">cxx</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/cxx.html#cxx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.cxx.cxx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
+<p>Compile C++ files into object files</p>
+<dl class="method">
+<dt id="waflib.Tools.cxx.cxx.scan">
+<tt class="descname">scan</tt><big>(</big><em>task</em><big>)</big><a class="headerlink" href="#waflib.Tools.cxx.cxx.scan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the dependencies using a c/c++ preprocessor, this is required for finding dependencies of the kind:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#include some_macro()</span>
+</pre></div>
+</div>
+<p>This function is bound as a task method on <a class="reference internal" href="c.html#waflib.Tools.c.c" title="waflib.Tools.c.c"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.c.c</span></tt></a> and <a class="reference internal" href="#waflib.Tools.cxx.cxx" title="waflib.Tools.cxx.cxx"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.cxx.cxx</span></tt></a> for example</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.cxx.cxx.exec_command">
+<tt class="descname">exec_command</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.cxx.cxx.exec_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the command-line execution for msvc programs.
+Instead of quoting all the paths and keep using the shell, we can just join the options msvc is interested in</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.cxx.cxx.exec_mf">
+<tt class="descname">exec_mf</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Tools.cxx.cxx.exec_mf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the manifest file</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.cxx.cxxprogram">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.cxx.</tt><tt class="descname">cxxprogram</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/cxx.html#cxxprogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.cxx.cxxprogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ccroot.html#waflib.Tools.ccroot.link_task" title="waflib.Tools.ccroot.link_task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.ccroot.link_task</span></tt></a></p>
+<p>Link object files into a c++ program</p>
+<dl class="method">
+<dt id="waflib.Tools.cxx.cxxprogram.exec_command">
+<tt class="descname">exec_command</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.cxx.cxxprogram.exec_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the command-line execution for msvc programs.
+Instead of quoting all the paths and keep using the shell, we can just join the options msvc is interested in</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.cxx.cxxprogram.exec_mf">
+<tt class="descname">exec_mf</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Tools.cxx.cxxprogram.exec_mf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the manifest file</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.cxx.cxxshlib">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.cxx.</tt><tt class="descname">cxxshlib</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/cxx.html#cxxshlib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.cxx.cxxshlib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#waflib.Tools.cxx.cxxprogram" title="waflib.Tools.cxx.cxxprogram"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.cxx.cxxprogram</span></tt></a></p>
+<p>Link object files into a c++ shared library</p>
+<dl class="method">
+<dt id="waflib.Tools.cxx.cxxshlib.exec_command">
+<tt class="descname">exec_command</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.cxx.cxxshlib.exec_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the command-line execution for msvc programs.
+Instead of quoting all the paths and keep using the shell, we can just join the options msvc is interested in</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.cxx.cxxshlib.exec_mf">
+<tt class="descname">exec_mf</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Tools.cxx.cxxshlib.exec_mf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the manifest file</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.cxx.cxxstlib">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.cxx.</tt><tt class="descname">cxxstlib</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/cxx.html#cxxstlib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.cxx.cxxstlib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ccroot.html#waflib.Tools.ccroot.stlink_task" title="waflib.Tools.ccroot.stlink_task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.ccroot.stlink_task</span></tt></a></p>
+<p>Link object files into a c++ static library</p>
+<dl class="method">
+<dt id="waflib.Tools.cxx.cxxstlib.exec_command">
+<tt class="descname">exec_command</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.cxx.cxxstlib.exec_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the command-line execution for msvc programs.
+Instead of quoting all the paths and keep using the shell, we can just join the options msvc is interested in</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.cxx.cxxstlib.exec_mf">
+<tt class="descname">exec_mf</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Tools.cxx.cxxstlib.exec_mf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the manifest file</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.cxx.stlink_task">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.cxx.</tt><tt class="descname">stlink_task</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.cxx.stlink_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ccroot.html#waflib.Tools.ccroot.link_task" title="waflib.Tools.ccroot.link_task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.ccroot.link_task</span></tt></a></p>
+<p>Base for static link tasks, which use <em>ar</em> most of the time.
+The target is always removed before being written.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Tools.cxx.link_task">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.cxx.</tt><tt class="descname">link_task</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.cxx.link_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
+<p>Base class for all link tasks. A task generator is supposed to have at most one link task bound in the attribute <em>link_task</em>. See <a class="reference internal" href="ccroot.html#waflib.Tools.ccroot.apply_link" title="waflib.Tools.ccroot.apply_link"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Tools.ccroot.apply_link()</span></tt></a>.</p>
+<p class="graphviz">
+<img src="../_images/inheritance-87858de8d1dbe8bfecc3a15ee7533f8c2f93fdea.png" alt="Inheritance diagram of waflib.Tools.ccroot.stlink_task, waflib.Tools.c.cprogram, waflib.Tools.c.cshlib, waflib.Tools.cxx.cxxstlib, waflib.Tools.cxx.cxxprogram, waflib.Tools.cxx.cxxshlib, waflib.Tools.d.dprogram, waflib.Tools.d.dshlib, waflib.Tools.d.dstlib, waflib.Tools.ccroot.fake_shlib, waflib.Tools.ccroot.fake_stlib, waflib.Tools.asm.asmprogram, waflib.Tools.asm.asmshlib, waflib.Tools.asm.asmstlib" usemap="#inheritance733d6de23e" class="inheritance"/>
+<map id="inheritance733d6de23e" name="inheritance733d6de23e">
+<area shape="rect" id="node1" href="../Task.html#waflib.Task.evil" title="waflib.Task.evil" alt="" coords="4,171,74,187"/>
+<area shape="rect" id="node31" href="../Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase" alt="" coords="104,171,197,187"/>
+<area shape="rect" id="node2" href="d.html#waflib.Tools.d.dstlib" title="waflib.Tools.d.dstlib" alt="" coords="659,3,747,19"/>
+<area shape="rect" id="node3" href="ccroot.html#waflib.Tools.ccroot.stlink_task" title="waflib.Tools.ccroot.stlink_task" alt="" coords="482,64,610,80"/>
+<area shape="rect" id="node15" href="asm.html#waflib.Tools.asm.asmstlib" title="waflib.Tools.asm.asmstlib" alt="" coords="646,33,759,49"/>
+<area shape="rect" id="node19" href="#waflib.Tools.cxx.cxxstlib" title="waflib.Tools.cxx.cxxstlib" alt="" coords="651,64,755,80"/>
+<area shape="rect" id="node26" href="ccroot.html#waflib.Tools.ccroot.fake_stlib" title="waflib.Tools.ccroot.fake_stlib" alt="" coords="641,94,765,110"/>
+<area shape="rect" id="node5" href="ccroot.html#waflib.Tools.ccroot.link_task" title="waflib.Tools.ccroot.link_task" alt="" coords="331,171,452,187"/>
+<area shape="rect" id="node9" href="asm.html#waflib.Tools.asm.asmprogram" title="waflib.Tools.asm.asmprogram" alt="" coords="481,125,611,140"/>
+<area shape="rect" id="node12" href="#waflib.Tools.cxx.cxxprogram" title="waflib.Tools.cxx.cxxprogram" alt="" coords="485,155,607,171"/>
+<area shape="rect" id="node22" href="c.html#waflib.Tools.c.cprogram" title="waflib.Tools.c.cprogram" alt="" coords="494,186,599,201"/>
+<area shape="rect" id="node24" href="ccroot.html#waflib.Tools.ccroot.fake_shlib" title="waflib.Tools.ccroot.fake_shlib" alt="" coords="484,216,609,232"/>
+<area shape="rect" id="node29" href="d.html#waflib.Tools.d.dprogram" title="waflib.Tools.d.dprogram" alt="" coords="494,247,599,262"/>
+<area shape="rect" id="node6" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task" alt="" coords="228,171,301,187"/>
+<area shape="rect" id="node17" href="asm.html#waflib.Tools.asm.asmshlib" title="waflib.Tools.asm.asmshlib" alt="" coords="646,125,760,140"/>
+<area shape="rect" id="node11" href="#waflib.Tools.cxx.cxxshlib" title="waflib.Tools.cxx.cxxshlib" alt="" coords="650,155,756,171"/>
+<area shape="rect" id="node21" href="c.html#waflib.Tools.c.cshlib" title="waflib.Tools.c.cshlib" alt="" coords="659,186,747,201"/>
+<area shape="rect" id="node28" href="d.html#waflib.Tools.d.dshlib" title="waflib.Tools.d.dshlib" alt="" coords="658,247,748,262"/>
+</map>
+</p>
+<dl class="method">
+<dt id="waflib.Tools.cxx.link_task.add_target">
+<tt class="descname">add_target</tt><big>(</big><em>target</em><big>)</big><a class="headerlink" href="#waflib.Tools.cxx.link_task.add_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process the <em>target</em> attribute to add the platform-specific prefix/suffix such as <em>.so</em> or <em>.exe</em>.
+The settings are retrieved from <tt class="docutils literal"><span class="pre">env.clsname_PATTERN</span></tt></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="c.html"
+                        title="previous chapter">c</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="c_config.html"
+                        title="next chapter">c_config</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tools/cxx.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="c_config.html" title="c_config"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="c.html" title="c"
+             >previous</a> |</li>
+        <li><a href="../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

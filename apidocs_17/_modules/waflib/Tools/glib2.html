@@ -1,0 +1,474 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.glib2 &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.glib2</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2006-2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Support for GLib2 tools:</span>
+
+<span class="sd">* marshal</span>
+<span class="sd">* enums</span>
+<span class="sd">* gsettings</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Errors</span><span class="p">,</span> <span class="n">Logs</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">taskgen_method</span><span class="p">,</span> <span class="n">before_method</span><span class="p">,</span> <span class="n">after_method</span><span class="p">,</span> <span class="n">feature</span>
+
+<span class="c">################## marshal files</span>
+
+<span class="nd">@taskgen_method</span>
+<div class="viewcode-block" id="add_marshal_file"><a class="viewcode-back" href="../../../tools/glib2.html#waflib.Tools.glib2.add_marshal_file">[docs]</a><span class="k">def</span> <span class="nf">add_marshal_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Add a file to the list of marshal files to process. Store them in the attribute *marshal_list*.</span>
+
+<span class="sd">	:param filename: xml file to compile</span>
+<span class="sd">	:type filename: string</span>
+<span class="sd">	:param prefix: marshal prefix (--prefix=prefix)</span>
+<span class="sd">	:type prefix: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;marshal_list&#39;</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">marshal_list</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">meths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;process_marshal&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">marshal_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">filename</span><span class="p">,</span> <span class="n">prefix</span><span class="p">))</span>
+</div>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="process_marshal"><a class="viewcode-back" href="../../../tools/glib2.html#waflib.Tools.glib2.process_marshal">[docs]</a><span class="k">def</span> <span class="nf">process_marshal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process the marshal files stored in the attribute *marshal_list* to create :py:class:`waflib.Tools.glib2.glib_genmarshal` instances.</span>
+<span class="sd">	Add the c file created to the list of source to process.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;marshal_list&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;file not found </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">f</span><span class="p">)</span>
+
+		<span class="n">h_node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.h&#39;</span><span class="p">)</span>
+		<span class="n">c_node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.c&#39;</span><span class="p">)</span>
+
+		<span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;glib_genmarshal&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="p">[</span><span class="n">h_node</span><span class="p">,</span> <span class="n">c_node</span><span class="p">])</span>
+		<span class="n">task</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">GLIB_GENMARSHAL_PREFIX</span> <span class="o">=</span> <span class="n">prefix</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_nodes</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;source&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c_node</span><span class="p">)</span>
+</div>
+<span class="k">class</span> <span class="nc">glib_genmarshal</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+		<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">ctx</span>
+
+		<span class="n">get</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get_flat</span>
+		<span class="n">cmd1</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> --prefix=</span><span class="si">%s</span><span class="s"> --header &gt; </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+			<span class="n">get</span><span class="p">(</span><span class="s">&#39;GLIB_GENMARSHAL&#39;</span><span class="p">),</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">srcpath</span><span class="p">(),</span>
+			<span class="n">get</span><span class="p">(</span><span class="s">&#39;GLIB_GENMARSHAL_PREFIX&#39;</span><span class="p">),</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+		<span class="p">)</span>
+
+		<span class="n">ret</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="n">cmd1</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">ret</span><span class="p">:</span> <span class="k">return</span> <span class="n">ret</span>
+
+		<span class="c">#print self.outputs[1].abspath()</span>
+		<span class="n">c</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;#include &quot;</span><span class="si">%s</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&#39;&#39;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+		<span class="n">cmd2</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> --prefix=</span><span class="si">%s</span><span class="s"> --body &gt;&gt; </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+			<span class="n">get</span><span class="p">(</span><span class="s">&#39;GLIB_GENMARSHAL&#39;</span><span class="p">),</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">srcpath</span><span class="p">(),</span>
+			<span class="n">get</span><span class="p">(</span><span class="s">&#39;GLIB_GENMARSHAL_PREFIX&#39;</span><span class="p">),</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+		<span class="p">)</span>
+		<span class="k">return</span> <span class="n">bld</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="n">cmd2</span><span class="p">)</span>
+
+	<span class="nb">vars</span>    <span class="o">=</span> <span class="p">[</span><span class="s">&#39;GLIB_GENMARSHAL_PREFIX&#39;</span><span class="p">,</span> <span class="s">&#39;GLIB_GENMARSHAL&#39;</span><span class="p">]</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+	<span class="n">ext_out</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.h&#39;</span><span class="p">]</span>
+
+<span class="c">########################## glib-mkenums</span>
+
+<span class="nd">@taskgen_method</span>
+<div class="viewcode-block" id="add_enums_from_template"><a class="viewcode-back" href="../../../tools/glib2.html#waflib.Tools.glib2.add_enums_from_template">[docs]</a><span class="k">def</span> <span class="nf">add_enums_from_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">template</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Add a file to the list of enum files to process. Store them in the attribute *enums_list*.</span>
+
+<span class="sd">	:param source: enum file to process</span>
+<span class="sd">	:type source: string</span>
+<span class="sd">	:param target: target file</span>
+<span class="sd">	:type target: string</span>
+<span class="sd">	:param template: template file</span>
+<span class="sd">	:type template: string</span>
+<span class="sd">	:param comments: comments</span>
+<span class="sd">	:type comments: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;enums_list&#39;</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">enums_list</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">meths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;process_enums&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">enums_list</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s">&#39;source&#39;</span><span class="p">:</span> <span class="n">source</span><span class="p">,</span>
+	                        <span class="s">&#39;target&#39;</span><span class="p">:</span> <span class="n">target</span><span class="p">,</span>
+	                        <span class="s">&#39;template&#39;</span><span class="p">:</span> <span class="n">template</span><span class="p">,</span>
+	                        <span class="s">&#39;file-head&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+	                        <span class="s">&#39;file-prod&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+	                        <span class="s">&#39;file-tail&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+	                        <span class="s">&#39;enum-prod&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+	                        <span class="s">&#39;value-head&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+	                        <span class="s">&#39;value-prod&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+	                        <span class="s">&#39;value-tail&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+	                        <span class="s">&#39;comments&#39;</span><span class="p">:</span> <span class="n">comments</span><span class="p">})</span>
+</div>
+<span class="nd">@taskgen_method</span>
+<div class="viewcode-block" id="add_enums"><a class="viewcode-back" href="../../../tools/glib2.html#waflib.Tools.glib2.add_enums">[docs]</a><span class="k">def</span> <span class="nf">add_enums</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span>
+              <span class="n">file_head</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">file_prod</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">file_tail</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">enum_prod</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span>
+              <span class="n">value_head</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">value_prod</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">value_tail</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Add a file to the list of enum files to process. Store them in the attribute *enums_list*.</span>
+
+<span class="sd">	:param source: enum file to process</span>
+<span class="sd">	:type source: string</span>
+<span class="sd">	:param target: target file</span>
+<span class="sd">	:type target: string</span>
+<span class="sd">	:param file_head: unused</span>
+<span class="sd">	:param file_prod: unused</span>
+<span class="sd">	:param file_tail: unused</span>
+<span class="sd">	:param enum_prod: unused</span>
+<span class="sd">	:param value_head: unused</span>
+<span class="sd">	:param value_prod: unused</span>
+<span class="sd">	:param value_tail: unused</span>
+<span class="sd">	:param comments: comments</span>
+<span class="sd">	:type comments: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;enums_list&#39;</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">enums_list</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">meths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;process_enums&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">enums_list</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s">&#39;source&#39;</span><span class="p">:</span> <span class="n">source</span><span class="p">,</span>
+	                        <span class="s">&#39;template&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+	                        <span class="s">&#39;target&#39;</span><span class="p">:</span> <span class="n">target</span><span class="p">,</span>
+	                        <span class="s">&#39;file-head&#39;</span><span class="p">:</span> <span class="n">file_head</span><span class="p">,</span>
+	                        <span class="s">&#39;file-prod&#39;</span><span class="p">:</span> <span class="n">file_prod</span><span class="p">,</span>
+	                        <span class="s">&#39;file-tail&#39;</span><span class="p">:</span> <span class="n">file_tail</span><span class="p">,</span>
+	                        <span class="s">&#39;enum-prod&#39;</span><span class="p">:</span> <span class="n">enum_prod</span><span class="p">,</span>
+	                        <span class="s">&#39;value-head&#39;</span><span class="p">:</span> <span class="n">value_head</span><span class="p">,</span>
+	                        <span class="s">&#39;value-prod&#39;</span><span class="p">:</span> <span class="n">value_prod</span><span class="p">,</span>
+	                        <span class="s">&#39;value-tail&#39;</span><span class="p">:</span> <span class="n">value_tail</span><span class="p">,</span>
+	                        <span class="s">&#39;comments&#39;</span><span class="p">:</span> <span class="n">comments</span><span class="p">})</span>
+</div>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="process_enums"><a class="viewcode-back" href="../../../tools/glib2.html#waflib.Tools.glib2.process_enums">[docs]</a><span class="k">def</span> <span class="nf">process_enums</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process the enum files stored in the attribute *enum_list* to create :py:class:`waflib.Tools.glib2.glib_mkenums` instances.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">for</span> <span class="n">enum</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;enums_list&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+		<span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;glib_mkenums&#39;</span><span class="p">)</span>
+		<span class="n">env</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">env</span>
+
+		<span class="n">inputs</span> <span class="o">=</span> <span class="p">[]</span>
+
+		<span class="c"># process the source</span>
+		<span class="n">source_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">enum</span><span class="p">[</span><span class="s">&#39;source&#39;</span><span class="p">])</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">source_list</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;missing source &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">enum</span><span class="p">))</span>
+		<span class="n">source_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">source_list</span><span class="p">]</span>
+		<span class="n">inputs</span> <span class="o">+=</span> <span class="n">source_list</span>
+		<span class="n">env</span><span class="p">[</span><span class="s">&#39;GLIB_MKENUMS_SOURCE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">source_list</span><span class="p">]</span>
+
+		<span class="c"># find the target</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">enum</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">]:</span>
+			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;missing target &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">enum</span><span class="p">))</span>
+		<span class="n">tgt_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="n">enum</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">])</span>
+		<span class="k">if</span> <span class="n">tgt_node</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.c&#39;</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tgt_node</span><span class="p">)</span>
+		<span class="n">env</span><span class="p">[</span><span class="s">&#39;GLIB_MKENUMS_TARGET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tgt_node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+
+
+		<span class="n">options</span> <span class="o">=</span> <span class="p">[]</span>
+
+		<span class="k">if</span> <span class="n">enum</span><span class="p">[</span><span class="s">&#39;template&#39;</span><span class="p">]:</span> <span class="c"># template, if provided</span>
+			<span class="n">template_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">enum</span><span class="p">[</span><span class="s">&#39;template&#39;</span><span class="p">])</span>
+			<span class="n">options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;--template </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">template_node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()))</span>
+			<span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">template_node</span><span class="p">)</span>
+		<span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;file-head&#39;</span> <span class="p">:</span> <span class="s">&#39;--fhead&#39;</span><span class="p">,</span>
+		           <span class="s">&#39;file-prod&#39;</span> <span class="p">:</span> <span class="s">&#39;--fprod&#39;</span><span class="p">,</span>
+		           <span class="s">&#39;file-tail&#39;</span> <span class="p">:</span> <span class="s">&#39;--ftail&#39;</span><span class="p">,</span>
+		           <span class="s">&#39;enum-prod&#39;</span> <span class="p">:</span> <span class="s">&#39;--eprod&#39;</span><span class="p">,</span>
+		           <span class="s">&#39;value-head&#39;</span> <span class="p">:</span> <span class="s">&#39;--vhead&#39;</span><span class="p">,</span>
+		           <span class="s">&#39;value-prod&#39;</span> <span class="p">:</span> <span class="s">&#39;--vprod&#39;</span><span class="p">,</span>
+		           <span class="s">&#39;value-tail&#39;</span> <span class="p">:</span> <span class="s">&#39;--vtail&#39;</span><span class="p">,</span>
+		           <span class="s">&#39;comments&#39;</span><span class="p">:</span> <span class="s">&#39;--comments&#39;</span><span class="p">}</span>
+		<span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+			<span class="k">if</span> <span class="n">enum</span><span class="p">[</span><span class="n">param</span><span class="p">]:</span>
+				<span class="n">options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">option</span><span class="p">,</span> <span class="n">enum</span><span class="p">[</span><span class="n">param</span><span class="p">]))</span>
+
+		<span class="n">env</span><span class="p">[</span><span class="s">&#39;GLIB_MKENUMS_OPTIONS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+
+		<span class="c"># update the task instance</span>
+		<span class="n">task</span><span class="o">.</span><span class="n">set_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+		<span class="n">task</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">tgt_node</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="glib_mkenums"><a class="viewcode-back" href="../../../tools/glib2.html#waflib.Tools.glib2.glib_mkenums">[docs]</a><span class="k">class</span> <span class="nc">glib_mkenums</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process enum files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${GLIB_MKENUMS} ${GLIB_MKENUMS_OPTIONS} ${GLIB_MKENUMS_SOURCE} &gt; ${GLIB_MKENUMS_TARGET}&#39;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;PINK&#39;</span>
+	<span class="n">ext_out</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.h&#39;</span><span class="p">]</span>
+
+<span class="c">######################################### gsettings</span>
+</div>
+<span class="nd">@taskgen_method</span>
+<div class="viewcode-block" id="add_settings_schemas"><a class="viewcode-back" href="../../../tools/glib2.html#waflib.Tools.glib2.add_settings_schemas">[docs]</a><span class="k">def</span> <span class="nf">add_settings_schemas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename_list</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Add settings files to process, add them to *settings_schema_files*</span>
+
+<span class="sd">	:param filename_list: files</span>
+<span class="sd">	:type filename_list: list of string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;settings_schema_files&#39;</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">settings_schema_files</span> <span class="o">=</span> <span class="p">[]</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">filename_list</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+		<span class="n">filename_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">filename_list</span><span class="p">]</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">settings_schema_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">filename_list</span><span class="p">)</span>
+</div>
+<span class="nd">@taskgen_method</span>
+<div class="viewcode-block" id="add_settings_enums"><a class="viewcode-back" href="../../../tools/glib2.html#waflib.Tools.glib2.add_settings_enums">[docs]</a><span class="k">def</span> <span class="nf">add_settings_enums</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">namespace</span><span class="p">,</span> <span class="n">filename_list</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	This function may be called only once by task generator to set the enums namespace.</span>
+
+<span class="sd">	:param namespace: namespace</span>
+<span class="sd">	:type namespace: string</span>
+<span class="sd">	:param filename_list: enum files to process</span>
+<span class="sd">	:type filename_list: file list</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;settings_enum_namespace&#39;</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&quot;Tried to add gsettings enums to &#39;</span><span class="si">%s</span><span class="s">&#39; more than once&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">settings_enum_namespace</span> <span class="o">=</span> <span class="n">namespace</span>
+
+	<span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">filename_list</span><span class="p">)</span> <span class="o">!=</span> <span class="s">&#39;list&#39;</span><span class="p">:</span>
+		<span class="n">filename_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">filename_list</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">settings_enum_files</span> <span class="o">=</span> <span class="n">filename_list</span>
+
+</div>
+<div class="viewcode-block" id="r_change_ext"><a class="viewcode-back" href="../../../tools/glib2.html#waflib.Tools.glib2.r_change_ext">[docs]</a><span class="k">def</span> <span class="nf">r_change_ext</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ext</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Change the extension from the *last* dot in the filename. The gsettings schemas</span>
+<span class="sd">	often have names of the form org.gsettings.test.gschema.xml</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+	<span class="n">k</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+		<span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[:</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">ext</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="n">ext</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">([</span><span class="n">name</span><span class="p">])</span>
+</div>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;glib2&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="process_settings"><a class="viewcode-back" href="../../../tools/glib2.html#waflib.Tools.glib2.process_settings">[docs]</a><span class="k">def</span> <span class="nf">process_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process the schema files in *settings_schema_files* to create :py:class:`waflib.Tools.glib2.glib_mkenums` instances. The</span>
+<span class="sd">	same files are validated through :py:class:`waflib.Tools.glib2.glib_validate_schema` tasks.</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">enums_tgt_node</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">install_files</span> <span class="o">=</span> <span class="p">[]</span>
+
+	<span class="n">settings_schema_files</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;settings_schema_files&#39;</span><span class="p">,</span> <span class="p">[])</span>
+	<span class="k">if</span> <span class="n">settings_schema_files</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;GLIB_COMPILE_SCHEMAS&#39;</span><span class="p">]:</span>
+		<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span> <span class="p">(</span><span class="s">&quot;Unable to process GSettings schemas - glib-compile-schemas was not found during configure&quot;</span><span class="p">)</span>
+
+	<span class="c"># 1. process gsettings_enum_files (generate .enums.xml)</span>
+	<span class="c">#</span>
+	<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;settings_enum_files&#39;</span><span class="p">):</span>
+		<span class="n">enums_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;glib_mkenums&#39;</span><span class="p">)</span>
+
+		<span class="n">source_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings_enum_files</span>
+		<span class="n">source_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">source_list</span><span class="p">]</span>
+		<span class="n">enums_task</span><span class="o">.</span><span class="n">set_inputs</span><span class="p">(</span><span class="n">source_list</span><span class="p">)</span>
+		<span class="n">enums_task</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;GLIB_MKENUMS_SOURCE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">source_list</span><span class="p">]</span>
+
+		<span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings_enum_namespace</span> <span class="o">+</span> <span class="s">&#39;.enums.xml&#39;</span>
+		<span class="n">tgt_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+		<span class="n">enums_task</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">tgt_node</span><span class="p">)</span>
+		<span class="n">enums_task</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;GLIB_MKENUMS_TARGET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tgt_node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+		<span class="n">enums_tgt_node</span> <span class="o">=</span> <span class="p">[</span><span class="n">tgt_node</span><span class="p">]</span>
+
+		<span class="n">install_files</span><span class="o">.</span><span class="n">append</span> <span class="p">(</span><span class="n">tgt_node</span><span class="p">)</span>
+
+		<span class="n">options</span> <span class="o">=</span> <span class="s">&#39;--comments &quot;&lt;!-- @comment@ --&gt;&quot; --fhead &quot;&lt;schemalist&gt;&quot; --vhead &quot;  &lt;@type@ id=</span><span class="se">\\</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">.@EnumName@</span><span class="se">\\</span><span class="s">&quot;&gt;&quot; --vprod &quot;    &lt;value nick=</span><span class="se">\\</span><span class="s">&quot;@valuenick@</span><span class="se">\\</span><span class="s">&quot; value=</span><span class="se">\\</span><span class="s">&quot;@valuenum@</span><span class="se">\\</span><span class="s">&quot;/&gt;&quot; --vtail &quot;  &lt;/@type@&gt;&quot; --ftail &quot;&lt;/schemalist&gt;&quot; &#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings_enum_namespace</span><span class="p">)</span>
+		<span class="n">enums_task</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;GLIB_MKENUMS_OPTIONS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">options</span>
+
+	<span class="c"># 2. process gsettings_schema_files (validate .gschema.xml files)</span>
+	<span class="c">#</span>
+	<span class="k">for</span> <span class="n">schema</span> <span class="ow">in</span> <span class="n">settings_schema_files</span><span class="p">:</span>
+		<span class="n">schema_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span> <span class="p">(</span><span class="s">&#39;glib_validate_schema&#39;</span><span class="p">)</span>
+
+		<span class="n">schema_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">schema_node</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&quot;Cannot find the schema file &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">schema</span><span class="p">)</span>
+		<span class="n">install_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">schema_node</span><span class="p">)</span>
+		<span class="n">source_list</span> <span class="o">=</span> <span class="n">enums_tgt_node</span> <span class="o">+</span> <span class="p">[</span><span class="n">schema_node</span><span class="p">]</span>
+
+		<span class="n">schema_task</span><span class="o">.</span><span class="n">set_inputs</span> <span class="p">(</span><span class="n">source_list</span><span class="p">)</span>
+		<span class="n">schema_task</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;GLIB_COMPILE_SCHEMAS_OPTIONS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&quot;--schema-file=&quot;</span> <span class="o">+</span> <span class="n">k</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">source_list</span><span class="p">]</span>
+
+		<span class="n">target_node</span> <span class="o">=</span> <span class="n">r_change_ext</span> <span class="p">(</span><span class="n">schema_node</span><span class="p">,</span> <span class="s">&#39;.xml.valid&#39;</span><span class="p">)</span>
+		<span class="n">schema_task</span><span class="o">.</span><span class="n">set_outputs</span> <span class="p">(</span><span class="n">target_node</span><span class="p">)</span>
+		<span class="n">schema_task</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;GLIB_VALIDATE_SCHEMA_OUTPUT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+
+	<span class="c"># 3. schemas install task</span>
+	<span class="k">def</span> <span class="nf">compile_schemas_callback</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">bld</span><span class="o">.</span><span class="n">is_install</span><span class="p">:</span> <span class="k">return</span>
+		<span class="n">Logs</span><span class="o">.</span><span class="n">pprint</span> <span class="p">(</span><span class="s">&#39;YELLOW&#39;</span><span class="p">,</span><span class="s">&#39;Updating GSettings schema cache&#39;</span><span class="p">)</span>
+		<span class="n">command</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subst_vars</span><span class="p">(</span><span class="s">&quot;${GLIB_COMPILE_SCHEMAS} ${GSETTINGSSCHEMADIR}&quot;</span><span class="p">,</span> <span class="n">bld</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">is_install</span><span class="p">:</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;GSETTINGSSCHEMADIR&#39;</span><span class="p">]:</span>
+			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span> <span class="p">(</span><span class="s">&#39;GSETTINGSSCHEMADIR not defined (should have been set up automatically during configure)&#39;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="n">install_files</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;GSETTINGSSCHEMADIR&#39;</span><span class="p">],</span> <span class="n">install_files</span><span class="p">)</span>
+
+			<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="p">,</span> <span class="s">&#39;_compile_schemas_registered&#39;</span><span class="p">):</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">add_post_fun</span> <span class="p">(</span><span class="n">compile_schemas_callback</span><span class="p">)</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">_compile_schemas_registered</span> <span class="o">=</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="glib_validate_schema"><a class="viewcode-back" href="../../../tools/glib2.html#waflib.Tools.glib2.glib_validate_schema">[docs]</a><span class="k">class</span> <span class="nc">glib_validate_schema</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Validate schema files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;rm -f ${GLIB_VALIDATE_SCHEMA_OUTPUT} &amp;&amp; ${GLIB_COMPILE_SCHEMAS} --dry-run ${GLIB_COMPILE_SCHEMAS_OPTIONS} &amp;&amp; touch ${GLIB_VALIDATE_SCHEMA_OUTPUT}&#39;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;PINK&#39;</span>
+</div>
+<div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/glib2.html#waflib.Tools.glib2.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Find the following programs:</span>
+
+<span class="sd">	* *glib-genmarshal* and set *GLIB_GENMARSHAL*</span>
+<span class="sd">	* *glib-mkenums* and set *GLIB_MKENUMS*</span>
+<span class="sd">	* *glib-compile-schemas* and set *GLIB_COMPILE_SCHEMAS* (not mandatory)</span>
+
+<span class="sd">	And set the variable *GSETTINGSSCHEMADIR*</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;glib-genmarshal&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;GLIB_GENMARSHAL&#39;</span><span class="p">)</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_perl_program</span><span class="p">(</span><span class="s">&#39;glib-mkenums&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;GLIB_MKENUMS&#39;</span><span class="p">)</span>
+
+	<span class="c"># when cross-compiling, gsettings.m4 locates the program with the following:</span>
+	<span class="c">#   pkg-config --variable glib_compile_schemas gio-2.0</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;glib-compile-schemas&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;GLIB_COMPILE_SCHEMAS&#39;</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">getstr</span><span class="p">(</span><span class="n">varname</span><span class="p">):</span>
+		<span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">,</span><span class="n">varname</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">))</span>
+
+	<span class="c"># TODO make this dependent on the gnu_dirs tool?</span>
+	<span class="n">gsettingsschemadir</span> <span class="o">=</span> <span class="n">getstr</span><span class="p">(</span><span class="s">&#39;GSETTINGSSCHEMADIR&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">gsettingsschemadir</span><span class="p">:</span>
+		<span class="n">datadir</span> <span class="o">=</span> <span class="n">getstr</span><span class="p">(</span><span class="s">&#39;DATADIR&#39;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">datadir</span><span class="p">:</span>
+			<span class="n">prefix</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PREFIX&#39;</span><span class="p">]</span>
+			<span class="n">datadir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="s">&#39;share&#39;</span><span class="p">)</span>
+		<span class="n">gsettingsschemadir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span> <span class="s">&#39;glib-2.0&#39;</span><span class="p">,</span> <span class="s">&#39;schemas&#39;</span><span class="p">)</span>
+
+	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;GSETTINGSSCHEMADIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gsettingsschemadir</span>
+</div>
+<div class="viewcode-block" id="options"><a class="viewcode-back" href="../../../tools/glib2.html#waflib.Tools.glib2.options">[docs]</a><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Add the ``--gsettingsschemadir`` command-line option</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--gsettingsschemadir&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;GSettings schema location [Default: ${datadir}/glib-2.0/schemas]&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span><span class="n">dest</span><span class="o">=</span><span class="s">&#39;GSETTINGSSCHEMADIR&#39;</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

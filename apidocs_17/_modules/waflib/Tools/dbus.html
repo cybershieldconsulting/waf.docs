@@ -1,0 +1,166 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.dbus &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.dbus</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Ali Sabil, 2007</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Compile dbus files with **dbus-binding-tool**</span>
+
+<span class="sd">Typical usage::</span>
+
+<span class="sd">	def options(opt):</span>
+<span class="sd">		opt.load(&#39;compiler_c dbus&#39;)</span>
+<span class="sd">	def configure(conf):</span>
+<span class="sd">		conf.load(&#39;compiler_c dbus&#39;)</span>
+<span class="sd">	def build(bld):</span>
+<span class="sd">		tg = bld.program(</span>
+<span class="sd">			includes = &#39;.&#39;,</span>
+<span class="sd">			source = bld.path.ant_glob(&#39;*.c&#39;),</span>
+<span class="sd">			target = &#39;gnome-hello&#39;)</span>
+<span class="sd">		tg.add_dbus_file(&#39;test.xml&#39;, &#39;test_prefix&#39;, &#39;glib-server&#39;)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">taskgen_method</span><span class="p">,</span> <span class="n">before_method</span>
+
+<span class="nd">@taskgen_method</span>
+<div class="viewcode-block" id="add_dbus_file"><a class="viewcode-back" href="../../../tools/dbus.html#waflib.Tools.dbus.add_dbus_file">[docs]</a><span class="k">def</span> <span class="nf">add_dbus_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Add a dbus file to the list of dbus files to process. Store them in the attribute *dbus_lst*.</span>
+
+<span class="sd">	:param filename: xml file to compile</span>
+<span class="sd">	:type filename: string</span>
+<span class="sd">	:param prefix: dbus binding tool prefix (--prefix=prefix)</span>
+<span class="sd">	:type prefix: string</span>
+<span class="sd">	:param mode: dbus binding tool mode (--mode=mode)</span>
+<span class="sd">	:type mode: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;dbus_lst&#39;</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">dbus_lst</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;process_dbus&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">meths</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">meths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;process_dbus&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">dbus_lst</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">filename</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">mode</span><span class="p">])</span>
+</div>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;apply_core&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="process_dbus"><a class="viewcode-back" href="../../../tools/dbus.html#waflib.Tools.dbus.process_dbus">[docs]</a><span class="k">def</span> <span class="nf">process_dbus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process the dbus files stored in the attribute *dbus_lst* to create :py:class:`waflib.Tools.dbus.dbus_binding_tool` instances.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">mode</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;dbus_lst&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;file not found &#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">)</span>
+		<span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;dbus_binding_tool&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.h&#39;</span><span class="p">))</span>
+		<span class="n">tsk</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">DBUS_BINDING_TOOL_PREFIX</span> <span class="o">=</span> <span class="n">prefix</span>
+		<span class="n">tsk</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">DBUS_BINDING_TOOL_MODE</span>   <span class="o">=</span> <span class="n">mode</span>
+</div>
+<div class="viewcode-block" id="dbus_binding_tool"><a class="viewcode-back" href="../../../tools/dbus.html#waflib.Tools.dbus.dbus_binding_tool">[docs]</a><span class="k">class</span> <span class="nc">dbus_binding_tool</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Compile a dbus file</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+	<span class="n">ext_out</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.h&#39;</span><span class="p">]</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${DBUS_BINDING_TOOL} --prefix=${DBUS_BINDING_TOOL_PREFIX} --mode=${DBUS_BINDING_TOOL_MODE} --output=${TGT} ${SRC}&#39;</span>
+	<span class="n">shell</span>   <span class="o">=</span> <span class="bp">True</span> <span class="c"># temporary workaround for #795</span>
+</div>
+<div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/dbus.html#waflib.Tools.dbus.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Detect the program dbus-binding-tool and set the *conf.env.DBUS_BINDING_TOOL*</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">dbus_binding_tool</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;dbus-binding-tool&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;DBUS_BINDING_TOOL&#39;</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

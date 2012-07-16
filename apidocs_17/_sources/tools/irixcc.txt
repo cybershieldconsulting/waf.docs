@@ -1,0 +1,5 @@
+irixcc
+======
+
+.. automodule:: waflib.Tools.irixcc
+

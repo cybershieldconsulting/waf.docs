@@ -1,0 +1,8 @@
+kde4
+====
+
+.. automodule:: waflib.Tools.kde4
+
+Features defined in this module:
+
+* `msgfmt <../featuremap.html#feature-msgfmt>`_

@@ -1,0 +1,8 @@
+tex
+===
+
+.. automodule:: waflib.Tools.tex
+
+Features defined in this module:
+
+* `tex <../featuremap.html#feature-tex>`_

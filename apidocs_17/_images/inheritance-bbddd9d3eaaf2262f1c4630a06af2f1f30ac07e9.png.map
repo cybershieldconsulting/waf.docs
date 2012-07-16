@@ -1,0 +1,13 @@
+<map id="inheritance4b7d10a9a3" name="inheritance4b7d10a9a3">
+<area shape="rect" id="node1" href="Scripting.html#waflib.Scripting.Dist" title="waflib.Scripting.Dist" alt="" coords="306,20,404,37"/>
+<area shape="rect" id="node15" href="Scripting.html#waflib.Scripting.DistCheck" title="waflib.Scripting.DistCheck" alt="" coords="474,3,597,20"/>
+<area shape="rect" id="node2" href="#waflib.Context.Context" title="waflib.Context.Context" alt="" coords="126,69,236,86"/>
+<area shape="rect" id="node5" href="Build.html#waflib.Build.BuildContext" title="waflib.Build.BuildContext" alt="" coords="296,69,414,86"/>
+<area shape="rect" id="node9" href="Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext" alt="" coords="268,102,442,118"/>
+<area shape="rect" id="node4" href="Build.html#waflib.Build.CleanContext" title="waflib.Build.CleanContext" alt="" coords="475,36,596,53"/>
+<area shape="rect" id="node11" href="Build.html#waflib.Build.ListContext" title="waflib.Build.ListContext" alt="" coords="480,69,592,86"/>
+<area shape="rect" id="node13" href="Build.html#waflib.Build.InstallContext" title="waflib.Build.InstallContext" alt="" coords="475,102,596,118"/>
+<area shape="rect" id="node20" href="Build.html#waflib.Build.StepContext" title="waflib.Build.StepContext" alt="" coords="477,134,594,151"/>
+<area shape="rect" id="node7" href="#waflib.Context.ctx" title="waflib.Context.ctx" alt="" coords="4,69,94,86"/>
+<area shape="rect" id="node17" href="Build.html#waflib.Build.UninstallContext" title="waflib.Build.UninstallContext" alt="" coords="630,102,764,118"/>
+</map>

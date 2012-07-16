@@ -1,0 +1,193 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.d &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.d</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Carlos Rafael Giani, 2007 (dv)</span>
+<span class="c"># Thomas Nagy, 2007-2010 (ita)</span>
+
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">taskgen_method</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">extension</span>
+<span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">d_scan</span><span class="p">,</span> <span class="n">d_config</span>
+<span class="kn">from</span> <span class="nn">waflib.Tools.ccroot</span> <span class="kn">import</span> <span class="n">link_task</span><span class="p">,</span> <span class="n">stlink_task</span>
+
+<div class="viewcode-block" id="d"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.d">[docs]</a><span class="k">class</span> <span class="nc">d</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="s">&quot;Compile a d file into an object file&quot;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;GREEN&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${D} ${DFLAGS} ${DINC_ST:INCPATHS} ${D_SRC_F:SRC} ${D_TGT_F:TGT}&#39;</span>
+	<span class="n">scan</span>    <span class="o">=</span> <span class="n">d_scan</span><span class="o">.</span><span class="n">scan</span>
+</div>
+<div class="viewcode-block" id="d_with_header"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.d_with_header">[docs]</a><span class="k">class</span> <span class="nc">d_with_header</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+	<span class="s">&quot;Compile a d file and generate a header&quot;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${D} ${DFLAGS} ${DINC_ST:INCPATHS} ${D_HDR_F:tgt.outputs[1].bldpath()} ${D_SRC_F:SRC} ${D_TGT_F:tgt.outputs[0].bldpath()}&#39;</span>
+</div>
+<div class="viewcode-block" id="d_header"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.d_header">[docs]</a><span class="k">class</span> <span class="nc">d_header</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="s">&quot;Compile d headers&quot;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${D} ${D_HEADER} ${SRC}&#39;</span>
+</div>
+<div class="viewcode-block" id="dprogram"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.dprogram">[docs]</a><span class="k">class</span> <span class="nc">dprogram</span><span class="p">(</span><span class="n">link_task</span><span class="p">):</span>
+	<span class="s">&quot;Link object files into a d program&quot;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${D_LINKER} ${LINKFLAGS} ${DLNK_SRC_F}${SRC} ${DLNK_TGT_F:TGT} ${RPATH_ST:RPATH} ${DSTLIB_MARKER} ${DSTLIBPATH_ST:STLIBPATH} ${DSTLIB_ST:STLIB} ${DSHLIB_MARKER} ${DLIBPATH_ST:LIBPATH} ${DSHLIB_ST:LIB}&#39;</span>
+	<span class="n">inst_to</span> <span class="o">=</span> <span class="s">&#39;${BINDIR}&#39;</span>
+</div>
+<div class="viewcode-block" id="dshlib"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.dshlib">[docs]</a><span class="k">class</span> <span class="nc">dshlib</span><span class="p">(</span><span class="n">dprogram</span><span class="p">):</span>
+	<span class="s">&quot;Link object files into a d shared library&quot;</span>
+	<span class="n">inst_to</span> <span class="o">=</span> <span class="s">&#39;${LIBDIR}&#39;</span>
+</div>
+<div class="viewcode-block" id="dstlib"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.dstlib">[docs]</a><span class="k">class</span> <span class="nc">dstlib</span><span class="p">(</span><span class="n">stlink_task</span><span class="p">):</span>
+	<span class="s">&quot;Link object files into a d static library&quot;</span>
+	<span class="k">pass</span> <span class="c"># do not remove</span>
+</div>
+<span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.d&#39;</span><span class="p">,</span> <span class="s">&#39;.di&#39;</span><span class="p">,</span> <span class="s">&#39;.D&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="d_hook"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.d_hook">[docs]</a><span class="k">def</span> <span class="nf">d_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Compile *D* files. To get .di files as well as .o files, set the following::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.program(source=&#39;foo.d&#39;, target=&#39;app&#39;, generate_headers=True)</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">ext</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">destos_to_binfmt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">DEST_OS</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;pe&#39;</span> <span class="ow">and</span> <span class="s">&#39;obj&#39;</span> <span class="ow">or</span> <span class="s">&#39;o&#39;</span>
+	<span class="n">out</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%d</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span>
+	<span class="k">def</span> <span class="nf">create_compiled_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+		<span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="n">out</span><span class="p">))</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">compiled_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">compiled_tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">task</span><span class="p">]</span>
+		<span class="k">return</span> <span class="n">task</span>
+
+	<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;generate_headers&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+		<span class="n">tsk</span> <span class="o">=</span> <span class="n">create_compiled_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;d_with_header&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+		<span class="n">tsk</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;DHEADER_ext&#39;</span><span class="p">]))</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">tsk</span> <span class="o">=</span> <span class="n">create_compiled_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;d&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">tsk</span>
+</div>
+<span class="nd">@taskgen_method</span>
+<div class="viewcode-block" id="generate_header"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.generate_header">[docs]</a><span class="k">def</span> <span class="nf">generate_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	See feature request #104::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			tg = bld.program(source=&#39;foo.d&#39;, target=&#39;app&#39;)</span>
+<span class="sd">			tg.generate_header(&#39;blah.d&#39;)</span>
+<span class="sd">			# is equivalent to:</span>
+<span class="sd">			#tg = bld.program(source=&#39;foo.d&#39;, target=&#39;app&#39;, header_lst=&#39;blah.d&#39;)</span>
+
+<span class="sd">	:param filename: header to create</span>
+<span class="sd">	:type filename: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">header_lst</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">filename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">install_path</span><span class="p">])</span>
+	<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">header_lst</span> <span class="o">=</span> <span class="p">[[</span><span class="n">filename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">install_path</span><span class="p">]]</span>
+</div>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;d&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="process_header"><a class="viewcode-back" href="../../../tools/d.html#waflib.Tools.d.process_header">[docs]</a><span class="k">def</span> <span class="nf">process_header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Process the attribute &#39;header_lst&#39; to create the d header compilation tasks::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.program(source=&#39;foo.d&#39;, target=&#39;app&#39;, header_lst=&#39;blah.d&#39;)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;header_lst&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+		<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;file </span><span class="si">%r</span><span class="s"> not found on d obj&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;d_header&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.di&#39;</span><span class="p">))</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

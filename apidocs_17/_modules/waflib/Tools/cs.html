@@ -1,0 +1,275 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.cs &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.cs</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2006-2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">C# support. A simple example::</span>
+
+<span class="sd">	def configure(conf):</span>
+<span class="sd">		conf.load(&#39;cs&#39;)</span>
+<span class="sd">	def build(bld):</span>
+<span class="sd">		bld(features=&#39;cs&#39;, source=&#39;main.cs&#39;, gen=&#39;foo&#39;)</span>
+
+<span class="sd">Note that the configuration may compile C# snippets::</span>
+
+<span class="sd">	FRAG = &#39;&#39;&#39;</span>
+<span class="sd">	namespace Moo {</span>
+<span class="sd">		public class Test { public static int Main(string[] args) { return 0; } }</span>
+<span class="sd">	}&#39;&#39;&#39;</span>
+<span class="sd">	def configure(conf):</span>
+<span class="sd">		conf.check(features=&#39;cs&#39;, fragment=FRAG, compile_filename=&#39;test.cs&#39;, gen=&#39;test.exe&#39;,</span>
+<span class="sd">			bintype=&#39;exe&#39;, csflags=[&#39;-pkg:gtk-sharp-2.0&#39;], msg=&#39;Checking for Gtksharp support&#39;)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">before_method</span><span class="p">,</span> <span class="n">after_method</span><span class="p">,</span> <span class="n">feature</span>
+<span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">ccroot</span>
+<span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
+
+<span class="n">ccroot</span><span class="o">.</span><span class="n">USELIB_VARS</span><span class="p">[</span><span class="s">&#39;cs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;CSFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;ASSEMBLIES&#39;</span><span class="p">,</span> <span class="s">&#39;RESOURCES&#39;</span><span class="p">])</span>
+<span class="n">ccroot</span><span class="o">.</span><span class="n">lib_patterns</span><span class="p">[</span><span class="s">&#39;csshlib&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span><span class="p">]</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;cs&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;process_source&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="apply_cs"><a class="viewcode-back" href="../../../tools/cs.html#waflib.Tools.cs.apply_cs">[docs]</a><span class="k">def</span> <span class="nf">apply_cs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create a C# task bound to the attribute *cs_task*. There can be only one C# task by task generator.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">cs_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">no_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_nodes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.cs&#39;</span><span class="p">):</span>
+			<span class="n">cs_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">no_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">no_nodes</span>
+
+	<span class="n">bintype</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;bintype&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.dll&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="s">&#39;library&#39;</span> <span class="ow">or</span> <span class="s">&#39;exe&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">cs_task</span> <span class="o">=</span> <span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;mcs&#39;</span><span class="p">,</span> <span class="n">cs_nodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="p">))</span>
+	<span class="n">tsk</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CSTYPE</span> <span class="o">=</span> <span class="s">&#39;/target:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">bintype</span>
+	<span class="n">tsk</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">OUT</span> <span class="o">=</span> <span class="s">&#39;/out:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">tsk</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CSFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;/platform:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;platform&#39;</span><span class="p">,</span> <span class="s">&#39;anycpu&#39;</span><span class="p">))</span>
+
+	<span class="n">inst_to</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;install_path&#39;</span><span class="p">,</span> <span class="n">bintype</span><span class="o">==</span><span class="s">&#39;exe&#39;</span> <span class="ow">and</span> <span class="s">&#39;${BINDIR}&#39;</span> <span class="ow">or</span> <span class="s">&#39;${LIBDIR}&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">inst_to</span><span class="p">:</span>
+		<span class="c"># note: we are making a copy, so the files added to cs_task.outputs won&#39;t be installed automatically</span>
+		<span class="n">mod</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;chmod&#39;</span><span class="p">,</span> <span class="n">bintype</span><span class="o">==</span><span class="s">&#39;exe&#39;</span> <span class="ow">and</span> <span class="n">Utils</span><span class="o">.</span><span class="n">O755</span> <span class="ow">or</span> <span class="n">Utils</span><span class="o">.</span><span class="n">O644</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">install_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">inst_to</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs_task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[:],</span> <span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">chmod</span><span class="o">=</span><span class="n">mod</span><span class="p">)</span>
+</div>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;cs&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_cs&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="use_cs"><a class="viewcode-back" href="../../../tools/cs.html#waflib.Tools.cs.use_cs">[docs]</a><span class="k">def</span> <span class="nf">use_cs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	C# applications honor the **use** keyword::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld(features=&#39;cs&#39;, source=&#39;My.cs&#39;, bintype=&#39;library&#39;, gen=&#39;my.dll&#39;, name=&#39;mylib&#39;)</span>
+<span class="sd">			bld(features=&#39;cs&#39;, source=&#39;Hi.cs&#39;, includes=&#39;.&#39;, bintype=&#39;exe&#39;, gen=&#39;hi.exe&#39;, use=&#39;mylib&#39;, name=&#39;hi&#39;)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;use&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+	<span class="n">get</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">get_tgen_by_name</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">y</span> <span class="o">=</span> <span class="n">get</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+		<span class="k">except</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CSFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;/reference:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span><span class="p">)</span>
+			<span class="k">continue</span>
+		<span class="n">y</span><span class="o">.</span><span class="n">post</span><span class="p">()</span>
+
+		<span class="n">tsk</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s">&#39;cs_task&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s">&#39;link_task&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">tsk</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;cs task has no link task for use </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">cs_task</span><span class="o">.</span><span class="n">dep_nodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tsk</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span> <span class="c"># dependency</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">cs_task</span><span class="o">.</span><span class="n">set_run_after</span><span class="p">(</span><span class="n">tsk</span><span class="p">)</span> <span class="c"># order (redundant, the order is infered from the nodes inputs/outputs)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CSFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;/reference:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">tsk</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+</div>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;cs&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_cs&#39;</span><span class="p">,</span> <span class="s">&#39;use_cs&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="debug_cs"><a class="viewcode-back" href="../../../tools/cs.html#waflib.Tools.cs.debug_cs">[docs]</a><span class="k">def</span> <span class="nf">debug_cs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	The C# targets may create .mdb or .pdb files::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld(features=&#39;cs&#39;, source=&#39;My.cs&#39;, bintype=&#39;library&#39;, gen=&#39;my.dll&#39;, csdebug=&#39;full&#39;)</span>
+<span class="sd">			# csdebug is a value in [True, &#39;full&#39;, &#39;pdbonly&#39;]</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">csdebug</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;csdebug&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CSDEBUG</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">csdebug</span><span class="p">:</span>
+		<span class="k">return</span>
+
+	<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs_task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CS_NAME</span> <span class="o">==</span> <span class="s">&#39;mono&#39;</span><span class="p">:</span>
+		<span class="n">out</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s">&#39;.mdb&#39;</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">out</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.pdb&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">cs_task</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">install_task</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+	<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+		<span class="k">pass</span>
+
+	<span class="k">if</span> <span class="n">csdebug</span> <span class="o">==</span> <span class="s">&#39;pdbonly&#39;</span><span class="p">:</span>
+		<span class="n">val</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;/debug+&#39;</span><span class="p">,</span> <span class="s">&#39;/debug:pdbonly&#39;</span><span class="p">]</span>
+	<span class="k">elif</span> <span class="n">csdebug</span> <span class="o">==</span> <span class="s">&#39;full&#39;</span><span class="p">:</span>
+		<span class="n">val</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;/debug+&#39;</span><span class="p">,</span> <span class="s">&#39;/debug:full&#39;</span><span class="p">]</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">val</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;/debug-&#39;</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="s">&#39;CSFLAGS&#39;</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="mcs"><a class="viewcode-back" href="../../../tools/cs.html#waflib.Tools.cs.mcs">[docs]</a><span class="k">class</span> <span class="nc">mcs</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Compile C# files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;YELLOW&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${MCS} ${CSTYPE} ${CSFLAGS} ${ASS_ST:ASSEMBLIES} ${RES_ST:RESOURCES} ${OUT} ${SRC}&#39;</span>
+</div>
+<div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/cs.html#waflib.Tools.cs.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Find a C# compiler, set the variable MCS for the compiler and CS_NAME (mono or csc)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">csc</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="s">&#39;cscbinary&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">csc</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">MCS</span> <span class="o">=</span> <span class="n">csc</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">([</span><span class="s">&#39;csc&#39;</span><span class="p">,</span> <span class="s">&#39;mcs&#39;</span><span class="p">,</span> <span class="s">&#39;gmcs&#39;</span><span class="p">],</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;MCS&#39;</span><span class="p">)</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">ASS_ST</span> <span class="o">=</span> <span class="s">&#39;/r:</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">RES_ST</span> <span class="o">=</span> <span class="s">&#39;/resource:</span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CS_NAME</span> <span class="o">=</span> <span class="s">&#39;csc&#39;</span>
+	<span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">MCS</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;mcs&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">CS_NAME</span> <span class="o">=</span> <span class="s">&#39;mono&#39;</span>
+</div>
+<div class="viewcode-block" id="options"><a class="viewcode-back" href="../../../tools/cs.html#waflib.Tools.cs.options">[docs]</a><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Add a command-line option for the configuration::</span>
+
+<span class="sd">		$ waf configure --with-csc-binary=/foo/bar/mcs</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--with-csc-binary&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&#39;string&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;cscbinary&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="fake_csshlib"><a class="viewcode-back" href="../../../tools/cs.html#waflib.Tools.cs.fake_csshlib">[docs]</a><span class="k">class</span> <span class="nc">fake_csshlib</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Task used for reading a foreign .net assembly and adding the dependency on it</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;YELLOW&#39;</span>
+	<span class="n">inst_to</span> <span class="o">=</span> <span class="bp">None</span>
+
+	<span class="k">def</span> <span class="nf">runnable_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+			<span class="n">x</span><span class="o">.</span><span class="n">sig</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">h_file</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+		<span class="k">return</span> <span class="n">Task</span><span class="o">.</span><span class="n">SKIP_ME</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="read_csshlib"><a class="viewcode-back" href="../../../tools/cs.html#waflib.Tools.cs.read_csshlib">[docs]</a><span class="k">def</span> <span class="nf">read_csshlib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">paths</span><span class="o">=</span><span class="p">[]):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Read a foreign .net assembly for the *use* system::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.read_csshlib(&#39;ManagedLibrary.dll&#39;, paths=[bld.env.mylibrarypath])</span>
+<span class="sd">			bld(features=&#39;cs&#39;, source=&#39;Hi.cs&#39;, bintype=&#39;exe&#39;, gen=&#39;hi.exe&#39;, use=&#39;ManagedLibrary.dll&#39;)</span>
+
+<span class="sd">	:param name: Name of the library</span>
+<span class="sd">	:type name: string</span>
+<span class="sd">	:param paths: Folders in which the library may be found</span>
+<span class="sd">	:type paths: list of string</span>
+<span class="sd">	:return: A task generator having the feature *fake_lib* which will call :py:func:`waflib.Tools.ccroot.process_lib`</span>
+<span class="sd">	:rtype: :py:class:`waflib.TaskGen.task_gen`</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="s">&#39;fake_lib&#39;</span><span class="p">,</span> <span class="n">lib_paths</span><span class="o">=</span><span class="n">paths</span><span class="p">,</span> <span class="n">lib_type</span><span class="o">=</span><span class="s">&#39;csshlib&#39;</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

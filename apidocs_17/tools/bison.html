@@ -1,0 +1,162 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>bison &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../index.html" />
+    <link rel="up" title="Waf Tools" href="../tools.html" />
+    <link rel="next" title="flex" href="flex.html" />
+    <link rel="prev" title="fc_scan" href="fc_scan.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="flex.html" title="flex"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="fc_scan.html" title="fc_scan"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Tools.bison">
+<span id="bison"></span><h1>bison<a class="headerlink" href="#module-waflib.Tools.bison" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>bison</strong> program is a code generator which creates C or C++ files.
+The generated files are compiled into object files.</p>
+<dl class="class">
+<dt id="waflib.Tools.bison.bison">
+<em class="property">class </em><tt class="descclassname">waflib.Tools.bison.</tt><tt class="descname">bison</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/bison.html#bison"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.bison.bison" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
+<p>Compile bison files</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.bison.big_bison">
+<tt class="descclassname">waflib.Tools.bison.</tt><tt class="descname">big_bison</tt><big>(</big><em>self</em>, <em>node</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/bison.html#big_bison"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.bison.big_bison" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a bison task, which must be executed from the directory of the output file.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.bison.configure">
+<tt class="descclassname">waflib.Tools.bison.</tt><tt class="descname">configure</tt><big>(</big><em>conf</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/bison.html#configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.bison.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detect the <em>bison</em> program</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.bison.extension">
+<tt class="descclassname">waflib.Tools.bison.</tt><tt class="descname">extension</tt><big>(</big><em>*k</em><big>)</big><a class="headerlink" href="#waflib.Tools.bison.extension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: register a task generator method which will be invoked during
+the processing of source files for the extension given:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span>
+<span class="k">class</span> <span class="nc">mytask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+        <span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;cp ${SRC} ${TGT}&#39;</span>
+<span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.moo&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">create_maa_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;mytask&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">change_ext</span><span class="p">(</span><span class="s">&#39;.maa&#39;</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s">&#39;foo.moo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="fc_scan.html"
+                        title="previous chapter">fc_scan</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="flex.html"
+                        title="next chapter">flex</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tools/bison.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="flex.html" title="flex"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="fc_scan.html" title="fc_scan"
+             >previous</a> |</li>
+        <li><a href="../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

@@ -1,0 +1,1159 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Feature reference &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="index.html" />
+    <link rel="next" title="Build" href="Build.html" />
+    <link rel="prev" title="Waf copyright" href="copyright.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Build.html" title="Build"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="copyright.html" title="Waf copyright"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Waf v1.7.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="feature-reference">
+<span id="featuremap"></span><h1>Feature reference<a class="headerlink" href="#feature-reference" title="Permalink to this headline">¶</a></h1>
+<p>The Waf features are names linked to specific functions by the decorator
+<a class="reference internal" href="TaskGen.html#waflib.TaskGen.feature" title="waflib.TaskGen.feature"><tt class="xref py py-func docutils literal"><span class="pre">waflib.TaskGen.feature()</span></tt></a>. The functions
+are mapped to the class <a class="reference internal" href="TaskGen.html#waflib.TaskGen.task_gen" title="waflib.TaskGen.task_gen"><tt class="xref py py-class docutils literal"><span class="pre">waflib.TaskGen.task_gen</span></tt></a> as methods.</p>
+<p>The association between feature names and methods is <em>many-to-many</em>, which means
+that a method may be involved in several features, and that a feature may be bound
+to several methods.</p>
+<p>Here is how to create and use a new feature named <strong>foo</strong>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;foo&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">print_hello</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Hello, World!&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The function <em>print_hello</em> is now associated with the <a class="reference internal" href="TaskGen.html#waflib.TaskGen.task_gen" title="waflib.TaskGen.task_gen"><tt class="xref py py-class docutils literal"><span class="pre">waflib.TaskGen.task_gen</span></tt></a> class, which means
+that it may be used directly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">tg</span> <span class="o">=</span> <span class="n">bld</span><span class="p">()</span>
+        <span class="n">tg</span><span class="o">.</span><span class="n">print_hello</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The method may be called directly, and several times. If a method creates task, the same tasks will be created
+more than once, which may cause build errors. The <em>feature</em> attribute is used to have the associated
+methods called <em>exactly once</em> before the build starts:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;foo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here is a more complete example with two methods:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after_method</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;foo&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;print_bar&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">print_hello</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Hello, Foo!&quot;</span><span class="p">)</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;bar&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">print_bar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Hello, Bar!&quot;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
+        <span class="n">bld</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="s">&#39;foo bar&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The order of method execution is unrelated to the order of the features given. For instance,
+this example will print &#8220;Hello, Bar!&#8221; then &#8220;Hello, Foo!&#8221;. The decorators
+<a class="reference internal" href="TaskGen.html#waflib.TaskGen.after" title="waflib.TaskGen.after"><tt class="xref py py-func docutils literal"><span class="pre">waflib.TaskGen.after()</span></tt></a> and <a class="reference internal" href="TaskGen.html#waflib.TaskGen.before" title="waflib.TaskGen.before"><tt class="xref py py-func docutils literal"><span class="pre">waflib.TaskGen.before()</span></tt></a> are
+enforcing partial order constraints on the methods to execute.</p>
+<p>The following maps represent the associations betwen feature methods (represented in yellow) and
+methods associated to other feature names.</p>
+</div>
+<div class="section" id="feature">
+<h1>Feature *<a class="headerlink" href="#feature" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-af290122b87c8fcc69ea475ac452a9e2480532fa.png" alt="digraph feature_all {
+size=&quot;8.0, 12.0&quot;;
+        &quot;apply_intltool_in_f&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/intltool.html#waflib.Tools.intltool.apply_intltool_in_f&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_source&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;TaskGen.html#waflib.TaskGen.process_source&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;process_rule&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;TaskGen.html#waflib.TaskGen.process_rule&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;jar_files&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/javaw.html#waflib.Tools.javaw.jar_files&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_marshal&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/glib2.html#waflib.Tools.glib2.process_marshal&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;link_lib_test_fun&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_tests.html#waflib.Tools.c_tests.link_lib_test_fun&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_enums&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/glib2.html#waflib.Tools.glib2.process_enums&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_java&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/javaw.html#waflib.Tools.javaw.apply_java&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;link_main_routines_tg_method&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc_config.html#waflib.Tools.fc_config.link_main_routines_tg_method&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_subst&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;TaskGen.html#waflib.TaskGen.process_subst&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_cs&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/cs.html#waflib.Tools.cs.apply_cs&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_tex&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/tex.html#waflib.Tools.tex.apply_tex&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_rule&quot; -&gt; &quot;process_subst&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_source&quot; -&gt; &quot;process_rule&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_source&quot; -&gt; &quot;process_subst&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_source&quot; -&gt; &quot;link_lib_test_fun&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_source&quot; -&gt; &quot;link_main_routines_tg_method&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_source&quot; -&gt; &quot;apply_tex&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_source&quot; -&gt; &quot;apply_java&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_source&quot; -&gt; &quot;jar_files&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_source&quot; -&gt; &quot;process_marshal&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_source&quot; -&gt; &quot;process_enums&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_source&quot; -&gt; &quot;apply_cs&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_source&quot; -&gt; &quot;apply_intltool_in_f&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_all" />
+<map id="feature_all" name="feature_all">
+<area shape="rect" id="node1" href="tools/intltool.html#waflib.Tools.intltool.apply_intltool_in_f" title="apply_intltool_in_f" alt="" coords="3,43,74,57"/>
+<area shape="rect" id="node2" href="TaskGen.html#waflib.TaskGen.process_source" title="process_source" alt="" coords="369,3,435,17"/>
+<area shape="rect" id="node3" href="TaskGen.html#waflib.TaskGen.process_rule" title="process_rule" alt="" coords="88,43,142,57"/>
+<area shape="rect" id="node4" href="tools/javaw.html#waflib.Tools.javaw.jar_files" title="jar_files" alt="" coords="156,43,195,57"/>
+<area shape="rect" id="node5" href="tools/glib2.html#waflib.Tools.glib2.process_marshal" title="process_marshal" alt="" coords="207,43,277,57"/>
+<area shape="rect" id="node6" href="tools/c_tests.html#waflib.Tools.c_tests.link_lib_test_fun" title="link_lib_test_fun" alt="" coords="290,43,356,57"/>
+<area shape="rect" id="node7" href="tools/glib2.html#waflib.Tools.glib2.process_enums" title="process_enums" alt="" coords="369,43,435,57"/>
+<area shape="rect" id="node8" href="tools/javaw.html#waflib.Tools.javaw.apply_java" title="apply_java" alt="" coords="448,43,496,57"/>
+<area shape="rect" id="node9" href="tools/fc_config.html#waflib.Tools.fc_config.link_main_routines_tg_method" title="link_main_routines_tg_method" alt="" coords="509,43,626,57"/>
+<area shape="rect" id="node10" href="TaskGen.html#waflib.TaskGen.process_subst" title="process_subst" alt="" coords="350,83,411,97"/>
+<area shape="rect" id="node11" href="tools/cs.html#waflib.Tools.cs.apply_cs" title="apply_cs" alt="" coords="666,43,707,57"/>
+<area shape="rect" id="node12" href="tools/tex.html#waflib.Tools.tex.apply_tex" title="apply_tex" alt="" coords="721,43,764,57"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-asm">
+<h1>Feature asm<a class="headerlink" href="#feature-asm" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-b069ae79e56738730b6e25ad440d28b3d318afd9.png" alt="digraph feature_asm {
+size=&quot;8.0, 12.0&quot;;
+        &quot;process_use&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.process_use&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_nasm_vars&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/nasm.html#waflib.Tools.nasm.apply_nasm_vars&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_perlext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/perl.html#waflib.Tools.perl.init_perlext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_ruby_so_name&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_source&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;TaskGen.html#waflib.TaskGen.process_source&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_incpaths&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;init_rubyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.init_rubyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;set_lib_pat&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;propagate_uselib_vars&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_bundle&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.apply_bundle&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_incpaths&quot; -&gt; &quot;propagate_uselib_vars&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;process_use&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;apply_bundle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;set_lib_pat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;apply_ruby_so_name&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_pyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_asm" />
+<map id="feature_asm" name="feature_asm">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.process_use" title="process_use" alt="" coords="123,51,187,67"/>
+<area shape="rect" id="node2" href="tools/nasm.html#waflib.Tools.nasm.apply_nasm_vars" title="apply_nasm_vars" alt="" coords="520,4,603,20"/>
+<area shape="rect" id="node3" href="tools/perl.html#waflib.Tools.perl.init_perlext" title="init_perlext" alt="" coords="203,51,260,67"/>
+<area shape="rect" id="node4" href="tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name" title="apply_ruby_so_name" alt="" coords="526,51,625,67"/>
+<area shape="rect" id="node5" href="TaskGen.html#waflib.TaskGen.process_source" title="process_source" alt="" coords="276,51,353,67"/>
+<area shape="rect" id="node6" href="tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths" title="apply_incpaths" alt="" coords="195,4,268,20"/>
+<area shape="rect" id="node9" href="tools/ruby.html#waflib.Tools.ruby.init_rubyext" title="init_rubyext" alt="" coords="368,51,429,67"/>
+<area shape="rect" id="node11" href="tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars" title="propagate_uselib_vars" alt="" coords="3,51,107,67"/>
+<area shape="rect" id="node7" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="451,4,504,20"/>
+<area shape="rect" id="node8" href="tools/python.html#waflib.Tools.python.init_pyext" title="init_pyext" alt="" coords="640,51,692,67"/>
+<area shape="rect" id="node10" href="tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat" title="set_lib_pat" alt="" coords="708,51,765,67"/>
+<area shape="rect" id="node12" href="tools/c_osx.html#waflib.Tools.c_osx.apply_bundle" title="apply_bundle" alt="" coords="444,51,511,67"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-c">
+<h1>Feature c<a class="headerlink" href="#feature-c" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-6f85650f469769bf124c674dfeb8056d5e945000.png" alt="digraph feature_c {
+size=&quot;8.0, 12.0&quot;;
+        &quot;process_use&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.process_use&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;process_source&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;TaskGen.html#waflib.TaskGen.process_source&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_incpaths&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;set_lib_pat&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_bundle&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.apply_bundle&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;set_macosx_deployment_target&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.set_macosx_deployment_target&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_perlext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/perl.html#waflib.Tools.perl.init_perlext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_ruby_so_name&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;init_rubyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.init_rubyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_flags_msvc&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/msvc.html#waflib.Tools.msvc.apply_flags_msvc&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;propagate_uselib_vars&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyembed&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyembed&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_use&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_use&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;propagate_uselib_vars&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;process_use&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;apply_bundle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;set_lib_pat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;apply_ruby_so_name&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_pyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_flags_msvc&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;apply_bundle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;process_use&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;set_lib_pat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_pyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_pyembed&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_bundle&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_c" />
+<map id="feature_c" name="feature_c">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.process_use" title="process_use" alt="" coords="135,137,225,159"/>
+<area shape="rect" id="node2" href="TaskGen.html#waflib.TaskGen.process_source" title="process_source" alt="" coords="39,268,147,290"/>
+<area shape="rect" id="node9" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="405,202,478,225"/>
+<area shape="rect" id="node3" href="tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths" title="apply_incpaths" alt="" coords="50,5,152,28"/>
+<area shape="rect" id="node7" href="tools/perl.html#waflib.Tools.perl.init_perlext" title="init_perlext" alt="" coords="168,268,249,290"/>
+<area shape="rect" id="node11" href="tools/ruby.html#waflib.Tools.ruby.init_rubyext" title="init_rubyext" alt="" coords="400,334,484,356"/>
+<area shape="rect" id="node13" href="tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars" title="propagate_uselib_vars" alt="" coords="267,71,413,93"/>
+<area shape="rect" id="node4" href="tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat" title="set_lib_pat" alt="" coords="475,268,555,290"/>
+<area shape="rect" id="node5" href="tools/c_osx.html#waflib.Tools.c_osx.apply_bundle" title="apply_bundle" alt="" coords="670,268,763,290"/>
+<area shape="rect" id="node6" href="tools/c_osx.html#waflib.Tools.c_osx.set_macosx_deployment_target" title="set_macosx_deployment_target" alt="" coords="175,5,375,28"/>
+<area shape="rect" id="node8" href="tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name" title="apply_ruby_so_name" alt="" coords="271,268,409,290"/>
+<area shape="rect" id="node10" href="tools/python.html#waflib.Tools.python.init_pyext" title="init_pyext" alt="" coords="576,268,647,290"/>
+<area shape="rect" id="node12" href="tools/msvc.html#waflib.Tools.msvc.apply_flags_msvc" title="apply_flags_msvc" alt="" coords="409,137,526,159"/>
+<area shape="rect" id="node14" href="tools/python.html#waflib.Tools.python.init_pyembed" title="init_pyembed" alt="" coords="293,137,387,159"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-cprogram">
+<h1>Feature cprogram<a class="headerlink" href="#feature-cprogram" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-28e8e52113d6b541eb279c3d2eb7f1de644caed4.png" alt="digraph feature_cprogram {
+size=&quot;8.0, 12.0&quot;;
+        &quot;create_task_macapp&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.create_task_macapp&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;create_task_macplist&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.create_task_macplist&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_manifest&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/msvc.html#waflib.Tools.msvc.apply_manifest&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;create_task_macapp&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;create_task_macplist&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_manifest&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_cprogram" />
+<map id="feature_cprogram" name="feature_cprogram">
+<area shape="rect" id="node1" href="tools/c_osx.html#waflib.Tools.c_osx.create_task_macapp" title="create_task_macapp" alt="" coords="5,6,160,31"/>
+<area shape="rect" id="node3" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="222,81,305,106"/>
+<area shape="rect" id="node2" href="tools/c_osx.html#waflib.Tools.c_osx.create_task_macplist" title="create_task_macplist" alt="" coords="185,6,343,31"/>
+<area shape="rect" id="node4" href="tools/msvc.html#waflib.Tools.msvc.apply_manifest" title="apply_manifest" alt="" coords="367,6,485,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-cs">
+<h1>Feature cs<a class="headerlink" href="#feature-cs" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-02dd80b60eee61658944977912029028f0129616.png" alt="digraph feature_cs {
+size=&quot;8.0, 12.0&quot;;
+        &quot;process_use&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.process_use&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;init_perlext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/perl.html#waflib.Tools.perl.init_perlext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;debug_cs&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/cs.html#waflib.Tools.cs.debug_cs&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;use_cs&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/cs.html#waflib.Tools.cs.use_cs&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;set_lib_pat&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;propagate_uselib_vars&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyembed&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyembed&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_cs&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/cs.html#waflib.Tools.cs.apply_cs&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_bundle&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.apply_bundle&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;use_cs&quot; -&gt; &quot;apply_cs&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;apply_bundle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;process_use&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;set_lib_pat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_pyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_pyembed&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;debug_cs&quot; -&gt; &quot;apply_cs&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;debug_cs&quot; -&gt; &quot;use_cs&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_cs" />
+<map id="feature_cs" name="feature_cs">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.process_use" title="process_use" alt="" coords="4,73,96,96"/>
+<area shape="rect" id="node2" href="tools/perl.html#waflib.Tools.perl.init_perlext" title="init_perlext" alt="" coords="118,73,201,96"/>
+<area shape="rect" id="node3" href="tools/cs.html#waflib.Tools.cs.debug_cs" title="debug_cs" alt="" coords="689,5,762,28"/>
+<area shape="rect" id="node5" href="tools/cs.html#waflib.Tools.cs.use_cs" title="use_cs" alt="" coords="661,73,726,96"/>
+<area shape="rect" id="node9" href="tools/cs.html#waflib.Tools.cs.apply_cs" title="apply_cs" alt="" coords="691,140,760,163"/>
+<area shape="rect" id="node4" href="tools/python.html#waflib.Tools.python.init_pyext" title="init_pyext" alt="" coords="224,73,297,96"/>
+<area shape="rect" id="node6" href="tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat" title="set_lib_pat" alt="" coords="320,73,401,96"/>
+<area shape="rect" id="node7" href="tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars" title="propagate_uselib_vars" alt="" coords="235,5,385,28"/>
+<area shape="rect" id="node8" href="tools/python.html#waflib.Tools.python.init_pyembed" title="init_pyembed" alt="" coords="424,73,520,96"/>
+<area shape="rect" id="node10" href="tools/c_osx.html#waflib.Tools.c_osx.apply_bundle" title="apply_bundle" alt="" coords="543,73,639,96"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-cshlib">
+<h1>Feature cshlib<a class="headerlink" href="#feature-cshlib" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-082852cfa9c61f7e150e2adce6368d4b6d2628bf.png" alt="digraph feature_cshlib {
+size=&quot;8.0, 12.0&quot;;
+        &quot;apply_implib&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_implib&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_bundle_remove_dynamiclib&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.apply_bundle_remove_dynamiclib&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_vnum&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_vnum&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_manifest&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/msvc.html#waflib.Tools.msvc.apply_manifest&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_implib&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_bundle_remove_dynamiclib&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_vnum&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_manifest&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_cshlib" />
+<map id="feature_cshlib" name="feature_cshlib">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.apply_implib" title="apply_implib" alt="" coords="5,6,107,31"/>
+<area shape="rect" id="node5" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="303,81,387,106"/>
+<area shape="rect" id="node2" href="tools/c_osx.html#waflib.Tools.c_osx.apply_bundle_remove_dynamiclib" title="apply_bundle_remove_dynamiclib" alt="" coords="131,6,367,31"/>
+<area shape="rect" id="node3" href="tools/ccroot.html#waflib.Tools.ccroot.apply_vnum" title="apply_vnum" alt="" coords="392,6,491,31"/>
+<area shape="rect" id="node4" href="tools/msvc.html#waflib.Tools.msvc.apply_manifest" title="apply_manifest" alt="" coords="515,6,633,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-cxx">
+<h1>Feature cxx<a class="headerlink" href="#feature-cxx" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-b479de970b6cbc8f8f08d3d3705b2268cc84f235.png" alt="digraph feature_cxx {
+size=&quot;8.0, 12.0&quot;;
+        &quot;process_use&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.process_use&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;process_source&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;TaskGen.html#waflib.TaskGen.process_source&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_incpaths&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;set_lib_pat&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_bundle&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.apply_bundle&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;set_macosx_deployment_target&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.set_macosx_deployment_target&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_perlext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/perl.html#waflib.Tools.perl.init_perlext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_ruby_so_name&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;init_rubyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.init_rubyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_flags_msvc&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/msvc.html#waflib.Tools.msvc.apply_flags_msvc&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;propagate_uselib_vars&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyembed&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyembed&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_use&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_use&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;propagate_uselib_vars&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;process_use&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;apply_bundle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;set_lib_pat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;apply_ruby_so_name&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_pyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_flags_msvc&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;apply_bundle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;process_use&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;set_lib_pat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_pyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_pyembed&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_bundle&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_cxx" />
+<map id="feature_cxx" name="feature_cxx">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.process_use" title="process_use" alt="" coords="135,137,225,159"/>
+<area shape="rect" id="node2" href="TaskGen.html#waflib.TaskGen.process_source" title="process_source" alt="" coords="39,268,147,290"/>
+<area shape="rect" id="node9" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="405,202,478,225"/>
+<area shape="rect" id="node3" href="tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths" title="apply_incpaths" alt="" coords="50,5,152,28"/>
+<area shape="rect" id="node7" href="tools/perl.html#waflib.Tools.perl.init_perlext" title="init_perlext" alt="" coords="168,268,249,290"/>
+<area shape="rect" id="node11" href="tools/ruby.html#waflib.Tools.ruby.init_rubyext" title="init_rubyext" alt="" coords="400,334,484,356"/>
+<area shape="rect" id="node13" href="tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars" title="propagate_uselib_vars" alt="" coords="267,71,413,93"/>
+<area shape="rect" id="node4" href="tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat" title="set_lib_pat" alt="" coords="475,268,555,290"/>
+<area shape="rect" id="node5" href="tools/c_osx.html#waflib.Tools.c_osx.apply_bundle" title="apply_bundle" alt="" coords="670,268,763,290"/>
+<area shape="rect" id="node6" href="tools/c_osx.html#waflib.Tools.c_osx.set_macosx_deployment_target" title="set_macosx_deployment_target" alt="" coords="175,5,375,28"/>
+<area shape="rect" id="node8" href="tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name" title="apply_ruby_so_name" alt="" coords="271,268,409,290"/>
+<area shape="rect" id="node10" href="tools/python.html#waflib.Tools.python.init_pyext" title="init_pyext" alt="" coords="576,268,647,290"/>
+<area shape="rect" id="node12" href="tools/msvc.html#waflib.Tools.msvc.apply_flags_msvc" title="apply_flags_msvc" alt="" coords="409,137,526,159"/>
+<area shape="rect" id="node14" href="tools/python.html#waflib.Tools.python.init_pyembed" title="init_pyembed" alt="" coords="293,137,387,159"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-cxxprogram">
+<h1>Feature cxxprogram<a class="headerlink" href="#feature-cxxprogram" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-2bf26c0a6a1c5a70be6be2cbc83bd96156b1a220.png" alt="digraph feature_cxxprogram {
+size=&quot;8.0, 12.0&quot;;
+        &quot;create_task_macapp&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.create_task_macapp&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;create_task_macplist&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.create_task_macplist&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_manifest&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/msvc.html#waflib.Tools.msvc.apply_manifest&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;create_task_macapp&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;create_task_macplist&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_manifest&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_cxxprogram" />
+<map id="feature_cxxprogram" name="feature_cxxprogram">
+<area shape="rect" id="node1" href="tools/c_osx.html#waflib.Tools.c_osx.create_task_macapp" title="create_task_macapp" alt="" coords="5,6,160,31"/>
+<area shape="rect" id="node3" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="222,81,305,106"/>
+<area shape="rect" id="node2" href="tools/c_osx.html#waflib.Tools.c_osx.create_task_macplist" title="create_task_macplist" alt="" coords="185,6,343,31"/>
+<area shape="rect" id="node4" href="tools/msvc.html#waflib.Tools.msvc.apply_manifest" title="apply_manifest" alt="" coords="367,6,485,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-cxxshlib">
+<h1>Feature cxxshlib<a class="headerlink" href="#feature-cxxshlib" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-80f283b9057aee89b82c345aac552b2c0a0dfff8.png" alt="digraph feature_cxxshlib {
+size=&quot;8.0, 12.0&quot;;
+        &quot;apply_implib&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_implib&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_bundle_remove_dynamiclib&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.apply_bundle_remove_dynamiclib&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_vnum&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_vnum&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_manifest&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/msvc.html#waflib.Tools.msvc.apply_manifest&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_implib&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_bundle_remove_dynamiclib&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_vnum&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_manifest&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_cxxshlib" />
+<map id="feature_cxxshlib" name="feature_cxxshlib">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.apply_implib" title="apply_implib" alt="" coords="5,6,107,31"/>
+<area shape="rect" id="node5" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="303,81,387,106"/>
+<area shape="rect" id="node2" href="tools/c_osx.html#waflib.Tools.c_osx.apply_bundle_remove_dynamiclib" title="apply_bundle_remove_dynamiclib" alt="" coords="131,6,367,31"/>
+<area shape="rect" id="node3" href="tools/ccroot.html#waflib.Tools.ccroot.apply_vnum" title="apply_vnum" alt="" coords="392,6,491,31"/>
+<area shape="rect" id="node4" href="tools/msvc.html#waflib.Tools.msvc.apply_manifest" title="apply_manifest" alt="" coords="515,6,633,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-d">
+<h1>Feature d<a class="headerlink" href="#feature-d" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-a62c15ab0aacebc8feb843cde4eef4e7fc37c2c8.png" alt="digraph feature_d {
+size=&quot;8.0, 12.0&quot;;
+        &quot;process_use&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.process_use&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;process_header&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/d.html#waflib.Tools.d.process_header&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_ruby_so_name&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_source&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;TaskGen.html#waflib.TaskGen.process_source&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_incpaths&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;init_rubyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.init_rubyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;init_perlext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/perl.html#waflib.Tools.perl.init_perlext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;set_lib_pat&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;propagate_uselib_vars&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyembed&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyembed&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_bundle&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.apply_bundle&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_use&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_use&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;propagate_uselib_vars&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;process_use&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;apply_bundle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;process_use&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;set_lib_pat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_pyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_pyembed&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;apply_bundle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;set_lib_pat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;apply_ruby_so_name&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_pyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_d" />
+<map id="feature_d" name="feature_d">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.process_use" title="process_use" alt="" coords="307,132,394,154"/>
+<area shape="rect" id="node4" href="TaskGen.html#waflib.TaskGen.process_source" title="process_source" alt="" coords="5,259,109,281"/>
+<area shape="rect" id="node6" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="319,196,390,217"/>
+<area shape="rect" id="node2" href="tools/d.html#waflib.Tools.d.process_header" title="process_header" alt="" coords="420,5,525,27"/>
+<area shape="rect" id="node3" href="tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name" title="apply_ruby_so_name" alt="" coords="231,259,365,281"/>
+<area shape="rect" id="node5" href="tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths" title="apply_incpaths" alt="" coords="301,5,399,27"/>
+<area shape="rect" id="node8" href="tools/ruby.html#waflib.Tools.ruby.init_rubyext" title="init_rubyext" alt="" coords="129,259,211,281"/>
+<area shape="rect" id="node9" href="tools/perl.html#waflib.Tools.perl.init_perlext" title="init_perlext" alt="" coords="686,259,763,281"/>
+<area shape="rect" id="node11" href="tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars" title="propagate_uselib_vars" alt="" coords="434,69,575,90"/>
+<area shape="rect" id="node7" href="tools/python.html#waflib.Tools.python.init_pyext" title="init_pyext" alt="" coords="497,259,566,281"/>
+<area shape="rect" id="node10" href="tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat" title="set_lib_pat" alt="" coords="588,259,665,281"/>
+<area shape="rect" id="node13" href="tools/c_osx.html#waflib.Tools.c_osx.apply_bundle" title="apply_bundle" alt="" coords="386,259,476,281"/>
+<area shape="rect" id="node12" href="tools/python.html#waflib.Tools.python.init_pyembed" title="init_pyembed" alt="" coords="459,132,550,154"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-dshlib">
+<h1>Feature dshlib<a class="headerlink" href="#feature-dshlib" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-9af605ef58ec84435ae2f9b82a50bd0422a8366e.png" alt="digraph feature_dshlib {
+size=&quot;8.0, 12.0&quot;;
+        &quot;apply_vnum&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_vnum&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_vnum&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_dshlib" />
+<map id="feature_dshlib" name="feature_dshlib">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.apply_vnum" title="apply_vnum" alt="" coords="5,6,104,31"/>
+<area shape="rect" id="node2" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="13,81,96,106"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-fake-lib">
+<h1>Feature fake_lib<a class="headerlink" href="#feature-fake-lib" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-4be81091747f4202c9e18c5f1bdffbeb64d8fdd7.png" alt="digraph feature_fake_lib {
+size=&quot;8.0, 12.0&quot;;
+        &quot;process_lib&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.process_lib&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_fake_lib" />
+<map id="feature_fake_lib" name="feature_fake_lib">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.process_lib" title="process_lib" alt="" coords="5,6,99,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-fc">
+<h1>Feature fc<a class="headerlink" href="#feature-fc" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-7b9c1f612d6f5d17f04b378811ce1eac63145b0e.png" alt="digraph feature_fc {
+size=&quot;8.0, 12.0&quot;;
+        &quot;process_use&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.process_use&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_perlext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/perl.html#waflib.Tools.perl.init_perlext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_ruby_so_name&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_source&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;TaskGen.html#waflib.TaskGen.process_source&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_incpaths&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;init_rubyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.init_rubyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;set_lib_pat&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;propagate_uselib_vars&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyembed&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyembed&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_bundle&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.apply_bundle&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_use&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_use&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;propagate_uselib_vars&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;process_use&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;apply_bundle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;process_use&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;set_lib_pat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_pyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_pyembed&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;apply_bundle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;set_lib_pat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;apply_ruby_so_name&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_pyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_fc" />
+<map id="feature_fc" name="feature_fc">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.process_use" title="process_use" alt="" coords="255,132,342,153"/>
+<area shape="rect" id="node4" href="TaskGen.html#waflib.TaskGen.process_source" title="process_source" alt="" coords="5,259,109,280"/>
+<area shape="rect" id="node6" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="268,195,339,217"/>
+<area shape="rect" id="node2" href="tools/perl.html#waflib.Tools.perl.init_perlext" title="init_perlext" alt="" coords="386,259,463,280"/>
+<area shape="rect" id="node3" href="tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name" title="apply_ruby_so_name" alt="" coords="231,259,365,280"/>
+<area shape="rect" id="node5" href="tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths" title="apply_incpaths" alt="" coords="249,5,348,27"/>
+<area shape="rect" id="node8" href="tools/ruby.html#waflib.Tools.ruby.init_rubyext" title="init_rubyext" alt="" coords="129,259,211,280"/>
+<area shape="rect" id="node10" href="tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars" title="propagate_uselib_vars" alt="" coords="407,69,548,90"/>
+<area shape="rect" id="node7" href="tools/python.html#waflib.Tools.python.init_pyext" title="init_pyext" alt="" coords="693,259,762,280"/>
+<area shape="rect" id="node9" href="tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat" title="set_lib_pat" alt="" coords="485,259,562,280"/>
+<area shape="rect" id="node12" href="tools/c_osx.html#waflib.Tools.c_osx.apply_bundle" title="apply_bundle" alt="" coords="582,259,673,280"/>
+<area shape="rect" id="node11" href="tools/python.html#waflib.Tools.python.init_pyembed" title="init_pyembed" alt="" coords="504,132,595,153"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-fcprogram">
+<h1>Feature fcprogram<a class="headerlink" href="#feature-fcprogram" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-ae31d438318588d1f5139bd1aa4ee9260c3b20ad.png" alt="digraph feature_fcprogram {
+size=&quot;8.0, 12.0&quot;;
+        &quot;dummy&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc.html#waflib.Tools.fc.dummy&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_fcprogram" />
+<map id="feature_fcprogram" name="feature_fcprogram">
+<area shape="rect" id="node1" href="tools/fc.html#waflib.Tools.fc.dummy" title="dummy" alt="" coords="5,6,77,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-fcprogram-test">
+<h1>Feature fcprogram_test<a class="headerlink" href="#feature-fcprogram-test" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-624d2a71a2c85af1b248111548ee38604ae2f660.png" alt="digraph feature_fcprogram_test {
+size=&quot;8.0, 12.0&quot;;
+        &quot;dummy&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc.html#waflib.Tools.fc.dummy&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_fcprogram_test" />
+<map id="feature_fcprogram_test" name="feature_fcprogram_test">
+<area shape="rect" id="node1" href="tools/fc.html#waflib.Tools.fc.dummy" title="dummy" alt="" coords="5,6,77,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-fcshlib">
+<h1>Feature fcshlib<a class="headerlink" href="#feature-fcshlib" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-87761c4b705c403b4139ff93c290ddc6c3b80532.png" alt="digraph feature_fcshlib {
+size=&quot;8.0, 12.0&quot;;
+        &quot;dummy&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc.html#waflib.Tools.fc.dummy&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_vnum&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_vnum&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_vnum&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_fcshlib" />
+<map id="feature_fcshlib" name="feature_fcshlib">
+<area shape="rect" id="node1" href="tools/fc.html#waflib.Tools.fc.dummy" title="dummy" alt="" coords="5,6,77,31"/>
+<area shape="rect" id="node2" href="tools/ccroot.html#waflib.Tools.ccroot.apply_vnum" title="apply_vnum" alt="" coords="101,6,200,31"/>
+<area shape="rect" id="node3" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="109,81,192,106"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-fcstlib">
+<h1>Feature fcstlib<a class="headerlink" href="#feature-fcstlib" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-3b13ab659f487b87b08460f40438e1368ad0a23d.png" alt="digraph feature_fcstlib {
+size=&quot;8.0, 12.0&quot;;
+        &quot;dummy&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc.html#waflib.Tools.fc.dummy&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_fcstlib" />
+<map id="feature_fcstlib" name="feature_fcstlib">
+<area shape="rect" id="node1" href="tools/fc.html#waflib.Tools.fc.dummy" title="dummy" alt="" coords="5,6,77,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-glib2">
+<h1>Feature glib2<a class="headerlink" href="#feature-glib2" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-00c14d2c5db67916b56d5c8bc8aa27ac531c81ac.png" alt="digraph feature_glib2 {
+size=&quot;8.0, 12.0&quot;;
+        &quot;process_settings&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/glib2.html#waflib.Tools.glib2.process_settings&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_glib2" />
+<map id="feature_glib2" name="feature_glib2">
+<area shape="rect" id="node1" href="tools/glib2.html#waflib.Tools.glib2.process_settings" title="process_settings" alt="" coords="4,6,133,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-go">
+<h1>Feature go<a class="headerlink" href="#feature-go" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-a65edfab64324f84cc59fae84ecbba3089830bf4.png" alt="digraph feature_go {
+size=&quot;8.0, 12.0&quot;;
+        &quot;process_use&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.process_use&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;init_perlext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/perl.html#waflib.Tools.perl.init_perlext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_ruby_so_name&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_source&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;TaskGen.html#waflib.TaskGen.process_source&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_incpaths&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;init_rubyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.init_rubyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;set_lib_pat&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;propagate_uselib_vars&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_bundle&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.apply_bundle&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_incpaths&quot; -&gt; &quot;propagate_uselib_vars&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;process_use&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;apply_bundle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;set_lib_pat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;apply_ruby_so_name&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_pyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_link&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_go" />
+<map id="feature_go" name="feature_go">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.process_use" title="process_use" alt="" coords="123,51,187,67"/>
+<area shape="rect" id="node2" href="tools/perl.html#waflib.Tools.perl.init_perlext" title="init_perlext" alt="" coords="203,51,260,67"/>
+<area shape="rect" id="node3" href="tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name" title="apply_ruby_so_name" alt="" coords="526,51,625,67"/>
+<area shape="rect" id="node4" href="TaskGen.html#waflib.TaskGen.process_source" title="process_source" alt="" coords="276,51,353,67"/>
+<area shape="rect" id="node5" href="tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths" title="apply_incpaths" alt="" coords="195,4,268,20"/>
+<area shape="rect" id="node8" href="tools/ruby.html#waflib.Tools.ruby.init_rubyext" title="init_rubyext" alt="" coords="368,51,429,67"/>
+<area shape="rect" id="node10" href="tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars" title="propagate_uselib_vars" alt="" coords="3,51,107,67"/>
+<area shape="rect" id="node6" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="451,4,504,20"/>
+<area shape="rect" id="node7" href="tools/python.html#waflib.Tools.python.init_pyext" title="init_pyext" alt="" coords="640,51,692,67"/>
+<area shape="rect" id="node9" href="tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat" title="set_lib_pat" alt="" coords="708,51,765,67"/>
+<area shape="rect" id="node11" href="tools/c_osx.html#waflib.Tools.c_osx.apply_bundle" title="apply_bundle" alt="" coords="444,51,511,67"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-includes">
+<h1>Feature includes<a class="headerlink" href="#feature-includes" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-3bb70bd795969891a3d234d58f370bca2654cb08.png" alt="digraph feature_includes {
+size=&quot;8.0, 12.0&quot;;
+        &quot;process_use&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.process_use&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;init_perlext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/perl.html#waflib.Tools.perl.init_perlext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_source&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;TaskGen.html#waflib.TaskGen.process_source&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_incpaths&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_rubyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.init_rubyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;propagate_uselib_vars&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_incpaths&quot; -&gt; &quot;propagate_uselib_vars&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;process_use&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;init_rubyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;apply_incpaths&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_includes" />
+<map id="feature_includes" name="feature_includes">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.process_use" title="process_use" alt="" coords="5,81,107,106"/>
+<area shape="rect" id="node2" href="tools/perl.html#waflib.Tools.perl.init_perlext" title="init_perlext" alt="" coords="131,81,223,106"/>
+<area shape="rect" id="node3" href="TaskGen.html#waflib.TaskGen.process_source" title="process_source" alt="" coords="248,81,371,106"/>
+<area shape="rect" id="node4" href="tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths" title="apply_incpaths" alt="" coords="251,6,367,31"/>
+<area shape="rect" id="node5" href="tools/ruby.html#waflib.Tools.ruby.init_rubyext" title="init_rubyext" alt="" coords="395,81,491,106"/>
+<area shape="rect" id="node6" href="tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars" title="propagate_uselib_vars" alt="" coords="515,81,681,106"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-intltool-in">
+<h1>Feature intltool_in<a class="headerlink" href="#feature-intltool-in" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-083ff68d627e6374d86b22aa4cd7c3ef510f4c9d.png" alt="digraph feature_intltool_in {
+size=&quot;8.0, 12.0&quot;;
+        &quot;apply_intltool_in_f&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/intltool.html#waflib.Tools.intltool.apply_intltool_in_f&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_intltool_in" />
+<map id="feature_intltool_in" name="feature_intltool_in">
+<area shape="rect" id="node1" href="tools/intltool.html#waflib.Tools.intltool.apply_intltool_in_f" title="apply_intltool_in_f" alt="" coords="5,6,139,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-intltool-po">
+<h1>Feature intltool_po<a class="headerlink" href="#feature-intltool-po" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-6a239c9362b88b8c797403d63df6e57fd738114e.png" alt="digraph feature_intltool_po {
+size=&quot;8.0, 12.0&quot;;
+        &quot;apply_intltool_po&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/intltool.html#waflib.Tools.intltool.apply_intltool_po&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_intltool_po" />
+<map id="feature_intltool_po" name="feature_intltool_po">
+<area shape="rect" id="node1" href="tools/intltool.html#waflib.Tools.intltool.apply_intltool_po" title="apply_intltool_po" alt="" coords="5,6,133,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-jar">
+<h1>Feature jar<a class="headerlink" href="#feature-jar" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-6c014ed5a537fdb8f6cc696aaae268d5f861c218.png" alt="digraph feature_jar {
+size=&quot;8.0, 12.0&quot;;
+        &quot;apply_java&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/javaw.html#waflib.Tools.javaw.apply_java&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;jar_files&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/javaw.html#waflib.Tools.javaw.jar_files&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;use_javac_files&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/javaw.html#waflib.Tools.javaw.use_javac_files&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;use_jar_files&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/javaw.html#waflib.Tools.javaw.use_jar_files&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;jar_files&quot; -&gt; &quot;apply_java&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;jar_files&quot; -&gt; &quot;use_javac_files&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;use_jar_files&quot; -&gt; &quot;jar_files&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_jar" />
+<map id="feature_jar" name="feature_jar">
+<area shape="rect" id="node1" href="tools/javaw.html#waflib.Tools.javaw.apply_java" title="apply_java" alt="" coords="5,155,93,181"/>
+<area shape="rect" id="node2" href="tools/javaw.html#waflib.Tools.javaw.jar_files" title="jar_files" alt="" coords="77,81,149,106"/>
+<area shape="rect" id="node3" href="tools/javaw.html#waflib.Tools.javaw.use_javac_files" title="use_javac_files" alt="" coords="119,155,235,181"/>
+<area shape="rect" id="node4" href="tools/javaw.html#waflib.Tools.javaw.use_jar_files" title="use_jar_files" alt="" coords="63,6,163,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-javac">
+<h1>Feature javac<a class="headerlink" href="#feature-javac" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-87de536f8d4d9a050b23ab3caa9ccc8d1cf3fd9e.png" alt="digraph feature_javac {
+size=&quot;8.0, 12.0&quot;;
+        &quot;process_use&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.process_use&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;init_perlext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/perl.html#waflib.Tools.perl.init_perlext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_java&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/javaw.html#waflib.Tools.javaw.apply_java&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;set_lib_pat&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;propagate_uselib_vars&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyembed&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyembed&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;use_javac_files&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/javaw.html#waflib.Tools.javaw.use_javac_files&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;set_classpath&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/javaw.html#waflib.Tools.javaw.set_classpath&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_bundle&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.apply_bundle&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;apply_bundle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;process_use&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;set_lib_pat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_pyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_pyembed&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;use_javac_files&quot; -&gt; &quot;apply_java&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;set_classpath&quot; -&gt; &quot;apply_java&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;set_classpath&quot; -&gt; &quot;propagate_uselib_vars&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;set_classpath&quot; -&gt; &quot;use_javac_files&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_javac" />
+<map id="feature_javac" name="feature_javac">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.process_use" title="process_use" alt="" coords="109,144,204,168"/>
+<area shape="rect" id="node2" href="tools/perl.html#waflib.Tools.perl.init_perlext" title="init_perlext" alt="" coords="227,144,312,168"/>
+<area shape="rect" id="node3" href="tools/javaw.html#waflib.Tools.javaw.apply_java" title="apply_java" alt="" coords="4,144,87,168"/>
+<area shape="rect" id="node4" href="tools/python.html#waflib.Tools.python.init_pyext" title="init_pyext" alt="" coords="335,144,411,168"/>
+<area shape="rect" id="node5" href="tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat" title="set_lib_pat" alt="" coords="434,144,518,168"/>
+<area shape="rect" id="node6" href="tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars" title="propagate_uselib_vars" alt="" coords="296,75,450,98"/>
+<area shape="rect" id="node7" href="tools/python.html#waflib.Tools.python.init_pyembed" title="init_pyembed" alt="" coords="541,144,641,168"/>
+<area shape="rect" id="node10" href="tools/c_osx.html#waflib.Tools.c_osx.apply_bundle" title="apply_bundle" alt="" coords="664,144,763,168"/>
+<area shape="rect" id="node8" href="tools/javaw.html#waflib.Tools.javaw.use_javac_files" title="use_javac_files" alt="" coords="80,75,188,98"/>
+<area shape="rect" id="node9" href="tools/javaw.html#waflib.Tools.javaw.set_classpath" title="set_classpath" alt="" coords="83,6,186,29"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-link-lib-test">
+<h1>Feature link_lib_test<a class="headerlink" href="#feature-link-lib-test" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-1f5973af05228e1ffb37a8c08a2da3ed67dd3235.png" alt="digraph feature_link_lib_test {
+size=&quot;8.0, 12.0&quot;;
+        &quot;link_lib_test_fun&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_tests.html#waflib.Tools.c_tests.link_lib_test_fun&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_link_lib_test" />
+<map id="feature_link_lib_test" name="feature_link_lib_test">
+<area shape="rect" id="node1" href="tools/c_tests.html#waflib.Tools.c_tests.link_lib_test_fun" title="link_lib_test_fun" alt="" coords="5,6,128,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-link-main-routines-func">
+<h1>Feature link_main_routines_func<a class="headerlink" href="#feature-link-main-routines-func" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-b235f2239013860ad3c62ada54f97dc605eea97f.png" alt="digraph feature_link_main_routines_func {
+size=&quot;8.0, 12.0&quot;;
+        &quot;link_main_routines_tg_method&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc_config.html#waflib.Tools.fc_config.link_main_routines_tg_method&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_link_main_routines_func" />
+<map id="feature_link_main_routines_func" name="feature_link_main_routines_func">
+<area shape="rect" id="node1" href="tools/fc_config.html#waflib.Tools.fc_config.link_main_routines_tg_method" title="link_main_routines_tg_method" alt="" coords="5,6,224,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-msgfmt">
+<h1>Feature msgfmt<a class="headerlink" href="#feature-msgfmt" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-0f5a22aba9fec233fbdf2e235ea93874b163df56.png" alt="digraph feature_msgfmt {
+size=&quot;8.0, 12.0&quot;;
+        &quot;apply_msgfmt&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/kde4.html#waflib.Tools.kde4.apply_msgfmt&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_msgfmt" />
+<map id="feature_msgfmt" name="feature_msgfmt">
+<area shape="rect" id="node1" href="tools/kde4.html#waflib.Tools.kde4.apply_msgfmt" title="apply_msgfmt" alt="" coords="5,6,117,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-perlext">
+<h1>Feature perlext<a class="headerlink" href="#feature-perlext" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-5dc50cb6bd13424689eb6f2b3ba40d6fade5a4df.png" alt="digraph feature_perlext {
+size=&quot;8.0, 12.0&quot;;
+        &quot;init_perlext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/perl.html#waflib.Tools.perl.init_perlext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_perlext" />
+<map id="feature_perlext" name="feature_perlext">
+<area shape="rect" id="node1" href="tools/perl.html#waflib.Tools.perl.init_perlext" title="init_perlext" alt="" coords="5,6,96,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-py">
+<h1>Feature py<a class="headerlink" href="#feature-py" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-c94958f2890356319520476ddfe7afff4a492b4d.png" alt="digraph feature_py {
+size=&quot;8.0, 12.0&quot;;
+        &quot;feature_py&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.feature_py&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_py" />
+<map id="feature_py" name="feature_py">
+<area shape="rect" id="node1" href="tools/python.html#waflib.Tools.python.feature_py" title="feature_py" alt="" coords="5,6,96,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-pyembed">
+<h1>Feature pyembed<a class="headerlink" href="#feature-pyembed" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-ade90309dbbd8824afbdf25bc3819692a18ce7aa.png" alt="digraph feature_pyembed {
+size=&quot;8.0, 12.0&quot;;
+        &quot;init_pyembed&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyembed&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_pyembed" />
+<map id="feature_pyembed" name="feature_pyembed">
+<area shape="rect" id="node1" href="tools/python.html#waflib.Tools.python.init_pyembed" title="init_pyembed" alt="" coords="5,6,112,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-pyext">
+<h1>Feature pyext<a class="headerlink" href="#feature-pyext" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-f741d066b197431b7c364d2c94c2e306cba956da.png" alt="digraph feature_pyext {
+size=&quot;8.0, 12.0&quot;;
+        &quot;set_lib_pat&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;init_pyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_pyext" />
+<map id="feature_pyext" name="feature_pyext">
+<area shape="rect" id="node1" href="tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat" title="set_lib_pat" alt="" coords="5,6,96,31"/>
+<area shape="rect" id="node2" href="tools/python.html#waflib.Tools.python.init_pyext" title="init_pyext" alt="" coords="120,6,201,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-qt4">
+<h1>Feature qt4<a class="headerlink" href="#feature-qt4" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-bd5f09094a327521a409879038067c5a707111ca.png" alt="digraph feature_qt4 {
+size=&quot;8.0, 12.0&quot;;
+        &quot;apply_qt4&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/qt4.html#waflib.Tools.qt4.apply_qt4&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_qt4&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_qt4" />
+<map id="feature_qt4" name="feature_qt4">
+<area shape="rect" id="node1" href="tools/qt4.html#waflib.Tools.qt4.apply_qt4" title="apply_qt4" alt="" coords="5,6,88,31"/>
+<area shape="rect" id="node2" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="5,81,88,106"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-rubyext">
+<h1>Feature rubyext<a class="headerlink" href="#feature-rubyext" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-e951cb7d0ddc9d29444ebe58b26f768f8c86c84d.png" alt="digraph feature_rubyext {
+size=&quot;8.0, 12.0&quot;;
+        &quot;init_rubyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.init_rubyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_ruby_so_name&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_rubyext" />
+<map id="feature_rubyext" name="feature_rubyext">
+<area shape="rect" id="node1" href="tools/ruby.html#waflib.Tools.ruby.init_rubyext" title="init_rubyext" alt="" coords="5,6,101,31"/>
+<area shape="rect" id="node2" href="tools/ruby.html#waflib.Tools.ruby.apply_ruby_so_name" title="apply_ruby_so_name" alt="" coords="125,6,283,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-seq">
+<h1>Feature seq<a class="headerlink" href="#feature-seq" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-bb28bc36ef8281b425e60860419d57c985defe42.png" alt="digraph feature_seq {
+size=&quot;8.0, 12.0&quot;;
+        &quot;sequence_order&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;TaskGen.html#waflib.TaskGen.sequence_order&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_seq" />
+<map id="feature_seq" name="feature_seq">
+<area shape="rect" id="node1" href="TaskGen.html#waflib.TaskGen.sequence_order" title="sequence_order" alt="" coords="5,6,131,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-subst">
+<h1>Feature subst<a class="headerlink" href="#feature-subst" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-dcf6ea99b502473ff2eae1b7b1353fe3f5933ffc.png" alt="digraph feature_subst {
+size=&quot;8.0, 12.0&quot;;
+        &quot;process_subst&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;TaskGen.html#waflib.TaskGen.process_subst&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_subst" />
+<map id="feature_subst" name="feature_subst">
+<area shape="rect" id="node1" href="TaskGen.html#waflib.TaskGen.process_subst" title="process_subst" alt="" coords="5,6,120,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-test">
+<h1>Feature test<a class="headerlink" href="#feature-test" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-8681b03a97ba5fbc0ab7840bcea0035ec4f121d2.png" alt="digraph feature_test {
+size=&quot;8.0, 12.0&quot;;
+        &quot;make_test&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/waf_unit_test.html#waflib.Tools.waf_unit_test.make_test&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;make_test&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_test" />
+<map id="feature_test" name="feature_test">
+<area shape="rect" id="node1" href="tools/waf_unit_test.html#waflib.Tools.waf_unit_test.make_test" title="make_test" alt="" coords="5,6,96,31"/>
+<area shape="rect" id="node2" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="9,81,92,106"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-test-exec">
+<h1>Feature test_exec<a class="headerlink" href="#feature-test-exec" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-5a3a0125825c744028e2dd7944205964e5ab4f54.png" alt="digraph feature_test_exec {
+size=&quot;8.0, 12.0&quot;;
+        &quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;test_exec_fun&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_config.html#waflib.Tools.c_config.test_exec_fun&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;test_exec_fun&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_test_exec" />
+<map id="feature_test_exec" name="feature_test_exec">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="18,81,101,106"/>
+<area shape="rect" id="node2" href="tools/c_config.html#waflib.Tools.c_config.test_exec_fun" title="test_exec_fun" alt="" coords="5,6,115,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-tex">
+<h1>Feature tex<a class="headerlink" href="#feature-tex" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-0e35af8d9dcfba1d314ca7c90f3dc8fa72715d5a.png" alt="digraph feature_tex {
+size=&quot;8.0, 12.0&quot;;
+        &quot;apply_tex&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/tex.html#waflib.Tools.tex.apply_tex&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+}" usemap="#feature_tex" />
+<map id="feature_tex" name="feature_tex">
+<area shape="rect" id="node1" href="tools/tex.html#waflib.Tools.tex.apply_tex" title="apply_tex" alt="" coords="4,6,85,31"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-use">
+<h1>Feature use<a class="headerlink" href="#feature-use" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-394e21a662af72ecc41501c656f3161c6e8e7c3d.png" alt="digraph feature_use {
+size=&quot;8.0, 12.0&quot;;
+        &quot;process_use&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.process_use&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_source&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;TaskGen.html#waflib.TaskGen.process_source&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;process_use&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;process_use&quot; -&gt; &quot;process_source&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_use" />
+<map id="feature_use" name="feature_use">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.process_use" title="process_use" alt="" coords="59,6,161,31"/>
+<area shape="rect" id="node2" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="5,81,88,106"/>
+<area shape="rect" id="node3" href="TaskGen.html#waflib.TaskGen.process_source" title="process_source" alt="" coords="113,81,236,106"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-uselib">
+<h1>Feature uselib<a class="headerlink" href="#feature-uselib" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-111a2bbcd173d2bfdcb8dc85b2d1e588a25725f6.png" alt="digraph feature_uselib {
+size=&quot;8.0, 12.0&quot;;
+        &quot;process_use&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.process_use&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;init_perlext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/perl.html#waflib.Tools.perl.init_perlext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;init_pyext&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyext&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;set_lib_pat&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;propagate_uselib_vars&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_bundle&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/c_osx.html#waflib.Tools.c_osx.apply_bundle&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;init_pyembed&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/python.html#waflib.Tools.python.init_pyembed&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;apply_bundle&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;process_use&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;set_lib_pat&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_pyext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_pyembed&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+&quot;propagate_uselib_vars&quot; -&gt; &quot;init_perlext&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_uselib" />
+<map id="feature_uselib" name="feature_uselib">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.process_use" title="process_use" alt="" coords="5,81,107,106"/>
+<area shape="rect" id="node2" href="tools/perl.html#waflib.Tools.perl.init_perlext" title="init_perlext" alt="" coords="131,81,223,106"/>
+<area shape="rect" id="node3" href="tools/python.html#waflib.Tools.python.init_pyext" title="init_pyext" alt="" coords="248,81,329,106"/>
+<area shape="rect" id="node4" href="tools/fc_config.html#waflib.Tools.fc_config.set_lib_pat" title="set_lib_pat" alt="" coords="355,81,445,106"/>
+<area shape="rect" id="node5" href="tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars" title="propagate_uselib_vars" alt="" coords="261,6,427,31"/>
+<area shape="rect" id="node6" href="tools/c_osx.html#waflib.Tools.c_osx.apply_bundle" title="apply_bundle" alt="" coords="469,81,576,106"/>
+<area shape="rect" id="node7" href="tools/python.html#waflib.Tools.python.init_pyembed" title="init_pyembed" alt="" coords="601,81,708,106"/>
+</map>
+</p>
+</div>
+<div class="section" id="feature-vnum">
+<h1>Feature vnum<a class="headerlink" href="#feature-vnum" title="Permalink to this headline">¶</a></h1>
+<p class="graphviz">
+<img src="_images/graphviz-cb9b97f9454900f3ff599af1734350b502b35f47.png" alt="digraph feature_vnum {
+size=&quot;8.0, 12.0&quot;;
+        &quot;apply_vnum&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_vnum&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10,fillcolor=&quot;#fffea6&quot;,style=filled];
+&quot;apply_link&quot; [style=&quot;setlinewidth(0.5)&quot;,URL=&quot;tools/ccroot.html#waflib.Tools.ccroot.apply_link&quot;,fontname=Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans,height=0.25,shape=box,fontsize=10];
+&quot;apply_vnum&quot; -&gt; &quot;apply_link&quot; [arrowsize=0.5,style=&quot;setlinewidth(0.5)&quot;];
+}" usemap="#feature_vnum" />
+<map id="feature_vnum" name="feature_vnum">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.apply_vnum" title="apply_vnum" alt="" coords="5,6,104,31"/>
+<area shape="rect" id="node2" href="tools/ccroot.html#waflib.Tools.ccroot.apply_link" title="apply_link" alt="" coords="13,81,96,106"/>
+</map>
+</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Feature reference</a></li>
+<li><a class="reference internal" href="#feature">Feature *</a></li>
+<li><a class="reference internal" href="#feature-asm">Feature asm</a></li>
+<li><a class="reference internal" href="#feature-c">Feature c</a></li>
+<li><a class="reference internal" href="#feature-cprogram">Feature cprogram</a></li>
+<li><a class="reference internal" href="#feature-cs">Feature cs</a></li>
+<li><a class="reference internal" href="#feature-cshlib">Feature cshlib</a></li>
+<li><a class="reference internal" href="#feature-cxx">Feature cxx</a></li>
+<li><a class="reference internal" href="#feature-cxxprogram">Feature cxxprogram</a></li>
+<li><a class="reference internal" href="#feature-cxxshlib">Feature cxxshlib</a></li>
+<li><a class="reference internal" href="#feature-d">Feature d</a></li>
+<li><a class="reference internal" href="#feature-dshlib">Feature dshlib</a></li>
+<li><a class="reference internal" href="#feature-fake-lib">Feature fake_lib</a></li>
+<li><a class="reference internal" href="#feature-fc">Feature fc</a></li>
+<li><a class="reference internal" href="#feature-fcprogram">Feature fcprogram</a></li>
+<li><a class="reference internal" href="#feature-fcprogram-test">Feature fcprogram_test</a></li>
+<li><a class="reference internal" href="#feature-fcshlib">Feature fcshlib</a></li>
+<li><a class="reference internal" href="#feature-fcstlib">Feature fcstlib</a></li>
+<li><a class="reference internal" href="#feature-glib2">Feature glib2</a></li>
+<li><a class="reference internal" href="#feature-go">Feature go</a></li>
+<li><a class="reference internal" href="#feature-includes">Feature includes</a></li>
+<li><a class="reference internal" href="#feature-intltool-in">Feature intltool_in</a></li>
+<li><a class="reference internal" href="#feature-intltool-po">Feature intltool_po</a></li>
+<li><a class="reference internal" href="#feature-jar">Feature jar</a></li>
+<li><a class="reference internal" href="#feature-javac">Feature javac</a></li>
+<li><a class="reference internal" href="#feature-link-lib-test">Feature link_lib_test</a></li>
+<li><a class="reference internal" href="#feature-link-main-routines-func">Feature link_main_routines_func</a></li>
+<li><a class="reference internal" href="#feature-msgfmt">Feature msgfmt</a></li>
+<li><a class="reference internal" href="#feature-perlext">Feature perlext</a></li>
+<li><a class="reference internal" href="#feature-py">Feature py</a></li>
+<li><a class="reference internal" href="#feature-pyembed">Feature pyembed</a></li>
+<li><a class="reference internal" href="#feature-pyext">Feature pyext</a></li>
+<li><a class="reference internal" href="#feature-qt4">Feature qt4</a></li>
+<li><a class="reference internal" href="#feature-rubyext">Feature rubyext</a></li>
+<li><a class="reference internal" href="#feature-seq">Feature seq</a></li>
+<li><a class="reference internal" href="#feature-subst">Feature subst</a></li>
+<li><a class="reference internal" href="#feature-test">Feature test</a></li>
+<li><a class="reference internal" href="#feature-test-exec">Feature test_exec</a></li>
+<li><a class="reference internal" href="#feature-tex">Feature tex</a></li>
+<li><a class="reference internal" href="#feature-use">Feature use</a></li>
+<li><a class="reference internal" href="#feature-uselib">Feature uselib</a></li>
+<li><a class="reference internal" href="#feature-vnum">Feature vnum</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="copyright.html"
+                        title="previous chapter">Waf copyright</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Build.html"
+                        title="next chapter">Build</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/featuremap.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Build.html" title="Build"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="copyright.html" title="Waf copyright"
+             >previous</a> |</li>
+        <li><a href="index.html">Waf v1.7.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

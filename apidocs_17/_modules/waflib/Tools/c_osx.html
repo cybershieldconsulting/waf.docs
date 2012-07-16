@@ -1,0 +1,284 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.c_osx &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.c_osx</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy 2008-2010</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">MacOSX related tools</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">shutil</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">platform</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">TaskGen</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">taskgen_method</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">after_method</span><span class="p">,</span> <span class="n">before_method</span>
+
+<span class="n">app_info</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="s">&lt;!DOCTYPE plist SYSTEM &quot;file://localhost/System/Library/DTDs/PropertyList.dtd&quot;&gt;</span>
+<span class="s">&lt;plist version=&quot;0.9&quot;&gt;</span>
+<span class="s">&lt;dict&gt;</span>
+<span class="s">	&lt;key&gt;CFBundlePackageType&lt;/key&gt;</span>
+<span class="s">	&lt;string&gt;APPL&lt;/string&gt;</span>
+<span class="s">	&lt;key&gt;CFBundleGetInfoString&lt;/key&gt;</span>
+<span class="s">	&lt;string&gt;Created by Waf&lt;/string&gt;</span>
+<span class="s">	&lt;key&gt;CFBundleSignature&lt;/key&gt;</span>
+<span class="s">	&lt;string&gt;????&lt;/string&gt;</span>
+<span class="s">	&lt;key&gt;NOTE&lt;/key&gt;</span>
+<span class="s">	&lt;string&gt;THIS IS A GENERATED FILE, DO NOT MODIFY&lt;/string&gt;</span>
+<span class="s">	&lt;key&gt;CFBundleExecutable&lt;/key&gt;</span>
+<span class="s">	&lt;string&gt;</span><span class="si">%s</span><span class="s">&lt;/string&gt;</span>
+<span class="s">&lt;/dict&gt;</span>
+<span class="s">&lt;/plist&gt;</span>
+<span class="s">&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">plist template</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="s">&#39;cxx&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="set_macosx_deployment_target"><a class="viewcode-back" href="../../../tools/c_osx.html#waflib.Tools.c_osx.set_macosx_deployment_target">[docs]</a><span class="k">def</span> <span class="nf">set_macosx_deployment_target</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	see WAF issue 285 and also and also http://trac.macports.org/ticket/17059</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;MACOSX_DEPLOYMENT_TARGET&#39;</span><span class="p">]:</span>
+		<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;MACOSX_DEPLOYMENT_TARGET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;MACOSX_DEPLOYMENT_TARGET&#39;</span><span class="p">]</span>
+	<span class="k">elif</span> <span class="s">&#39;MACOSX_DEPLOYMENT_TARGET&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">Utils</span><span class="o">.</span><span class="n">unversioned_sys_platform</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;darwin&#39;</span><span class="p">:</span>
+			<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;MACOSX_DEPLOYMENT_TARGET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">platform</span><span class="o">.</span><span class="n">mac_ver</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[:</span><span class="mi">2</span><span class="p">])</span>
+</div>
+<span class="nd">@taskgen_method</span>
+<div class="viewcode-block" id="create_bundle_dirs"><a class="viewcode-back" href="../../../tools/c_osx.html#waflib.Tools.c_osx.create_bundle_dirs">[docs]</a><span class="k">def</span> <span class="nf">create_bundle_dirs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create bundle folders, used by :py:func:`create_task_macplist` and :py:func:`create_task_macapp`</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bld</span>
+	<span class="nb">dir</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+	<span class="nb">dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+	<span class="n">macos</span> <span class="o">=</span> <span class="nb">dir</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">([</span><span class="s">&#39;Contents&#39;</span><span class="p">,</span> <span class="s">&#39;MacOS&#39;</span><span class="p">])</span>
+	<span class="n">macos</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+	<span class="k">return</span> <span class="nb">dir</span>
+</div>
+<span class="k">def</span> <span class="nf">bundle_name_for_output</span><span class="p">(</span><span class="n">out</span><span class="p">):</span>
+	<span class="n">name</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">name</span>
+	<span class="n">k</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+		<span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[:</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;.app&#39;</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&#39;.app&#39;</span>
+	<span class="k">return</span> <span class="n">name</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;cprogram&#39;</span><span class="p">,</span> <span class="s">&#39;cxxprogram&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="create_task_macapp"><a class="viewcode-back" href="../../../tools/c_osx.html#waflib.Tools.c_osx.create_task_macapp">[docs]</a><span class="k">def</span> <span class="nf">create_task_macapp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	To compile an executable into a Mac application (a .app), set its *mac_app* attribute::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.shlib(source=&#39;a.c&#39;, target=&#39;foo&#39;, mac_app = True)</span>
+
+<span class="sd">	To force *all* executables to be transformed into Mac applications::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.env.MACAPP = True</span>
+<span class="sd">			bld.shlib(source=&#39;a.c&#39;, target=&#39;foo&#39;)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;MACAPP&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;mac_app&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+		<span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+		<span class="n">name</span> <span class="o">=</span> <span class="n">bundle_name_for_output</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+		<span class="nb">dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_bundle_dirs</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+
+		<span class="n">n1</span> <span class="o">=</span> <span class="nb">dir</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">([</span><span class="s">&#39;Contents&#39;</span><span class="p">,</span> <span class="s">&#39;MacOS&#39;</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">apptask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;macapp&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span> <span class="n">n1</span><span class="p">)</span>
+		<span class="n">inst_to</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;install_path&#39;</span><span class="p">,</span> <span class="s">&#39;/Applications&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;/</span><span class="si">%s</span><span class="s">/Contents/MacOS/&#39;</span> <span class="o">%</span> <span class="n">name</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">inst_to</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">chmod</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">O755</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;mac_resources&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">res_dir</span> <span class="o">=</span> <span class="n">n1</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="s">&#39;Resources&#39;</span><span class="p">)</span>
+			<span class="n">inst_to</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;install_path&#39;</span><span class="p">,</span> <span class="s">&#39;/Applications&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;/</span><span class="si">%s</span><span class="s">/Resources&#39;</span> <span class="o">%</span> <span class="n">name</span>
+			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mac_resources</span><span class="p">):</span>
+				<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+					<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;Missing mac_resource </span><span class="si">%r</span><span class="s"> in </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+
+				<span class="n">parent</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span>
+				<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()):</span>
+					<span class="n">nodes</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">ant_glob</span><span class="p">(</span><span class="s">&#39;**&#39;</span><span class="p">)</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="p">]</span>
+				<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+					<span class="n">rel</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">path_from</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+					<span class="n">tsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;macapp&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">res_dir</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">rel</span><span class="p">))</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_as</span><span class="p">(</span><span class="n">inst_to</span> <span class="o">+</span> <span class="s">&#39;/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">rel</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="p">,</span> <span class="s">&#39;is_install&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="c"># disable the normal binary installation</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">install_task</span><span class="o">.</span><span class="n">hasrun</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">SKIP_ME</span>
+</div>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;cprogram&#39;</span><span class="p">,</span> <span class="s">&#39;cxxprogram&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="create_task_macplist"><a class="viewcode-back" href="../../../tools/c_osx.html#waflib.Tools.c_osx.create_task_macplist">[docs]</a><span class="k">def</span> <span class="nf">create_task_macplist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create a :py:class:`waflib.Tools.c_osx.macplist` instance.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span>  <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;MACAPP&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;mac_app&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+		<span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+		<span class="n">name</span> <span class="o">=</span> <span class="n">bundle_name_for_output</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+		<span class="nb">dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_bundle_dirs</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+		<span class="n">n1</span> <span class="o">=</span> <span class="nb">dir</span><span class="o">.</span><span class="n">find_or_declare</span><span class="p">([</span><span class="s">&#39;Contents&#39;</span><span class="p">,</span> <span class="s">&#39;Info.plist&#39;</span><span class="p">])</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">plisttask</span> <span class="o">=</span> <span class="n">plisttask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="s">&#39;macplist&#39;</span><span class="p">,</span> <span class="p">[],</span> <span class="n">n1</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;mac_plist&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+			<span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_resource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mac_plist</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">node</span><span class="p">:</span>
+				<span class="n">plisttask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">plisttask</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mac_plist</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">plisttask</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="n">app_info</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_task</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+
+		<span class="n">inst_to</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;install_path&#39;</span><span class="p">,</span> <span class="s">&#39;/Applications&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;/</span><span class="si">%s</span><span class="s">/Contents/&#39;</span> <span class="o">%</span> <span class="n">name</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">bld</span><span class="o">.</span><span class="n">install_files</span><span class="p">(</span><span class="n">inst_to</span><span class="p">,</span> <span class="n">n1</span><span class="p">)</span>
+</div>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;cshlib&#39;</span><span class="p">,</span> <span class="s">&#39;cxxshlib&#39;</span><span class="p">)</span>
+<span class="nd">@before_method</span><span class="p">(</span><span class="s">&#39;apply_link&#39;</span><span class="p">,</span> <span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="apply_bundle"><a class="viewcode-back" href="../../../tools/c_osx.html#waflib.Tools.c_osx.apply_bundle">[docs]</a><span class="k">def</span> <span class="nf">apply_bundle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	To make a bundled shared library (a ``.bundle``), set the *mac_bundle* attribute::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.shlib(source=&#39;a.c&#39;, target=&#39;foo&#39;, mac_bundle = True)</span>
+
+<span class="sd">	To force *all* executables to be transformed into bundles::</span>
+
+<span class="sd">		def build(bld):</span>
+<span class="sd">			bld.env.MACBUNDLE = True</span>
+<span class="sd">			bld.shlib(source=&#39;a.c&#39;, target=&#39;foo&#39;)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;MACBUNDLE&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;mac_bundle&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cshlib&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;LINKFLAGS_cxxshlib&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span> <span class="c"># disable the &#39;-dynamiclib&#39; flag</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;cshlib_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;cxxshlib_PATTERN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;macbundle_PATTERN&#39;</span><span class="p">]</span>
+		<span class="n">use</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">use</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;use&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;MACBUNDLE&#39;</span> <span class="ow">in</span> <span class="n">use</span><span class="p">:</span>
+			<span class="n">use</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;MACBUNDLE&#39;</span><span class="p">)</span>
+</div>
+<span class="n">app_dirs</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Contents&#39;</span><span class="p">,</span> <span class="s">&#39;Contents/MacOS&#39;</span><span class="p">,</span> <span class="s">&#39;Contents/Resources&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="macapp"><a class="viewcode-back" href="../../../tools/c_osx.html#waflib.Tools.c_osx.macapp">[docs]</a><span class="k">class</span> <span class="nc">macapp</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create mac applications</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">color</span> <span class="o">=</span> <span class="s">&#39;PINK&#39;</span>
+	<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+		<span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">srcpath</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="macplist"><a class="viewcode-back" href="../../../tools/c_osx.html#waflib.Tools.c_osx.macplist">[docs]</a><span class="k">class</span> <span class="nc">macplist</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create plist files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">color</span> <span class="o">=</span> <span class="s">&#39;PINK&#39;</span>
+	<span class="n">ext_in</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.bin&#39;</span><span class="p">]</span>
+	<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;code&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">txt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">code</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">txt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

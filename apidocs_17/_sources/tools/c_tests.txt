@@ -1,0 +1,10 @@
+c_tests
+=======
+
+.. automodule:: waflib.Tools.c_tests
+
+Features defined in this module:
+
+* `grep_for_endianness <../featuremap.html#feature-grep_for_endianness>`_
+
+* `link_lib_test <../featuremap.html#feature-link_lib_test>`_

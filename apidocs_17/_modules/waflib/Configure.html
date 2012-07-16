@@ -1,0 +1,665 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Configure &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Configure</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2005-2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Configuration system</span>
+
+<span class="sd">A :py:class:`waflib.Configure.ConfigurationContext` instance is created when ``waf configure`` is called, it is used to:</span>
+
+<span class="sd">* create data dictionaries (ConfigSet instances)</span>
+<span class="sd">* store the list of modules to import</span>
+<span class="sd">* hold configuration routines such as ``find_program``, etc</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">shlex</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">ConfigSet</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Context</span><span class="p">,</span> <span class="n">Build</span><span class="p">,</span> <span class="n">Errors</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">request</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+	<span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">urlopen</span>
+<span class="k">else</span><span class="p">:</span>
+	<span class="n">urlopen</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">urlopen</span>
+
+<span class="n">BREAK</span>    <span class="o">=</span> <span class="s">&#39;break&#39;</span>
+<span class="sd">&quot;&quot;&quot;In case of a configuration error, break&quot;&quot;&quot;</span>
+
+<span class="n">CONTINUE</span> <span class="o">=</span> <span class="s">&#39;continue&#39;</span>
+<span class="sd">&quot;&quot;&quot;In case of a configuration error, continue&quot;&quot;&quot;</span>
+
+<span class="n">WAF_CONFIG_LOG</span> <span class="o">=</span> <span class="s">&#39;config.log&#39;</span>
+<span class="sd">&quot;&quot;&quot;Name of the configuration log file&quot;&quot;&quot;</span>
+
+<span class="n">autoconfig</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="sd">&quot;&quot;&quot;Execute the configuration automatically&quot;&quot;&quot;</span>
+
+<span class="n">conf_template</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;# project </span><span class="si">%(app)s</span><span class="s"> configured on </span><span class="si">%(now)s</span><span class="s"> by</span>
+<span class="s"># waf </span><span class="si">%(wafver)s</span><span class="s"> (abi </span><span class="si">%(abi)s</span><span class="s">, python </span><span class="si">%(pyver)x</span><span class="s"> on </span><span class="si">%(systype)s</span><span class="s">)</span>
+<span class="s"># using </span><span class="si">%(args)s</span><span class="s"></span>
+<span class="s">#&#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="download_check"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.download_check">[docs]</a><span class="k">def</span> <span class="nf">download_check</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Hook to check for the tools which are downloaded. Replace with your function if necessary.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="download_tool"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.download_tool">[docs]</a><span class="k">def</span> <span class="nf">download_tool</span><span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Download a Waf tool from the remote repository defined in :py:const:`waflib.Context.remote_repo`::</span>
+
+<span class="sd">		$ waf configure --download</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">remote_repo</span><span class="p">):</span>
+		<span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">remote_locs</span><span class="p">):</span>
+			<span class="n">url</span> <span class="o">=</span> <span class="s">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">sub</span><span class="p">,</span> <span class="n">tool</span> <span class="o">+</span> <span class="s">&#39;.py&#39;</span><span class="p">))</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">web</span> <span class="o">=</span> <span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">web</span><span class="o">.</span><span class="n">getcode</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+						<span class="k">continue</span>
+				<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+					<span class="k">pass</span>
+			<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+				<span class="c"># on python3 urlopen throws an exception</span>
+				<span class="c"># python 2.3 does not have getcode and throws an exception to fail</span>
+				<span class="k">continue</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">tmp</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">Context</span><span class="o">.</span><span class="n">waf_dir</span><span class="p">,</span> <span class="s">&#39;waflib&#39;</span><span class="p">,</span> <span class="s">&#39;extras&#39;</span><span class="p">,</span> <span class="n">tool</span> <span class="o">+</span> <span class="s">&#39;.py&#39;</span><span class="p">)))</span>
+				<span class="n">tmp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+				<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;Downloaded </span><span class="si">%s</span><span class="s"> from </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="n">url</span><span class="p">))</span>
+				<span class="n">download_check</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="n">module</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">load_tool</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span>
+				<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+					<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;The tool </span><span class="si">%s</span><span class="s"> from </span><span class="si">%s</span><span class="s"> is unusable&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="n">url</span><span class="p">))</span>
+					<span class="k">try</span><span class="p">:</span>
+						<span class="n">tmp</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+					<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+						<span class="k">pass</span>
+					<span class="k">continue</span>
+				<span class="k">return</span> <span class="n">module</span>
+	<span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;Could not load the Waf tool&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ConfigurationContext"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext">[docs]</a><span class="k">class</span> <span class="nc">ConfigurationContext</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">Context</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;configures the project&#39;&#39;&#39;</span>
+
+	<span class="n">cmd</span> <span class="o">=</span> <span class="s">&#39;configure&#39;</span>
+
+	<span class="n">error_handlers</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Additional functions to handle configuration errors</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+		<span class="nb">super</span><span class="p">(</span><span class="n">ConfigurationContext</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">environ</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">all_envs</span> <span class="o">=</span> <span class="p">{}</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">top_dir</span> <span class="o">=</span> <span class="bp">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">=</span> <span class="bp">None</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">tools</span> <span class="o">=</span> <span class="p">[]</span> <span class="c"># tools loaded in the configuration, and that will be loaded when building</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">hash</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">tool_cache</span> <span class="o">=</span> <span class="p">[]</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ConfigurationContext.setenv"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.setenv">[docs]</a>	<span class="k">def</span> <span class="nf">setenv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Set a new config set for conf.env. If a config set of that name already exists,</span>
+<span class="sd">		recall it without modification.</span>
+
+<span class="sd">		The name is the filename prefix to save to ``c4che/NAME_cache.py``, and it</span>
+<span class="sd">		is also used as *variants* by the build commands.</span>
+<span class="sd">		Though related to variants, whatever kind of data may be stored in the config set::</span>
+
+<span class="sd">			def configure(cfg):</span>
+<span class="sd">				cfg.env.ONE = 1</span>
+<span class="sd">				cfg.setenv(&#39;foo&#39;)</span>
+<span class="sd">				cfg.env.ONE = 2</span>
+
+<span class="sd">			def build(bld):</span>
+<span class="sd">				2 == bld.env_of_name(&#39;foo&#39;).ONE</span>
+
+<span class="sd">		:param name: name of the configuration set</span>
+<span class="sd">		:type name: string</span>
+<span class="sd">		:param env: ConfigSet to copy, or an empty ConfigSet is created</span>
+<span class="sd">		:type env: :py:class:`waflib.ConfigSet.ConfigSet`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_envs</span> <span class="ow">or</span> <span class="n">env</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="p">:</span>
+				<span class="n">env</span> <span class="o">=</span> <span class="n">ConfigSet</span><span class="o">.</span><span class="n">ConfigSet</span><span class="p">()</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">prepare_env</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">env</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">derive</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">all_envs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">env</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">variant</span> <span class="o">=</span> <span class="n">name</span>
+</div>
+<div class="viewcode-block" id="ConfigurationContext.get_env"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.get_env">[docs]</a>	<span class="k">def</span> <span class="nf">get_env</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Getter for the env property&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_envs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">]</span></div>
+<div class="viewcode-block" id="ConfigurationContext.set_env"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.set_env">[docs]</a>	<span class="k">def</span> <span class="nf">set_env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Setter for the env property&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">all_envs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+</div>
+	<span class="n">env</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_env</span><span class="p">,</span> <span class="n">set_env</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ConfigurationContext.init_dirs"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.init_dirs">[docs]</a>	<span class="k">def</span> <span class="nf">init_dirs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initialize the project directory and the build directory</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="n">top</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_dir</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">top</span><span class="p">:</span>
+			<span class="n">top</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">top</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">top</span><span class="p">:</span>
+			<span class="n">top</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="p">,</span> <span class="n">Context</span><span class="o">.</span><span class="n">TOP</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">top</span><span class="p">:</span>
+			<span class="n">top</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+		<span class="n">top</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">top</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">srcnode</span> <span class="o">=</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">top</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">find_dir</span><span class="p">(</span><span class="n">top</span><span class="p">)</span>
+		<span class="k">assert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">srcnode</span><span class="p">)</span>
+
+		<span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">out</span><span class="p">:</span>
+			<span class="n">out</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">out</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">out</span><span class="p">:</span>
+			<span class="n">out</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="p">,</span> <span class="n">Context</span><span class="o">.</span><span class="n">OUT</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">out</span><span class="p">:</span>
+			<span class="n">out</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">lockfile</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;.lock-waf_</span><span class="si">%s</span><span class="s">_&#39;</span> <span class="o">%</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;.lock-waf&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span> <span class="o">=</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">()):</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;could not create the build directory </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="ConfigurationContext.execute"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.execute">[docs]</a>	<span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		See :py:func:`waflib.Context.Context.execute`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">init_dirs</span><span class="p">()</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">cachedir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">Build</span><span class="o">.</span><span class="n">CACHE_DIR</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">cachedir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+
+		<span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">(),</span> <span class="n">WAF_CONFIG_LOG</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">Logs</span><span class="o">.</span><span class="n">make_logger</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;cfg&#39;</span><span class="p">)</span>
+
+		<span class="n">app</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="p">,</span> <span class="s">&#39;APPNAME&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">app</span><span class="p">:</span>
+			<span class="n">ver</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="p">,</span> <span class="s">&#39;VERSION&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">ver</span><span class="p">:</span>
+				<span class="n">app</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> (</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">ver</span><span class="p">)</span>
+
+		<span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">ctime</span><span class="p">()</span>
+		<span class="n">pyver</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">hexversion</span>
+		<span class="n">systype</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span>
+		<span class="n">args</span> <span class="o">=</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+		<span class="n">wafver</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">WAFVERSION</span>
+		<span class="n">abi</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">ABI</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="n">conf_template</span> <span class="o">%</span> <span class="nb">vars</span><span class="p">())</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Setting top to&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">srcnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Setting out to&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+
+		<span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">srcnode</span><span class="p">)</span> <span class="o">==</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span><span class="p">):</span>
+			<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;Setting top == out (remember to use &quot;update_outputs&quot;)&#39;</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">srcnode</span><span class="p">):</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">srcnode</span><span class="o">.</span><span class="n">is_child_of</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
+				<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;Are you certain that you do not want to set top=&quot;.&quot; ?&#39;</span><span class="p">)</span>
+
+		<span class="nb">super</span><span class="p">(</span><span class="n">ConfigurationContext</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">()</span>
+
+		<span class="n">Context</span><span class="o">.</span><span class="n">top_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">srcnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+		<span class="n">Context</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bldnode</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+
+		<span class="c"># this will write a configure lock so that subsequent builds will</span>
+		<span class="c"># consider the current path as the root directory (see prepare_impl).</span>
+		<span class="c"># to remove: use &#39;waf distclean&#39;</span>
+		<span class="n">env</span> <span class="o">=</span> <span class="n">ConfigSet</span><span class="o">.</span><span class="n">ConfigSet</span><span class="p">()</span>
+		<span class="n">env</span><span class="p">[</span><span class="s">&#39;argv&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span>
+		<span class="n">env</span><span class="p">[</span><span class="s">&#39;options&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">__dict__</span>
+
+		<span class="n">env</span><span class="o">.</span><span class="n">run_dir</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">run_dir</span>
+		<span class="n">env</span><span class="o">.</span><span class="n">top_dir</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">top_dir</span>
+		<span class="n">env</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">out_dir</span>
+
+		<span class="c"># conf.hash &amp; conf.files hold wscript files paths and hash</span>
+		<span class="c"># (used only by Configure.autoconfig)</span>
+		<span class="n">env</span><span class="p">[</span><span class="s">&#39;hash&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash</span>
+		<span class="n">env</span><span class="p">[</span><span class="s">&#39;files&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span>
+		<span class="n">env</span><span class="p">[</span><span class="s">&#39;environ&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">environ</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">NO_LOCK_IN_RUN</span><span class="p">:</span>
+			<span class="n">env</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">run_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">Options</span><span class="o">.</span><span class="n">lockfile</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">NO_LOCK_IN_TOP</span><span class="p">:</span>
+			<span class="n">env</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">top_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">Options</span><span class="o">.</span><span class="n">lockfile</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">NO_LOCK_IN_OUT</span><span class="p">:</span>
+			<span class="n">env</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">Options</span><span class="o">.</span><span class="n">lockfile</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ConfigurationContext.prepare_env"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.prepare_env">[docs]</a>	<span class="k">def</span> <span class="nf">prepare_env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Insert *PREFIX*, *BINDIR* and *LIBDIR* values into ``env``</span>
+
+<span class="sd">		:type env: :py:class:`waflib.ConfigSet.ConfigSet`</span>
+<span class="sd">		:param env: a ConfigSet, usually ``conf.env``</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">PREFIX</span><span class="p">:</span>
+			<span class="n">env</span><span class="o">.</span><span class="n">PREFIX</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">prefix</span><span class="p">))</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">BINDIR</span><span class="p">:</span>
+			<span class="n">env</span><span class="o">.</span><span class="n">BINDIR</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subst_vars</span><span class="p">(</span><span class="s">&#39;${PREFIX}/bin&#39;</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">LIBDIR</span><span class="p">:</span>
+			<span class="n">env</span><span class="o">.</span><span class="n">LIBDIR</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subst_vars</span><span class="p">(</span><span class="s">&#39;${PREFIX}/lib&#39;</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ConfigurationContext.store"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.store">[docs]</a>	<span class="k">def</span> <span class="nf">store</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Save the config results into the cache file&quot;&quot;&quot;</span>
+		<span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cachedir</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="s">&#39;build.config.py&#39;</span><span class="p">)</span>
+		<span class="n">n</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;version = 0x</span><span class="si">%x</span><span class="se">\n</span><span class="s">tools = </span><span class="si">%r</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">HEXVERSION</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="p">))</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_envs</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;nothing to store in the configuration context!&#39;</span><span class="p">)</span>
+
+		<span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_envs</span><span class="p">:</span>
+			<span class="n">tmpenv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_envs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+			<span class="n">tmpenv</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cachedir</span><span class="o">.</span><span class="n">abspath</span><span class="p">(),</span> <span class="n">key</span> <span class="o">+</span> <span class="n">Build</span><span class="o">.</span><span class="n">CACHE_SUFFIX</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="ConfigurationContext.load"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.load">[docs]</a>	<span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">tooldir</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">funs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Load Waf tools, which will be imported whenever a build is started.</span>
+
+<span class="sd">		:param input: waf tools to import</span>
+<span class="sd">		:type input: list of string</span>
+<span class="sd">		:param tooldir: paths for the imports</span>
+<span class="sd">		:type tooldir: list of string</span>
+<span class="sd">		:param funs: functions to execute from the waf tools</span>
+<span class="sd">		:type funs: list of string</span>
+<span class="sd">		:param download: whether to download the tool from the waf repository</span>
+<span class="sd">		:type download: bool</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="n">tools</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">tooldir</span><span class="p">:</span> <span class="n">tooldir</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">tooldir</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="n">tools</span><span class="p">:</span>
+			<span class="c"># avoid loading the same tool more than once with the same functions</span>
+			<span class="c"># used by composite projects</span>
+
+			<span class="n">mag</span> <span class="o">=</span> <span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">),</span> <span class="n">funs</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">mag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tool_cache</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&#39;(tool </span><span class="si">%s</span><span class="s"> is already loaded, skipping)&#39;</span> <span class="o">%</span> <span class="n">tool</span><span class="p">)</span>
+				<span class="k">continue</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">tool_cache</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mag</span><span class="p">)</span>
+
+			<span class="n">module</span> <span class="o">=</span> <span class="bp">None</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">module</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">load_tool</span><span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="n">tooldir</span><span class="p">)</span>
+			<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">download</span><span class="p">:</span>
+					<span class="n">module</span> <span class="o">=</span> <span class="n">download_tool</span><span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="n">ctx</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+					<span class="k">if</span> <span class="ow">not</span> <span class="n">module</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;Could not load the Waf tool </span><span class="si">%r</span><span class="s"> or download a suitable replacement from the repository (sys.path </span><span class="si">%r</span><span class="s">)</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;Could not load the Waf tool </span><span class="si">%r</span><span class="s"> from </span><span class="si">%r</span><span class="s"> (try the --download option?):</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
+			<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&#39;imp </span><span class="si">%r</span><span class="s"> (</span><span class="si">%r</span><span class="s"> &amp; </span><span class="si">%r</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="n">tooldir</span><span class="p">,</span> <span class="n">funs</span><span class="p">))</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">ex_stack</span><span class="p">())</span>
+				<span class="k">raise</span>
+
+			<span class="k">if</span> <span class="n">funs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">eval_rules</span><span class="p">(</span><span class="n">funs</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s">&#39;configure&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+				<span class="k">if</span> <span class="n">func</span><span class="p">:</span>
+					<span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">func</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">readf</span><span class="p">):</span> <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_rules</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+
+			<span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s">&#39;tool&#39;</span><span class="p">:</span><span class="n">tool</span><span class="p">,</span> <span class="s">&#39;tooldir&#39;</span><span class="p">:</span><span class="n">tooldir</span><span class="p">,</span> <span class="s">&#39;funs&#39;</span><span class="p">:</span><span class="n">funs</span><span class="p">})</span>
+</div>
+<div class="viewcode-block" id="ConfigurationContext.post_recurse"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.post_recurse">[docs]</a>	<span class="k">def</span> <span class="nf">post_recurse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Records the path and a hash of the scripts visited, see :py:meth:`waflib.Context.Context.post_recurse`</span>
+
+<span class="sd">		:param node: script</span>
+<span class="sd">		:type node: :py:class:`waflib.Node.Node`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="nb">super</span><span class="p">(</span><span class="n">ConfigurationContext</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">post_recurse</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">hash</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s">&#39;rb&#39;</span><span class="p">)))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="ConfigurationContext.eval_rules"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.eval_rules">[docs]</a>	<span class="k">def</span> <span class="nf">eval_rules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rules</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Execute the configuration tests. The method :py:meth:`waflib.Configure.ConfigurationContext.err_handler`</span>
+<span class="sd">		is used to process the eventual exceptions</span>
+
+<span class="sd">		:param rules: list of configuration method names</span>
+<span class="sd">		:type rules: list of string</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">rules</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">rules</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rules</span><span class="p">:</span>
+			<span class="n">f</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&quot;No such method &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="n">x</span><span class="p">)</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">f</span><span class="p">()</span>
+			<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+				<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">err_handler</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+				<span class="k">if</span> <span class="n">ret</span> <span class="o">==</span> <span class="n">BREAK</span><span class="p">:</span>
+					<span class="k">break</span>
+				<span class="k">elif</span> <span class="n">ret</span> <span class="o">==</span> <span class="n">CONTINUE</span><span class="p">:</span>
+					<span class="k">continue</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="k">raise</span>
+</div>
+<div class="viewcode-block" id="ConfigurationContext.err_handler"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.ConfigurationContext.err_handler">[docs]</a>	<span class="k">def</span> <span class="nf">err_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fun</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Error handler for the configuration tests, the default is to let the exception raise</span>
+
+<span class="sd">		:param fun: configuration test</span>
+<span class="sd">		:type fun: method</span>
+<span class="sd">		:param error: exception</span>
+<span class="sd">		:type error: exception</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">pass</span>
+</div></div>
+<div class="viewcode-block" id="conf"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.conf">[docs]</a><span class="k">def</span> <span class="nf">conf</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Decorator: attach new configuration functions to :py:class:`waflib.Build.BuildContext` and</span>
+<span class="sd">	:py:class:`waflib.Configure.ConfigurationContext`. The methods bound will accept a parameter</span>
+<span class="sd">	named &#39;mandatory&#39; to disable the configuration errors::</span>
+
+<span class="sd">		def configure(conf):</span>
+<span class="sd">			conf.find_program(&#39;abc&#39;, mandatory=False)</span>
+
+<span class="sd">	:param f: method to bind</span>
+<span class="sd">	:type f: function</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">fun</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+		<span class="n">mandatory</span> <span class="o">=</span> <span class="bp">True</span>
+		<span class="k">if</span> <span class="s">&#39;mandatory&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+			<span class="n">mandatory</span> <span class="o">=</span> <span class="n">kw</span><span class="p">[</span><span class="s">&#39;mandatory&#39;</span><span class="p">]</span>
+			<span class="k">del</span> <span class="n">kw</span><span class="p">[</span><span class="s">&#39;mandatory&#39;</span><span class="p">]</span>
+
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+		<span class="k">except</span> <span class="n">Errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">mandatory</span><span class="p">:</span>
+				<span class="k">raise</span>
+
+	<span class="nb">setattr</span><span class="p">(</span><span class="n">ConfigurationContext</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">fun</span><span class="p">)</span>
+	<span class="nb">setattr</span><span class="p">(</span><span class="n">Build</span><span class="o">.</span><span class="n">BuildContext</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">fun</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">f</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="add_os_flags"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.add_os_flags">[docs]</a><span class="k">def</span> <span class="nf">add_os_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Import operating system environment values into ``conf.env`` dict::</span>
+
+<span class="sd">		def configure(conf):</span>
+<span class="sd">			conf.add_os_flags(&#39;CFLAGS&#39;)</span>
+
+<span class="sd">	:param var: variable to use</span>
+<span class="sd">	:type var: string</span>
+<span class="sd">	:param dest: destination variable, by default the same as var</span>
+<span class="sd">	:type dest: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c"># do not use &#39;get&#39; to make certain the variable is not defined</span>
+	<span class="k">try</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_value</span><span class="p">(</span><span class="n">dest</span> <span class="ow">or</span> <span class="n">var</span><span class="p">,</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="n">var</span><span class="p">]))</span>
+	<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span> <span class="k">pass</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="cmd_to_list"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.cmd_to_list">[docs]</a><span class="k">def</span> <span class="nf">cmd_to_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Detect if a command is written in pseudo shell like ``ccache g++`` and return a list.</span>
+
+<span class="sd">	:param cmd: command</span>
+<span class="sd">	:type cmd: a string or a list of string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cmd</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">):</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="p">[</span><span class="n">cmd</span><span class="p">]</span>
+	<span class="k">return</span> <span class="n">cmd</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="check_waf_version"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.check_waf_version">[docs]</a><span class="k">def</span> <span class="nf">check_waf_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mini</span><span class="o">=</span><span class="s">&#39;1.6.99&#39;</span><span class="p">,</span> <span class="n">maxi</span><span class="o">=</span><span class="s">&#39;1.8.0&#39;</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Raise a Configuration error if the Waf version does not strictly match the given bounds::</span>
+
+<span class="sd">		conf.check_waf_version(mini=&#39;1.7.0&#39;, maxi=&#39;1.8.0&#39;)</span>
+
+<span class="sd">	:type  mini: number, tuple or string</span>
+<span class="sd">	:param mini: Minimum required version</span>
+<span class="sd">	:type  maxi: number, tuple or string</span>
+<span class="sd">	:param maxi: Maximum allowed version</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">start_msg</span><span class="p">(</span><span class="s">&#39;Checking for waf version in </span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">mini</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">maxi</span><span class="p">)))</span>
+	<span class="n">ver</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">HEXVERSION</span>
+	<span class="k">if</span> <span class="n">Utils</span><span class="o">.</span><span class="n">num2ver</span><span class="p">(</span><span class="n">mini</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">ver</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;waf version should be at least </span><span class="si">%r</span><span class="s"> (</span><span class="si">%r</span><span class="s"> found)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">num2ver</span><span class="p">(</span><span class="n">mini</span><span class="p">),</span> <span class="n">ver</span><span class="p">))</span>
+
+	<span class="k">if</span> <span class="n">Utils</span><span class="o">.</span><span class="n">num2ver</span><span class="p">(</span><span class="n">maxi</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">ver</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;waf version should be at most </span><span class="si">%r</span><span class="s"> (</span><span class="si">%r</span><span class="s"> found)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">num2ver</span><span class="p">(</span><span class="n">maxi</span><span class="p">),</span> <span class="n">ver</span><span class="p">))</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">end_msg</span><span class="p">(</span><span class="s">&#39;ok&#39;</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="find_file"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.find_file">[docs]</a><span class="k">def</span> <span class="nf">find_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">path_list</span><span class="o">=</span><span class="p">[]):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Find a file in a list of paths</span>
+
+<span class="sd">	:param filename: name of the file to search for</span>
+<span class="sd">	:param path_list: list of directories to search</span>
+<span class="sd">	:return: the first occurrence filename or &#39;&#39; if filename could not be found</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+		<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">path_list</span><span class="p">):</span>
+			<span class="n">p</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+				<span class="k">return</span> <span class="n">p</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;Could not find </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="find_program"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.find_program">[docs]</a><span class="k">def</span> <span class="nf">find_program</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Search for a program on the operating system</span>
+
+<span class="sd">	When var is used, you may set os.environ[var] to help find a specific program version, for example::</span>
+
+<span class="sd">		$ VALAC=/usr/bin/valac_test waf configure</span>
+
+<span class="sd">	:param path_list: paths to use for searching</span>
+<span class="sd">	:type param_list: list of string</span>
+<span class="sd">	:param var: store the result to conf.env[var], by default use filename.upper()</span>
+<span class="sd">	:type var: string</span>
+<span class="sd">	:param ext: list of extensions for the binary (do not add an extension for portability)</span>
+<span class="sd">	:type ext: list of string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">exts</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;exts&#39;</span><span class="p">,</span> <span class="n">Utils</span><span class="o">.</span><span class="n">is_win32</span> <span class="ow">and</span> <span class="s">&#39;.exe,.com,.bat,.cmd&#39;</span> <span class="ow">or</span> <span class="s">&#39;,.sh,.pl,.py&#39;</span><span class="p">)</span>
+
+	<span class="n">environ</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;environ&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">)</span>
+
+	<span class="n">ret</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">filename</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+	<span class="n">var</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;var&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">var</span><span class="p">:</span>
+		<span class="n">var</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="n">var</span><span class="p">]:</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+	<span class="k">elif</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">environ</span><span class="p">:</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="n">environ</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+
+	<span class="n">path_list</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;path_list&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">path_list</span><span class="p">:</span>
+			<span class="n">path_list</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">path_list</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">path_list</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;PATH&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+			<span class="n">filename</span> <span class="o">=</span> <span class="p">[</span><span class="n">filename</span><span class="p">]</span>
+
+		<span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">exts</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">):</span>
+			<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+				<span class="k">break</span>
+			<span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+					<span class="k">break</span>
+				<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">path_list</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+						<span class="k">break</span>
+					<span class="n">x</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">b</span> <span class="o">+</span> <span class="n">a</span><span class="p">))</span>
+					<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+						<span class="n">ret</span> <span class="o">=</span> <span class="n">x</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span> <span class="ow">and</span> <span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="p">:</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">get_registry_app_path</span><span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">HKEY_CURRENT_USER</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span> <span class="ow">and</span> <span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="p">:</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">get_registry_app_path</span><span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">HKEY_LOCAL_MACHINE</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for program &#39;</span> <span class="o">+</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="n">ret</span> <span class="ow">or</span> <span class="bp">False</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">to_log</span><span class="p">(</span><span class="s">&#39;find program=</span><span class="si">%r</span><span class="s"> paths=</span><span class="si">%r</span><span class="s"> var=</span><span class="si">%r</span><span class="s"> -&gt; </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">path_list</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">ret</span><span class="p">))</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;errmsg&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="s">&#39;Could not find the program </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+
+	<span class="k">if</span> <span class="n">var</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span>
+	<span class="k">return</span> <span class="n">ret</span>
+
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="find_perl_program"><a class="viewcode-back" href="../../Configure.html#waflib.Configure.find_perl_program">[docs]</a><span class="k">def</span> <span class="nf">find_perl_program</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">path_list</span><span class="o">=</span><span class="p">[],</span> <span class="n">var</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">environ</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">exts</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Search for a perl program on the operating system</span>
+
+<span class="sd">	:param filename: file to search for</span>
+<span class="sd">	:type filename: string</span>
+<span class="sd">	:param path_list: list of paths to look into</span>
+<span class="sd">	:type path_list: list of string</span>
+<span class="sd">	:param var: store the results into *conf.env.var*</span>
+<span class="sd">	:type var: string</span>
+<span class="sd">	:param environ: operating system environment to pass to :py:func:`waflib.Configure.find_program`</span>
+<span class="sd">	:type environ: dict</span>
+<span class="sd">	:param exts: extensions given to :py:func:`waflib.Configure.find_program`</span>
+<span class="sd">	:type exts: list</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">app</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">path_list</span><span class="o">=</span><span class="n">path_list</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">,</span> <span class="n">environ</span><span class="o">=</span><span class="n">environ</span><span class="p">,</span> <span class="n">exts</span><span class="o">=</span><span class="n">exts</span><span class="p">)</span>
+	<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;perl&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;PERL&#39;</span><span class="p">)</span>
+		<span class="n">app</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;PATH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">))</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">app</span><span class="p">:</span>
+			<span class="k">raise</span>
+		<span class="k">if</span> <span class="n">var</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PERL&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="n">app</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&#39;Checking for </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">,</span> <span class="n">app</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

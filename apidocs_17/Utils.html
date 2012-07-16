@@ -1,0 +1,573 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Utils &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="index.html" />
+    <link rel="next" title="errcheck" href="tools/errcheck.html" />
+    <link rel="prev" title="TaskGen" href="TaskGen.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tools/errcheck.html" title="errcheck"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="TaskGen.html" title="TaskGen"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Waf v1.7.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Utils">
+<span id="utils"></span><h1>Utils<a class="headerlink" href="#module-waflib.Utils" title="Permalink to this headline">¶</a></h1>
+<p>Utilities and platform-specific fixes</p>
+<p>The portability fixes try to provide a consistent behavior of the Waf API
+through Python versions 2.3 to 3.X and across different platforms (win32, linux, etc)</p>
+<dl class="data">
+<dt id="waflib.Utils.SIG_NIL">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">SIG_NIL</tt><a class="headerlink" href="#waflib.Utils.SIG_NIL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Arbitrary null value for a md5 hash. This value must be changed when the hash value is replaced (size)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Utils.O644">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">O644</tt><a class="headerlink" href="#waflib.Utils.O644" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constant representing the permissions for regular files (0644 raises a syntax error on python 3)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Utils.O755">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">O755</tt><a class="headerlink" href="#waflib.Utils.O755" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constant representing the permissions for executable files (0755 raises a syntax error on python 3)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Utils.rot_chr">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">rot_chr</tt><a class="headerlink" href="#waflib.Utils.rot_chr" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of characters to use when displaying the throbber (progress bar)</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Utils.rot_idx">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">rot_idx</tt><a class="headerlink" href="#waflib.Utils.rot_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index of the current throbber character (progress bar)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.readf">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">readf</tt><big>(</big><em>fname</em>, <em>m='r'</em>, <em>encoding='ISO8859-1'</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#readf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.readf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read an entire file into a string, use this function instead of os.open() whenever possible.</p>
+<p>In practice the wrapper node.read(..) should be preferred to this function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">readf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="s">&#39;wscript&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="s">&#39;wscript&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>fname</strong> (<em>string</em>) &#8211; Path to file</li>
+<li><strong>m</strong> (<em>string</em>) &#8211; Open mode</li>
+<li><strong>encoding</strong> (<em>string</em>) &#8211; encoding value, only used for python 3</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">string</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Content of the file</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.writef">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">writef</tt><big>(</big><em>fname</em>, <em>data</em>, <em>m='w'</em>, <em>encoding='ISO8859-1'</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#writef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.writef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write an entire file from a string, use this function instead of os.open() whenever possible.</p>
+<p>In practice the wrapper node.write(..) should be preferred to this function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">writef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="s">&#39;i_like_kittens&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">abspath</span><span class="p">(),</span> <span class="s">&#39;some data&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="s">&#39;i_like_kittens&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;some data&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>fname</strong> (<em>string</em>) &#8211; Path to file</li>
+<li><strong>data</strong> (<em>string</em>) &#8211; The contents to write to the file</li>
+<li><strong>m</strong> (<em>string</em>) &#8211; Open mode</li>
+<li><strong>encoding</strong> (<em>string</em>) &#8211; encoding value, only used for python 3</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.h_file">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">h_file</tt><big>(</big><em>fname</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#h_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.h_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute a hash value for a file by using md5. This method may be replaced by
+a faster version if necessary. The following uses the file size and the timestamp value:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">stat</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span>
+<span class="k">def</span> <span class="nf">h_file</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_ISDIR</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="n">stat</span><span class="o">.</span><span class="n">ST_MODE</span><span class="p">]):</span> <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s">&#39;not a file&#39;</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">md5</span><span class="p">()</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">st_mtime</span><span class="p">))</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">st_size</span><span class="p">))</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
+<span class="n">Utils</span><span class="o">.</span><span class="n">h_file</span> <span class="o">=</span> <span class="n">h_file</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fname</strong> (<em>string</em>) &#8211; path to the file to hash</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">hash of the file contents</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.to_hex">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">to_hex</tt><big>(</big><em>s</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#to_hex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.to_hex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the hexadecimal representation of a string</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<em>string</em>) &#8211; string to convert</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.num2ver">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">num2ver</tt><big>(</big><em>ver</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#num2ver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.num2ver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a string, tuple or version number into an integer. The number is supposed to have at most 4 digits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.Utils</span> <span class="kn">import</span> <span class="n">num2ver</span>
+<span class="n">num2ver</span><span class="p">(</span><span class="s">&#39;1.3.2&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">num2ver</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> <span class="o">==</span> <span class="n">num2ver</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ver</strong> (<em>string or tuple of numbers</em>) &#8211; a version number</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.ex_stack">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">ex_stack</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#ex_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.ex_stack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract the stack to display exceptions</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">a string represening the last exception</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.to_list">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">to_list</tt><big>(</big><em>sth</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#to_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.to_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a string argument to a list by splitting on spaces, and pass
+through a list argument unchanged:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.Utils</span> <span class="kn">import</span> <span class="n">to_list</span>
+<span class="n">lst</span> <span class="o">=</span> <span class="n">to_list</span><span class="p">(</span><span class="s">&quot;a b c d&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sth</strong> &#8211; List or a string of items separated by spaces</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">Argument converted to list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.str_to_dict">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">str_to_dict</tt><big>(</big><em>txt</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#str_to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.str_to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a string with key = value pairs into a dictionary:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">str_to_dict</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">        a = 1</span>
+<span class="s">        b = test</span>
+<span class="s">&#39;&#39;&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<em>string</em>) &#8211; String to parse</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">Dictionary containing parsed key-value pairs</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.split_path">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">split_path</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#split_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.split_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split a path by / or . This function is not like os.path.split</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<em>string</em>) &#8211; path to split</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">list of strings</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.check_dir">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">check_dir</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#check_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.check_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure that a directory exists (similar to <tt class="docutils literal"><span class="pre">mkdir</span> <span class="pre">-p</span></tt>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dir</strong> (<em>string</em>) &#8211; Path to directory</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.def_attrs">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">def_attrs</tt><big>(</big><em>cls</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#def_attrs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.def_attrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set default attributes on a class instance</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cls</strong> (<em>class</em>) &#8211; the class to update the given attributes in.</li>
+<li><strong>kw</strong> (<em>dict</em>) &#8211; dictionary of attributes names and values.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.quote_define_name">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">quote_define_name</tt><big>(</big><em>s</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#quote_define_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.quote_define_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a string to an identifier suitable for C defines.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<em>string</em>) &#8211; String to convert</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">Identifier suitable for C defines</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.h_list">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">h_list</tt><big>(</big><em>lst</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#h_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.h_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hash lists. For tuples, using hash(tup) is much more efficient</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>lst</strong> (<em>list of strings</em>) &#8211; list to hash</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">hash of the list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.h_fun">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">h_fun</tt><big>(</big><em>fun</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#h_fun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.h_fun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hash functions</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fun</strong> (<em>function</em>) &#8211; function to hash</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">hash of the function</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.subst_vars">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">subst_vars</tt><big>(</big><em>expr</em>, <em>params</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#subst_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.subst_vars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace ${VAR} with the value of VAR taken from a dict or a config set:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subst_vars</span><span class="p">(</span><span class="s">&#39;${PREFIX}/bin&#39;</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>expr</strong> (<em>string</em>) &#8211; String to perform substitution on</li>
+<li><strong>params</strong> &#8211; Dictionary or config set to look up variable values.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.destos_to_binfmt">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">destos_to_binfmt</tt><big>(</big><em>key</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#destos_to_binfmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.destos_to_binfmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the binary format based on the unversioned platform name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> (<em>string</em>) &#8211; platform name</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">string representing the binary format</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.unversioned_sys_platform">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">unversioned_sys_platform</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#unversioned_sys_platform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.unversioned_sys_platform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the unversioned platform name.
+Some Python platform names contain versions, that depend on
+the build environment, e.g. linux2, freebsd6, etc.
+This returns the name without the version number. Exceptions are
+os2 and win32, which are returned verbatim.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">Unversioned platform name</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.nada">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">nada</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#nada"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.nada" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function that does nothing</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Utils.Timer">
+<em class="property">class </em><tt class="descclassname">waflib.Utils.</tt><tt class="descname">Timer</tt><a class="reference internal" href="_modules/waflib/Utils.html#Timer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.Timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Simple object for timing the execution of commands.
+Its string representation is the current time:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib.Utils</span> <span class="kn">import</span> <span class="n">Timer</span>
+<span class="n">timer</span> <span class="o">=</span> <span class="n">Timer</span><span class="p">()</span>
+<span class="n">a_few_operations</span><span class="p">()</span>
+<span class="n">s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">timer</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.read_la_file">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">read_la_file</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#read_la_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.read_la_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read property files, used by msvc.py</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<em>string</em>) &#8211; file to read</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.nogc">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">nogc</tt><big>(</big><em>fun</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#nogc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.nogc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: let a function disable the garbage collector during its execution.
+It is used in the build context when storing/loading the build cache file (pickle)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fun</strong> (<em>function</em>) &#8211; function to execute</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">the return value of the function executed</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Utils.run_once">
+<tt class="descclassname">waflib.Utils.</tt><tt class="descname">run_once</tt><big>(</big><em>fun</em><big>)</big><a class="reference internal" href="_modules/waflib/Utils.html#run_once"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Utils.run_once" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: let a function cache its results, use like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@run_once</span>
+<span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">345</span><span class="o">*</span><span class="mi">2343</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fun</strong> (<em>function</em>) &#8211; function to execute</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">the return value of the function executed</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="TaskGen.html"
+                        title="previous chapter">TaskGen</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tools/errcheck.html"
+                        title="next chapter">errcheck</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/Utils.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tools/errcheck.html" title="errcheck"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="TaskGen.html" title="TaskGen"
+             >previous</a> |</li>
+        <li><a href="index.html">Waf v1.7.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

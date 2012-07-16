@@ -1,0 +1,403 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Logs &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Logs</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Thomas Nagy, 2005-2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">logging, colors, terminal width and pretty-print</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">traceback</span><span class="o">,</span> <span class="nn">sys</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">import</span> <span class="nn">threading</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+	<span class="k">pass</span>
+<span class="k">else</span><span class="p">:</span>
+	<span class="n">wlock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+	<span class="k">class</span> <span class="nc">sync_stream</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+		<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> <span class="n">stream</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">encoding</span>
+
+		<span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">):</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">wlock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+			<span class="k">finally</span><span class="p">:</span>
+				<span class="n">wlock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+		<span class="k">def</span> <span class="nf">fileno</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
+
+		<span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+		<span class="k">def</span> <span class="nf">isatty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">isatty</span><span class="p">()</span>
+
+	<span class="n">_nocolor</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;NOCOLOR&#39;</span><span class="p">,</span> <span class="s">&#39;no&#39;</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;no&#39;</span><span class="p">,</span> <span class="s">&#39;0&#39;</span><span class="p">,</span> <span class="s">&#39;false&#39;</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">_nocolor</span><span class="p">:</span>
+			<span class="kn">import</span> <span class="nn">waflib.ansiterm</span>
+	<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+		<span class="k">pass</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;NOSYNC&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+		<span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span> <span class="o">==</span> <span class="nb">id</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">__stdout__</span><span class="p">):</span>
+			<span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">sync_stream</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+			<span class="n">sys</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="n">sync_stream</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">logging</span> <span class="c"># import other modules only after</span>
+
+<span class="n">LOG_FORMAT</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%(asctime)s</span><span class="s"> </span><span class="si">%(c1)s%(zone)s%(c2)s</span><span class="s"> </span><span class="si">%(message)s</span><span class="s">&quot;</span>
+<span class="n">HOUR_FORMAT</span> <span class="o">=</span> <span class="s">&quot;%H:%M:%S&quot;</span>
+
+<span class="n">zones</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+<span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="n">colors_lst</span> <span class="o">=</span> <span class="p">{</span>
+<span class="s">&#39;USE&#39;</span> <span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+<span class="s">&#39;BOLD&#39;</span>  <span class="p">:</span><span class="s">&#39;</span><span class="se">\x1b</span><span class="s">[01;1m&#39;</span><span class="p">,</span>
+<span class="s">&#39;RED&#39;</span>   <span class="p">:</span><span class="s">&#39;</span><span class="se">\x1b</span><span class="s">[01;31m&#39;</span><span class="p">,</span>
+<span class="s">&#39;GREEN&#39;</span> <span class="p">:</span><span class="s">&#39;</span><span class="se">\x1b</span><span class="s">[32m&#39;</span><span class="p">,</span>
+<span class="s">&#39;YELLOW&#39;</span><span class="p">:</span><span class="s">&#39;</span><span class="se">\x1b</span><span class="s">[33m&#39;</span><span class="p">,</span>
+<span class="s">&#39;PINK&#39;</span>  <span class="p">:</span><span class="s">&#39;</span><span class="se">\x1b</span><span class="s">[35m&#39;</span><span class="p">,</span>
+<span class="s">&#39;BLUE&#39;</span>  <span class="p">:</span><span class="s">&#39;</span><span class="se">\x1b</span><span class="s">[01;34m&#39;</span><span class="p">,</span>
+<span class="s">&#39;CYAN&#39;</span>  <span class="p">:</span><span class="s">&#39;</span><span class="se">\x1b</span><span class="s">[36m&#39;</span><span class="p">,</span>
+<span class="s">&#39;NORMAL&#39;</span><span class="p">:</span><span class="s">&#39;</span><span class="se">\x1b</span><span class="s">[0m&#39;</span><span class="p">,</span>
+<span class="s">&#39;cursor_on&#39;</span>  <span class="p">:</span><span class="s">&#39;</span><span class="se">\x1b</span><span class="s">[?25h&#39;</span><span class="p">,</span>
+<span class="s">&#39;cursor_off&#39;</span> <span class="p">:</span><span class="s">&#39;</span><span class="se">\x1b</span><span class="s">[?25l&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">got_tty</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;TERM&#39;</span><span class="p">,</span> <span class="s">&#39;dumb&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;dumb&#39;</span><span class="p">,</span> <span class="s">&#39;emacs&#39;</span><span class="p">]</span>
+<span class="k">if</span> <span class="n">got_tty</span><span class="p">:</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">got_tty</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">isatty</span><span class="p">()</span> <span class="ow">and</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">isatty</span><span class="p">()</span>
+	<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+		<span class="n">got_tty</span> <span class="o">=</span> <span class="bp">False</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">got_tty</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;TERM&#39;</span><span class="p">,</span> <span class="s">&#39;dumb&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s">&#39;msys&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_nocolor</span><span class="p">:</span>
+	<span class="n">colors_lst</span><span class="p">[</span><span class="s">&#39;USE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+
+<div class="viewcode-block" id="get_term_cols"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.get_term_cols">[docs]</a><span class="k">def</span> <span class="nf">get_term_cols</span><span class="p">():</span>
+	<span class="k">return</span> <span class="mi">80</span>
+
+<span class="c"># If console packages are available, replace the dummy function with a real</span>
+<span class="c"># implementation</span></div>
+<span class="k">try</span><span class="p">:</span>
+	<span class="kn">import</span> <span class="nn">struct</span><span class="o">,</span> <span class="nn">fcntl</span><span class="o">,</span> <span class="nn">termios</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+	<span class="k">pass</span>
+<span class="k">else</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">got_tty</span><span class="p">:</span>
+		<span class="k">def</span> <span class="nf">get_term_cols_real</span><span class="p">():</span>
+			<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">			Private use only.</span>
+<span class="sd">			&quot;&quot;&quot;</span>
+
+			<span class="n">dummy_lines</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s">&quot;HHHH&quot;</span><span class="p">,</span> \
+			<span class="n">fcntl</span><span class="o">.</span><span class="n">ioctl</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span><span class="n">termios</span><span class="o">.</span><span class="n">TIOCGWINSZ</span> <span class="p">,</span> \
+			<span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s">&quot;HHHH&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))[:</span><span class="mi">2</span><span class="p">]</span>
+			<span class="k">return</span> <span class="n">cols</span>
+		<span class="c"># try the function once to see if it really works</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">get_term_cols_real</span><span class="p">()</span>
+		<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">get_term_cols</span> <span class="o">=</span> <span class="n">get_term_cols_real</span>
+
+<span class="n">get_term_cols</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">	Get the console width in characters.</span>
+
+<span class="s">	:return: the number of characters per line</span>
+<span class="s">	:rtype: int</span>
+<span class="s">	&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">get_color</span><span class="p">(</span><span class="n">cl</span><span class="p">):</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">colors_lst</span><span class="p">[</span><span class="s">&#39;USE&#39;</span><span class="p">]:</span> <span class="k">return</span> <span class="s">&#39;&#39;</span>
+	<span class="k">return</span> <span class="n">colors_lst</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="color_dict"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.color_dict">[docs]</a><span class="k">class</span> <span class="nc">color_dict</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;attribute-based color access, eg: colors.PINK&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">get_color</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+	<span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">get_color</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+</div>
+<span class="n">colors</span> <span class="o">=</span> <span class="n">color_dict</span><span class="p">()</span>
+
+<span class="n">re_log</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;(\w+): (.*)&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+<div class="viewcode-block" id="log_filter"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.log_filter">[docs]</a><span class="k">class</span> <span class="nc">log_filter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Filter</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	The waf logs are of the form &#39;name: message&#39;, and can be filtered by &#39;waf --zones=name&#39;.</span>
+<span class="sd">	For example, the following::</span>
+
+<span class="sd">		from waflib import Logs</span>
+<span class="sd">		Logs.debug(&#39;test: here is a message&#39;)</span>
+
+<span class="sd">	Will be displayed only when executing::</span>
+
+<span class="sd">		$ waf --zones=test</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="k">pass</span>
+
+<div class="viewcode-block" id="log_filter.filter"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.log_filter.filter">[docs]</a>	<span class="k">def</span> <span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		filter a record, adding the colors automatically</span>
+
+<span class="sd">		* error: red</span>
+<span class="sd">		* warning: yellow</span>
+
+<span class="sd">		:param rec: message to record</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="n">rec</span><span class="o">.</span><span class="n">c1</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">PINK</span>
+		<span class="n">rec</span><span class="o">.</span><span class="n">c2</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">NORMAL</span>
+		<span class="n">rec</span><span class="o">.</span><span class="n">zone</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">module</span>
+		<span class="k">if</span> <span class="n">rec</span><span class="o">.</span><span class="n">levelno</span> <span class="o">&gt;=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">rec</span><span class="o">.</span><span class="n">levelno</span> <span class="o">&gt;=</span> <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span>
+				<span class="n">rec</span><span class="o">.</span><span class="n">c1</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">RED</span>
+			<span class="k">elif</span> <span class="n">rec</span><span class="o">.</span><span class="n">levelno</span> <span class="o">&gt;=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">:</span>
+				<span class="n">rec</span><span class="o">.</span><span class="n">c1</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">YELLOW</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">rec</span><span class="o">.</span><span class="n">c1</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">GREEN</span>
+			<span class="k">return</span> <span class="bp">True</span>
+
+		<span class="n">m</span> <span class="o">=</span> <span class="n">re_log</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+			<span class="n">rec</span><span class="o">.</span><span class="n">zone</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+			<span class="n">rec</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="n">zones</span><span class="p">:</span>
+			<span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">rec</span><span class="p">,</span> <span class="s">&#39;zone&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">zones</span> <span class="ow">or</span> <span class="s">&#39;*&#39;</span> <span class="ow">in</span> <span class="n">zones</span>
+		<span class="k">elif</span> <span class="ow">not</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">False</span>
+		<span class="k">return</span> <span class="bp">True</span>
+</div></div>
+<div class="viewcode-block" id="formatter"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.formatter">[docs]</a><span class="k">class</span> <span class="nc">formatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Simple log formatter which handles colors&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">LOG_FORMAT</span><span class="p">,</span> <span class="n">HOUR_FORMAT</span><span class="p">)</span>
+
+<div class="viewcode-block" id="formatter.format"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.formatter.format">[docs]</a>	<span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Messages in warning, error or info mode are displayed in color by default&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="n">rec</span><span class="o">.</span><span class="n">levelno</span> <span class="o">&gt;=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span> <span class="ow">or</span> <span class="n">rec</span><span class="o">.</span><span class="n">levelno</span> <span class="o">==</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">msg</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+			<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+				<span class="n">msg</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">msg</span>
+			<span class="k">return</span> <span class="s">&#39;</span><span class="si">%s%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">c1</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">rec</span><span class="o">.</span><span class="n">c2</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec</span><span class="p">)</span>
+</div></div>
+<span class="n">log</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="sd">&quot;&quot;&quot;global logger for Logs.debug, Logs.error, etc&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="debug"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.debug">[docs]</a><span class="k">def</span> <span class="nf">debug</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Wrap logging.debug, the output is filtered for performance reasons</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+		<span class="n">k</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+		<span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39; &#39;</span><span class="p">)</span>
+		<span class="k">global</span> <span class="n">log</span>
+		<span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="error"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.error">[docs]</a><span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Wrap logging.errors, display the origin of the message when &#39;-vv&#39; is set</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">global</span> <span class="n">log</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+		<span class="n">st</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">extract_stack</span><span class="p">()</span>
+		<span class="k">if</span> <span class="n">st</span><span class="p">:</span>
+			<span class="n">st</span> <span class="o">=</span> <span class="n">st</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+			<span class="n">buf</span> <span class="o">=</span> <span class="p">[]</span>
+			<span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">st</span><span class="p">:</span>
+				<span class="n">buf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;  File &quot;</span><span class="si">%s</span><span class="s">&quot;, line </span><span class="si">%d</span><span class="s">, in </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+				<span class="k">if</span> <span class="n">line</span><span class="p">:</span>
+					<span class="n">buf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;	</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+			<span class="k">if</span> <span class="n">buf</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">buf</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="warn"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.warn">[docs]</a><span class="k">def</span> <span class="nf">warn</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Wrap logging.warn</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">global</span> <span class="n">log</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="info"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.info">[docs]</a><span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Wrap logging.info</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">global</span> <span class="n">log</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="init_log"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.init_log">[docs]</a><span class="k">def</span> <span class="nf">init_log</span><span class="p">():</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Initialize the loggers globally</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">global</span> <span class="n">log</span>
+	<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&#39;waflib&#39;</span><span class="p">)</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">handlers</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">filters</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">hdlr</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>
+	<span class="n">hdlr</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">())</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">hdlr</span><span class="p">)</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">addFilter</span><span class="p">(</span><span class="n">log_filter</span><span class="p">())</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="make_logger"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.make_logger">[docs]</a><span class="k">def</span> <span class="nf">make_logger</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create a simple logger, which is often used to redirect the context command output::</span>
+
+<span class="sd">		from waflib import Logs</span>
+<span class="sd">		bld.logger = Logs.make_logger(&#39;test.log&#39;, &#39;build&#39;)</span>
+<span class="sd">		bld.check(header_name=&#39;sadlib.h&#39;, features=&#39;cxx cprogram&#39;, mandatory=False)</span>
+<span class="sd">		bld.logger = None</span>
+
+<span class="sd">	:param path: file name to write the log output to</span>
+<span class="sd">	:type path: string</span>
+<span class="sd">	:param name: logger name (loggers are reused)</span>
+<span class="sd">	:type name: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+	<span class="n">hdlr</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+	<span class="n">formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">)</span>
+	<span class="n">hdlr</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">hdlr</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">logger</span>
+</div>
+<div class="viewcode-block" id="make_mem_logger"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.make_mem_logger">[docs]</a><span class="k">def</span> <span class="nf">make_mem_logger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">to_log</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10000</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create a memory logger to avoid writing concurrently to the main logger</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">logging.handlers</span> <span class="kn">import</span> <span class="n">MemoryHandler</span>
+	<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+	<span class="n">hdlr</span> <span class="o">=</span> <span class="n">MemoryHandler</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">to_log</span><span class="p">)</span>
+	<span class="n">formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">)</span>
+	<span class="n">hdlr</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">hdlr</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">memhandler</span> <span class="o">=</span> <span class="n">hdlr</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">logger</span>
+</div>
+<div class="viewcode-block" id="pprint"><a class="viewcode-back" href="../../Logs.html#waflib.Logs.pprint">[docs]</a><span class="k">def</span> <span class="nf">pprint</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Print messages in color immediately on stderr::</span>
+
+<span class="sd">		from waflib import Logs</span>
+<span class="sd">		Logs.pprint(&#39;RED&#39;, &#39;Something bad just happened&#39;)</span>
+
+<span class="sd">	:param col: color name to use in :py:const:`Logs.colors_lst`</span>
+<span class="sd">	:type col: string</span>
+<span class="sd">	:param str: message to display</span>
+<span class="sd">	:type str: string or a value that can be printed by %s</span>
+<span class="sd">	:param label: a message to add after the colored output</span>
+<span class="sd">	:type label: string</span>
+<span class="sd">	:param sep: a string to append at the end (line separator)</span>
+<span class="sd">	:type sep: string</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s%s%s</span><span class="s"> </span><span class="si">%s%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">colors</span><span class="p">(</span><span class="n">col</span><span class="p">),</span> <span class="nb">str</span><span class="p">,</span> <span class="n">colors</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">sep</span><span class="p">))</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

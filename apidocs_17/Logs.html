@@ -1,0 +1,281 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Logs &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="index.html" />
+    <link rel="next" title="Node" href="Node.html" />
+    <link rel="prev" title="Errors" href="Errors.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Node.html" title="Node"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Errors.html" title="Errors"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Waf v1.7.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-waflib.Logs">
+<span id="logs"></span><h1>Logs<a class="headerlink" href="#module-waflib.Logs" title="Permalink to this headline">¶</a></h1>
+<p>logging, colors, terminal width and pretty-print</p>
+<dl class="function">
+<dt id="waflib.Logs.get_term_cols">
+<tt class="descclassname">waflib.Logs.</tt><tt class="descname">get_term_cols</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Logs.html#get_term_cols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Logs.get_term_cols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the console width in characters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">the number of characters per line</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Logs.color_dict">
+<em class="property">class </em><tt class="descclassname">waflib.Logs.</tt><tt class="descname">color_dict</tt><a class="reference internal" href="_modules/waflib/Logs.html#color_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Logs.color_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>attribute-based color access, eg: colors.PINK</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Logs.log_filter">
+<em class="property">class </em><tt class="descclassname">waflib.Logs.</tt><tt class="descname">log_filter</tt><big>(</big><em>name=None</em><big>)</big><a class="reference internal" href="_modules/waflib/Logs.html#log_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Logs.log_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">logging.Filter</span></tt></p>
+<p>The waf logs are of the form &#8216;name: message&#8217;, and can be filtered by &#8216;waf &#8211;zones=name&#8217;.
+For example, the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Logs</span>
+<span class="n">Logs</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;test: here is a message&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Will be displayed only when executing:</p>
+<div class="highlight-python"><pre>$ waf --zones=test</pre>
+</div>
+<dl class="method">
+<dt id="waflib.Logs.log_filter.filter">
+<tt class="descname">filter</tt><big>(</big><em>rec</em><big>)</big><a class="reference internal" href="_modules/waflib/Logs.html#log_filter.filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Logs.log_filter.filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>filter a record, adding the colors automatically</p>
+<ul class="simple">
+<li>error: red</li>
+<li>warning: yellow</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rec</strong> &#8211; message to record</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="waflib.Logs.formatter">
+<em class="property">class </em><tt class="descclassname">waflib.Logs.</tt><tt class="descname">formatter</tt><a class="reference internal" href="_modules/waflib/Logs.html#formatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Logs.formatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">logging.Formatter</span></tt></p>
+<p>Simple log formatter which handles colors</p>
+<dl class="method">
+<dt id="waflib.Logs.formatter.format">
+<tt class="descname">format</tt><big>(</big><em>rec</em><big>)</big><a class="reference internal" href="_modules/waflib/Logs.html#formatter.format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Logs.formatter.format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Messages in warning, error or info mode are displayed in color by default</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="data">
+<dt id="waflib.Logs.log">
+<tt class="descclassname">waflib.Logs.</tt><tt class="descname">log</tt><a class="headerlink" href="#waflib.Logs.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>global logger for Logs.debug, Logs.error, etc</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Logs.debug">
+<tt class="descclassname">waflib.Logs.</tt><tt class="descname">debug</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Logs.html#debug"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Logs.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap logging.debug, the output is filtered for performance reasons</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Logs.error">
+<tt class="descclassname">waflib.Logs.</tt><tt class="descname">error</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Logs.html#error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Logs.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap logging.errors, display the origin of the message when &#8216;-vv&#8217; is set</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Logs.warn">
+<tt class="descclassname">waflib.Logs.</tt><tt class="descname">warn</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Logs.html#warn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Logs.warn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap logging.warn</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Logs.info">
+<tt class="descclassname">waflib.Logs.</tt><tt class="descname">info</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Logs.html#info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Logs.info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap logging.info</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Logs.init_log">
+<tt class="descclassname">waflib.Logs.</tt><tt class="descname">init_log</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Logs.html#init_log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Logs.init_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the loggers globally</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Logs.make_logger">
+<tt class="descclassname">waflib.Logs.</tt><tt class="descname">make_logger</tt><big>(</big><em>path</em>, <em>name</em><big>)</big><a class="reference internal" href="_modules/waflib/Logs.html#make_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Logs.make_logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a simple logger, which is often used to redirect the context command output:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Logs</span>
+<span class="n">bld</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">Logs</span><span class="o">.</span><span class="n">make_logger</span><span class="p">(</span><span class="s">&#39;test.log&#39;</span><span class="p">,</span> <span class="s">&#39;build&#39;</span><span class="p">)</span>
+<span class="n">bld</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">header_name</span><span class="o">=</span><span class="s">&#39;sadlib.h&#39;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="s">&#39;cxx cprogram&#39;</span><span class="p">,</span> <span class="n">mandatory</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">bld</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="bp">None</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> (<em>string</em>) &#8211; file name to write the log output to</li>
+<li><strong>name</strong> (<em>string</em>) &#8211; logger name (loggers are reused)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Logs.make_mem_logger">
+<tt class="descclassname">waflib.Logs.</tt><tt class="descname">make_mem_logger</tt><big>(</big><em>name</em>, <em>to_log</em>, <em>size=10000</em><big>)</big><a class="reference internal" href="_modules/waflib/Logs.html#make_mem_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Logs.make_mem_logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a memory logger to avoid writing concurrently to the main logger</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Logs.pprint">
+<tt class="descclassname">waflib.Logs.</tt><tt class="descname">pprint</tt><big>(</big><em>col</em>, <em>str</em>, <em>label=''</em>, <em>sep='\n'</em><big>)</big><a class="reference internal" href="_modules/waflib/Logs.html#pprint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Logs.pprint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print messages in color immediately on stderr:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Logs</span>
+<span class="n">Logs</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="s">&#39;RED&#39;</span><span class="p">,</span> <span class="s">&#39;Something bad just happened&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>col</strong> (<em>string</em>) &#8211; color name to use in <tt class="xref py py-const docutils literal"><span class="pre">Logs.colors_lst</span></tt></li>
+<li><strong>str</strong> (<em>string or a value that can be printed by %s</em>) &#8211; message to display</li>
+<li><strong>label</strong> (<em>string</em>) &#8211; a message to add after the colored output</li>
+<li><strong>sep</strong> (<em>string</em>) &#8211; a string to append at the end (line separator)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Errors.html"
+                        title="previous chapter">Errors</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="Node.html"
+                        title="next chapter">Node</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/Logs.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Node.html" title="Node"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Errors.html" title="Errors"
+             >previous</a> |</li>
+        <li><a href="index.html">Waf v1.7.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

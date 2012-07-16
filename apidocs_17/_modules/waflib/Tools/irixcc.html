@@ -1,0 +1,159 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.irixcc &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.irixcc</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># imported from samba</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">compiler definition for irix/MIPSpro cc compiler</span>
+<span class="sd">based on suncc.py from waf</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span>
+<span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">ccroot</span><span class="p">,</span> <span class="n">ar</span>
+<span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
+
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="find_irixcc"><a class="viewcode-back" href="../../../tools/irixcc.html#waflib.Tools.irixcc.find_irixcc">[docs]</a><span class="k">def</span> <span class="nf">find_irixcc</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+	<span class="n">cc</span> <span class="o">=</span> <span class="bp">None</span>
+	<span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;CC&#39;</span><span class="p">]:</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;CC&#39;</span><span class="p">]</span>
+	<span class="k">elif</span> <span class="s">&#39;CC&#39;</span> <span class="ow">in</span> <span class="n">conf</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;CC&#39;</span><span class="p">]</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">cc</span><span class="p">:</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;cc&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;CC&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">cc</span><span class="p">:</span> <span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;irixcc was not found&#39;</span><span class="p">)</span>
+	<span class="n">cc</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_to_list</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
+
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">(</span><span class="n">cc</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;-version&#39;</span><span class="p">])</span>
+	<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%r</span><span class="s"> -version could not be executed&#39;</span> <span class="o">%</span> <span class="n">cc</span><span class="p">)</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CC&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">cc</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CC_NAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;irix&#39;</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="irixcc_common_flags"><a class="viewcode-back" href="../../../tools/irixcc.html#waflib.Tools.irixcc.irixcc_common_flags">[docs]</a><span class="k">def</span> <span class="nf">irixcc_common_flags</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CC_SRC_F&#39;</span><span class="p">]</span>            <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CC_TGT_F&#39;</span><span class="p">]</span>            <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;-o&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CPPPATH_ST&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="s">&#39;-I</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;DEFINES_ST&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="s">&#39;-D</span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="c"># linker</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;LINK_CC&#39;</span><span class="p">]:</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;LINK_CC&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s">&#39;CC&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CCLNK_SRC_F&#39;</span><span class="p">]</span>         <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;CCLNK_TGT_F&#39;</span><span class="p">]</span>         <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-o&#39;</span><span class="p">]</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LIB_ST&#39;</span><span class="p">]</span>              <span class="o">=</span> <span class="s">&#39;-l</span><span class="si">%s</span><span class="s">&#39;</span> <span class="c"># template for adding libs</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LIBPATH_ST&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="s">&#39;-L</span><span class="si">%s</span><span class="s">&#39;</span> <span class="c"># template for adding libpaths</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;STLIB_ST&#39;</span><span class="p">]</span>            <span class="o">=</span> <span class="s">&#39;-l</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;STLIBPATH_ST&#39;</span><span class="p">]</span>        <span class="o">=</span> <span class="s">&#39;-L</span><span class="si">%s</span><span class="s">&#39;</span>
+
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cprogram_PATTERN&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cshlib_PATTERN&#39;</span><span class="p">]</span>       <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.so&#39;</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;cstlib_PATTERN&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="s">&#39;lib</span><span class="si">%s</span><span class="s">.a&#39;</span>
+</div>
+<span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_irixcc</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_cpp</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_ar</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">irixcc_common_flags</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">cc_load_tools</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">cc_add_flags</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">link_add_flags</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

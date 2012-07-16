@@ -1,0 +1,8 @@
+<map id="feature_includes" name="feature_includes">
+<area shape="rect" id="node1" href="tools/ccroot.html#waflib.Tools.ccroot.process_use" title="process_use" alt="" coords="5,81,107,106"/>
+<area shape="rect" id="node2" href="tools/perl.html#waflib.Tools.perl.init_perlext" title="init_perlext" alt="" coords="131,81,223,106"/>
+<area shape="rect" id="node3" href="TaskGen.html#waflib.TaskGen.process_source" title="process_source" alt="" coords="248,81,371,106"/>
+<area shape="rect" id="node4" href="tools/ccroot.html#waflib.Tools.ccroot.apply_incpaths" title="apply_incpaths" alt="" coords="251,6,367,31"/>
+<area shape="rect" id="node5" href="tools/ruby.html#waflib.Tools.ruby.init_rubyext" title="init_rubyext" alt="" coords="395,81,491,106"/>
+<area shape="rect" id="node6" href="tools/ccroot.html#waflib.Tools.ccroot.propagate_uselib_vars" title="propagate_uselib_vars" alt="" coords="515,81,681,106"/>
+</map>

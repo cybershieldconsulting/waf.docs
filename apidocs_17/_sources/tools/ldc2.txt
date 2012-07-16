@@ -1,0 +1,5 @@
+ldc2
+====
+
+.. automodule:: waflib.Tools.ldc2
+

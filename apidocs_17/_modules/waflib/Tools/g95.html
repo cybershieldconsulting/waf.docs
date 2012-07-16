@@ -1,0 +1,163 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.g95 &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.g95</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># KWS 2010</span>
+<span class="c"># Thomas Nagy 2010 (ita)</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span>
+<span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">fc</span><span class="p">,</span> <span class="n">fc_config</span><span class="p">,</span> <span class="n">fc_scan</span><span class="p">,</span> <span class="n">ar</span>
+<span class="kn">from</span> <span class="nn">waflib.Configure</span> <span class="kn">import</span> <span class="n">conf</span>
+
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="find_g95"><a class="viewcode-back" href="../../../tools/g95.html#waflib.Tools.g95.find_g95">[docs]</a><span class="k">def</span> <span class="nf">find_g95</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="n">fc</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;g95&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;FC&#39;</span><span class="p">)</span>
+	<span class="n">fc</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_to_list</span><span class="p">(</span><span class="n">fc</span><span class="p">)</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">get_g95_version</span><span class="p">(</span><span class="n">fc</span><span class="p">)</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">FC_NAME</span> <span class="o">=</span> <span class="s">&#39;G95&#39;</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="g95_flags"><a class="viewcode-back" href="../../../tools/g95.html#waflib.Tools.g95.g95_flags">[docs]</a><span class="k">def</span> <span class="nf">g95_flags</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCFLAGS_fcshlib&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fPIC&#39;</span><span class="p">]</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FORTRANMODFLAG&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-fmod=&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]</span> <span class="c"># template for module path</span>
+	<span class="n">v</span><span class="p">[</span><span class="s">&#39;FCFLAGS_DEBUG&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;-Werror&#39;</span><span class="p">]</span> <span class="c"># why not</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="g95_modifier_win32"><a class="viewcode-back" href="../../../tools/g95.html#waflib.Tools.g95.g95_modifier_win32">[docs]</a><span class="k">def</span> <span class="nf">g95_modifier_win32</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="n">fc_config</span><span class="o">.</span><span class="n">fortran_modifier_win32</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="g95_modifier_cygwin"><a class="viewcode-back" href="../../../tools/g95.html#waflib.Tools.g95.g95_modifier_cygwin">[docs]</a><span class="k">def</span> <span class="nf">g95_modifier_cygwin</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="n">fc_config</span><span class="o">.</span><span class="n">fortran_modifier_cygwin</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="g95_modifier_darwin"><a class="viewcode-back" href="../../../tools/g95.html#waflib.Tools.g95.g95_modifier_darwin">[docs]</a><span class="k">def</span> <span class="nf">g95_modifier_darwin</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="n">fc_config</span><span class="o">.</span><span class="n">fortran_modifier_darwin</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="g95_modifier_platform"><a class="viewcode-back" href="../../../tools/g95.html#waflib.Tools.g95.g95_modifier_platform">[docs]</a><span class="k">def</span> <span class="nf">g95_modifier_platform</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="n">dest_os</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;DEST_OS&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="n">Utils</span><span class="o">.</span><span class="n">unversioned_sys_platform</span><span class="p">()</span>
+	<span class="n">g95_modifier_func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="s">&#39;g95_modifier_&#39;</span> <span class="o">+</span> <span class="n">dest_os</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">g95_modifier_func</span><span class="p">:</span>
+		<span class="n">g95_modifier_func</span><span class="p">()</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="get_g95_version"><a class="viewcode-back" href="../../../tools/g95.html#waflib.Tools.g95.get_g95_version">[docs]</a><span class="k">def</span> <span class="nf">get_g95_version</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">fc</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;get the compiler version&quot;&quot;&quot;</span>
+
+	<span class="n">version_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&quot;g95\s*(?P&lt;major&gt;\d*)\.(?P&lt;minor&gt;\d*)&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">search</span>
+	<span class="n">cmd</span> <span class="o">=</span> <span class="n">fc</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;--version&#39;</span><span class="p">]</span>
+	<span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">fc_config</span><span class="o">.</span><span class="n">getoutput</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">out</span><span class="p">:</span>
+		<span class="n">match</span> <span class="o">=</span> <span class="n">version_re</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">match</span> <span class="o">=</span> <span class="n">version_re</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;cannot determine g95 version&#39;</span><span class="p">)</span>
+	<span class="n">k</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groupdict</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;FC_VERSION&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="s">&#39;major&#39;</span><span class="p">],</span> <span class="n">k</span><span class="p">[</span><span class="s">&#39;minor&#39;</span><span class="p">])</span>
+</div>
+<span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_g95</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">find_ar</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">fc_flags</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">fc_add_flags</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">g95_flags</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">g95_modifier_platform</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

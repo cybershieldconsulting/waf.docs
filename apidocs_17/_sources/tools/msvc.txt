@@ -1,0 +1,18 @@
+msvc
+====
+
+.. automodule:: waflib.Tools.msvc
+
+Features defined in this module:
+
+* `c <../featuremap.html#feature-c>`_
+
+* `cprogram <../featuremap.html#feature-cprogram>`_
+
+* `cshlib <../featuremap.html#feature-cshlib>`_
+
+* `cxx <../featuremap.html#feature-cxx>`_
+
+* `cxxprogram <../featuremap.html#feature-cxxprogram>`_
+
+* `cxxshlib <../featuremap.html#feature-cxxshlib>`_

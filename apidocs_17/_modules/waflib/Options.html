@@ -1,0 +1,350 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Options &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Options</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Scott Newton, 2005 (scottn)</span>
+<span class="c"># Thomas Nagy, 2006-2010 (ita)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Support for waf command-line options</span>
+
+<span class="sd">Provides default command-line options,</span>
+<span class="sd">as well as custom ones, used by the ``options`` wscript function.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">tempfile</span><span class="o">,</span> <span class="nn">optparse</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Context</span>
+
+<span class="n">cmds</span> <span class="o">=</span> <span class="s">&#39;distclean configure build install clean uninstall check dist distcheck&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Constant representing the default waf commands displayed in::</span>
+
+<span class="sd">	$ waf --help</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A dictionary representing the command-line options::</span>
+
+<span class="sd">	$ waf --foo=bar</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">commands</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">List of commands to execute extracted from the command-line. This list is consumed during the execution, see :py:func:`waflib.Scripting.run_commands`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">lockfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;WAFLOCK&#39;</span><span class="p">,</span> <span class="s">&#39;.lock-waf_</span><span class="si">%s</span><span class="s">_build&#39;</span> <span class="o">%</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="p">)</span>
+<span class="k">try</span><span class="p">:</span> <span class="n">cache_global</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;WAFCACHE&#39;</span><span class="p">])</span>
+<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span> <span class="n">cache_global</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+<span class="n">platform</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">unversioned_sys_platform</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="opt_parser"><a class="viewcode-back" href="../../Options.html#waflib.Options.opt_parser">[docs]</a><span class="k">class</span> <span class="nc">opt_parser</span><span class="p">(</span><span class="n">optparse</span><span class="o">.</span><span class="n">OptionParser</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Command-line options parser.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>
+		<span class="n">optparse</span><span class="o">.</span><span class="n">OptionParser</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conflict_handler</span><span class="o">=</span><span class="s">&quot;resolve&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s">&#39;waf </span><span class="si">%s</span><span class="s"> (</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">WAFVERSION</span><span class="p">,</span> <span class="n">Context</span><span class="o">.</span><span class="n">WAFREVISION</span><span class="p">))</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">formatter</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">Logs</span><span class="o">.</span><span class="n">get_term_cols</span><span class="p">()</span>
+		<span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_option</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+
+		<span class="n">jobs</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">jobs</span><span class="p">()</span>
+		<span class="n">p</span><span class="p">(</span><span class="s">&#39;-j&#39;</span><span class="p">,</span> <span class="s">&#39;--jobs&#39;</span><span class="p">,</span>     <span class="n">dest</span><span class="o">=</span><span class="s">&#39;jobs&#39;</span><span class="p">,</span>    <span class="n">default</span><span class="o">=</span><span class="n">jobs</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&#39;int&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;amount of parallel jobs (</span><span class="si">%r</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="n">jobs</span><span class="p">)</span>
+		<span class="n">p</span><span class="p">(</span><span class="s">&#39;-k&#39;</span><span class="p">,</span> <span class="s">&#39;--keep&#39;</span><span class="p">,</span>     <span class="n">dest</span><span class="o">=</span><span class="s">&#39;keep&#39;</span><span class="p">,</span>    <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>     <span class="n">action</span><span class="o">=</span><span class="s">&#39;count&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;keep running happily even if errors are found&#39;</span><span class="p">)</span>
+		<span class="n">p</span><span class="p">(</span><span class="s">&#39;-v&#39;</span><span class="p">,</span> <span class="s">&#39;--verbose&#39;</span><span class="p">,</span>  <span class="n">dest</span><span class="o">=</span><span class="s">&#39;verbose&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>     <span class="n">action</span><span class="o">=</span><span class="s">&#39;count&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;verbosity level -v -vv or -vvv [default: 0]&#39;</span><span class="p">)</span>
+		<span class="n">p</span><span class="p">(</span><span class="s">&#39;--nocache&#39;</span><span class="p">,</span>        <span class="n">dest</span><span class="o">=</span><span class="s">&#39;nocache&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;ignore the WAFCACHE (if set)&#39;</span><span class="p">)</span>
+		<span class="n">p</span><span class="p">(</span><span class="s">&#39;--zones&#39;</span><span class="p">,</span>          <span class="n">dest</span><span class="o">=</span><span class="s">&#39;zones&#39;</span><span class="p">,</span>   <span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span>    <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;debugging zones (task_gen, deps, tasks, etc)&#39;</span><span class="p">)</span>
+
+		<span class="n">gr</span> <span class="o">=</span> <span class="n">optparse</span><span class="o">.</span><span class="n">OptionGroup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;configure options&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">add_option_group</span><span class="p">(</span><span class="n">gr</span><span class="p">)</span>
+
+		<span class="n">gr</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;-o&#39;</span><span class="p">,</span> <span class="s">&#39;--out&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;build dir for the project&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;out&#39;</span><span class="p">)</span>
+		<span class="n">gr</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;-t&#39;</span><span class="p">,</span> <span class="s">&#39;--top&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;src dir for the project&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;top&#39;</span><span class="p">)</span>
+
+		<span class="n">default_prefix</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;PREFIX&#39;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">default_prefix</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">platform</span> <span class="o">==</span> <span class="s">&#39;win32&#39;</span><span class="p">:</span>
+				<span class="n">d</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">()</span>
+				<span class="n">default_prefix</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">+</span> <span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+				<span class="c"># win32 preserves the case, but gettempdir does not</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">default_prefix</span> <span class="o">=</span> <span class="s">&#39;/usr/local/&#39;</span>
+		<span class="n">gr</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--prefix&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;prefix&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default_prefix</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;installation prefix [default: </span><span class="si">%r</span><span class="s">]&#39;</span> <span class="o">%</span> <span class="n">default_prefix</span><span class="p">)</span>
+		<span class="n">gr</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--download&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;download&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;try to download the tools if missing&#39;</span><span class="p">)</span>
+
+
+		<span class="n">gr</span> <span class="o">=</span> <span class="n">optparse</span><span class="o">.</span><span class="n">OptionGroup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;build and install options&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">add_option_group</span><span class="p">(</span><span class="n">gr</span><span class="p">)</span>
+
+		<span class="n">gr</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;-p&#39;</span><span class="p">,</span> <span class="s">&#39;--progress&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;progress_bar&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;count&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span> <span class="s">&#39;-p: progress bar; -pp: ide output&#39;</span><span class="p">)</span>
+		<span class="n">gr</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--targets&#39;</span><span class="p">,</span>        <span class="n">dest</span><span class="o">=</span><span class="s">&#39;targets&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;task generators, e.g. &quot;target1,target2&quot;&#39;</span><span class="p">)</span>
+
+		<span class="n">gr</span> <span class="o">=</span> <span class="n">optparse</span><span class="o">.</span><span class="n">OptionGroup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;step options&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">add_option_group</span><span class="p">(</span><span class="n">gr</span><span class="p">)</span>
+		<span class="n">gr</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--files&#39;</span><span class="p">,</span>          <span class="n">dest</span><span class="o">=</span><span class="s">&#39;files&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;files to process, by regexp, e.g. &quot;*/main.c,*/test/main.o&quot;&#39;</span><span class="p">)</span>
+
+		<span class="n">default_destdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;DESTDIR&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+		<span class="n">gr</span> <span class="o">=</span> <span class="n">optparse</span><span class="o">.</span><span class="n">OptionGroup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;install/uninstall options&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">add_option_group</span><span class="p">(</span><span class="n">gr</span><span class="p">)</span>
+		<span class="n">gr</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--destdir&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;installation root [default: </span><span class="si">%r</span><span class="s">]&#39;</span> <span class="o">%</span> <span class="n">default_destdir</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default_destdir</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;destdir&#39;</span><span class="p">)</span>
+		<span class="n">gr</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;-f&#39;</span><span class="p">,</span> <span class="s">&#39;--force&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;force&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;force file installation&#39;</span><span class="p">)</span>
+
+		<span class="n">gr</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--distcheck-args&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;arguments to pass to distcheck&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="opt_parser.get_usage"><a class="viewcode-back" href="../../Options.html#waflib.Options.opt_parser.get_usage">[docs]</a>	<span class="k">def</span> <span class="nf">get_usage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Return the message to print on ``waf --help``</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">cmds_str</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="k">for</span> <span class="n">cls</span> <span class="ow">in</span> <span class="n">Context</span><span class="o">.</span><span class="n">classes</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">cls</span><span class="o">.</span><span class="n">cmd</span> <span class="ow">or</span> <span class="n">cls</span><span class="o">.</span><span class="n">cmd</span> <span class="o">==</span> <span class="s">&#39;options&#39;</span><span class="p">:</span>
+				<span class="k">continue</span>
+
+			<span class="n">s</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">__doc__</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span>
+			<span class="n">cmds_str</span><span class="p">[</span><span class="n">cls</span><span class="o">.</span><span class="n">cmd</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+
+		<span class="k">if</span> <span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="p">:</span>
+			<span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+				<span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;options&#39;</span><span class="p">,</span> <span class="s">&#39;init&#39;</span><span class="p">,</span> <span class="s">&#39;shutdown&#39;</span><span class="p">]:</span>
+					<span class="k">continue</span>
+
+				<span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">create_context</span><span class="p">):</span>
+					<span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">__doc__</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">):</span>
+						<span class="n">cmds_str</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">__doc__</span>
+
+		<span class="n">just</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">cmds_str</span><span class="p">:</span>
+			<span class="n">just</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">just</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+
+		<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;  </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="n">just</span><span class="p">),</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cmds_str</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+		<span class="n">lst</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="s">&#39;&#39;&#39;waf [commands] [options]</span>
+
+<span class="s">Main commands (example: ./waf build -j4)</span>
+<span class="si">%s</span><span class="s"></span>
+<span class="s">&#39;&#39;&#39;</span> <span class="o">%</span> <span class="n">ret</span>
+
+</div></div>
+<div class="viewcode-block" id="OptionsContext"><a class="viewcode-back" href="../../Options.html#waflib.Options.OptionsContext">[docs]</a><span class="k">class</span> <span class="nc">OptionsContext</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">Context</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Collect custom options from wscript files and parses the command line.</span>
+<span class="sd">	Set the global :py:const:`waflib.Options.commands` and :py:const:`waflib.Options.options` values.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">cmd</span> <span class="o">=</span> <span class="s">&#39;options&#39;</span>
+	<span class="n">fun</span> <span class="o">=</span> <span class="s">&#39;options&#39;</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+		<span class="nb">super</span><span class="p">(</span><span class="n">OptionsContext</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">opt_parser</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+		<span class="sd">&quot;&quot;&quot;Instance of :py:class:`waflib.Options.opt_parser`&quot;&quot;&quot;</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">option_groups</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="OptionsContext.jobs"><a class="viewcode-back" href="../../Options.html#waflib.Options.OptionsContext.jobs">[docs]</a>	<span class="k">def</span> <span class="nf">jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Find the amount of cpu cores to set the default amount of tasks executed in parallel. At</span>
+<span class="sd">		runtime the options can be obtained from :py:const:`waflib.Options.options` ::</span>
+
+<span class="sd">			from waflib.Options import options</span>
+<span class="sd">			njobs = options.jobs</span>
+
+<span class="sd">		:return: the amount of cpu cores</span>
+<span class="sd">		:rtype: int</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;JOBS&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+		<span class="k">if</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+			<span class="k">if</span> <span class="s">&#39;NUMBER_OF_PROCESSORS&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+				<span class="c"># on Windows, use the NUMBER_OF_PROCESSORS environment variable</span>
+				<span class="n">count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;NUMBER_OF_PROCESSORS&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="c"># on everything else, first try the POSIX sysconf values</span>
+				<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="s">&#39;sysconf_names&#39;</span><span class="p">):</span>
+					<span class="k">if</span> <span class="s">&#39;SC_NPROCESSORS_ONLN&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">sysconf_names</span><span class="p">:</span>
+						<span class="n">count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sysconf</span><span class="p">(</span><span class="s">&#39;SC_NPROCESSORS_ONLN&#39;</span><span class="p">))</span>
+					<span class="k">elif</span> <span class="s">&#39;SC_NPROCESSORS_CONF&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">sysconf_names</span><span class="p">:</span>
+						<span class="n">count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sysconf</span><span class="p">(</span><span class="s">&#39;SC_NPROCESSORS_CONF&#39;</span><span class="p">))</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="n">count</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;nt&#39;</span><span class="p">,</span> <span class="s">&#39;java&#39;</span><span class="p">):</span>
+					<span class="k">try</span><span class="p">:</span>
+						<span class="n">tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="s">&#39;sysctl&#39;</span><span class="p">,</span> <span class="s">&#39;-n&#39;</span><span class="p">,</span> <span class="s">&#39;hw.ncpu&#39;</span><span class="p">],</span> <span class="n">quiet</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+					<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+						<span class="k">pass</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">&#39;^[0-9]+$&#39;</span><span class="p">,</span> <span class="n">tmp</span><span class="p">):</span>
+							<span class="n">count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+			<span class="n">count</span> <span class="o">=</span> <span class="mi">1</span>
+		<span class="k">elif</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">1024</span><span class="p">:</span>
+			<span class="n">count</span> <span class="o">=</span> <span class="mi">1024</span>
+		<span class="k">return</span> <span class="n">count</span>
+</div>
+<div class="viewcode-block" id="OptionsContext.add_option"><a class="viewcode-back" href="../../Options.html#waflib.Options.OptionsContext.add_option">[docs]</a>	<span class="k">def</span> <span class="nf">add_option</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Wrapper for optparse.add_option::</span>
+
+<span class="sd">			def options(ctx):</span>
+<span class="sd">				ctx.add_option(&#39;-u&#39;, &#39;--use&#39;, dest=&#39;use&#39;, default=False, action=&#39;store_true&#39;,</span>
+<span class="sd">					help=&#39;a boolean option&#39;)</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="OptionsContext.add_option_group"><a class="viewcode-back" href="../../Options.html#waflib.Options.OptionsContext.add_option_group">[docs]</a>	<span class="k">def</span> <span class="nf">add_option_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Wrapper for optparse.add_option_group::</span>
+
+<span class="sd">			def options(ctx):</span>
+<span class="sd">				gr = ctx.add_option_group(&#39;some options&#39;)</span>
+<span class="sd">				gr.add_option(&#39;-u&#39;, &#39;--use&#39;, dest=&#39;use&#39;, default=False, action=&#39;store_true&#39;)</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">gr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">option_groups</span><span class="p">[</span><span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+			<span class="n">gr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_option_group</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">option_groups</span><span class="p">[</span><span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">gr</span>
+		<span class="k">return</span> <span class="n">gr</span>
+</div>
+<div class="viewcode-block" id="OptionsContext.get_option_group"><a class="viewcode-back" href="../../Options.html#waflib.Options.OptionsContext.get_option_group">[docs]</a>	<span class="k">def</span> <span class="nf">get_option_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opt_str</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Wrapper for optparse.get_option_group::</span>
+
+<span class="sd">			def options(ctx):</span>
+<span class="sd">				gr = ctx.get_option_group(&#39;configure options&#39;)</span>
+<span class="sd">				gr.add_option(&#39;-o&#39;, &#39;--out&#39;, action=&#39;store&#39;, default=&#39;&#39;,</span>
+<span class="sd">					help=&#39;build dir for the project&#39;, dest=&#39;out&#39;)</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">option_groups</span><span class="p">[</span><span class="n">opt_str</span><span class="p">]</span>
+		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">option_groups</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">group</span><span class="o">.</span><span class="n">title</span> <span class="o">==</span> <span class="n">opt_str</span><span class="p">:</span>
+					<span class="k">return</span> <span class="n">group</span>
+			<span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="OptionsContext.parse_args"><a class="viewcode-back" href="../../Options.html#waflib.Options.OptionsContext.parse_args">[docs]</a>	<span class="k">def</span> <span class="nf">parse_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_args</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Parse arguments from a list (not bound to the command-line).</span>
+
+<span class="sd">		:param _args: arguments</span>
+<span class="sd">		:type _args: list of strings</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">global</span> <span class="n">options</span><span class="p">,</span> <span class="n">commands</span>
+		<span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">leftover_args</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">_args</span><span class="p">)</span>
+		<span class="n">commands</span> <span class="o">=</span> <span class="n">leftover_args</span>
+
+		<span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">destdir</span><span class="p">:</span>
+			<span class="n">options</span><span class="o">.</span><span class="n">destdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">destdir</span><span class="p">))</span>
+
+		<span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;errcheck&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="OptionsContext.execute"><a class="viewcode-back" href="../../Options.html#waflib.Options.OptionsContext.execute">[docs]</a>	<span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		See :py:func:`waflib.Context.Context.execute`</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="nb">super</span><span class="p">(</span><span class="n">OptionsContext</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+</pre></div></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>

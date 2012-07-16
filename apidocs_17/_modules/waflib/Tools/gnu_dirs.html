@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>waflib.Tools.gnu_dirs &mdash; Waf v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="copyright" title="Copyright" href="../../../copyright.html" />
+    <link rel="top" title="Waf v1.7.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for waflib.Tools.gnu_dirs</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="c"># Ali Sabil, 2007</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Sets various standard variables such as INCLUDEDIR. SBINDIR and others. To use this module just call::</span>
+
+<span class="sd">	opt.load(&#39;gnu_dirs&#39;)</span>
+
+<span class="sd">and::</span>
+
+<span class="sd">	conf.load(&#39;gnu_dirs&#39;)</span>
+
+<span class="sd">Add options for the standard GNU directories, this tool will add the options</span>
+<span class="sd">found in autotools, and will update the environment with the following</span>
+<span class="sd">installation variables:</span>
+
+<span class="sd">============== ========================================= =======================</span>
+<span class="sd">Variable       Description                               Value</span>
+<span class="sd">============== ========================================= =======================</span>
+<span class="sd">PREFIX         architecture-independent files            /usr/local</span>
+<span class="sd">EXEC_PREFIX    architecture-dependent files              PREFIX</span>
+<span class="sd">BINDIR         user executables                          EXEC_PREFIX/bin</span>
+<span class="sd">SBINDIR        user executables                          EXEC_PREFIX/sbin</span>
+<span class="sd">LIBEXECDIR     program executables                       EXEC_PREFIX/libexec</span>
+<span class="sd">SYSCONFDIR     read-only single-machine data             PREFIX/etc</span>
+<span class="sd">SHAREDSTATEDIR modifiable architecture-independent data  PREFIX/com</span>
+<span class="sd">LOCALSTATEDIR  modifiable single-machine data            PREFIX/var</span>
+<span class="sd">LIBDIR         object code libraries                     EXEC_PREFIX/lib</span>
+<span class="sd">INCLUDEDIR     C header files                            PREFIX/include</span>
+<span class="sd">OLDINCLUDEDIR  C header files for non-gcc                /usr/include</span>
+<span class="sd">DATAROOTDIR    read-only arch.-independent data root     PREFIX/share</span>
+<span class="sd">DATADIR        read-only architecture-independent data   DATAROOTDIR</span>
+<span class="sd">INFODIR        info documentation                        DATAROOTDIR/info</span>
+<span class="sd">LOCALEDIR      locale-dependent data                     DATAROOTDIR/locale</span>
+<span class="sd">MANDIR         man documentation                         DATAROOTDIR/man</span>
+<span class="sd">DOCDIR         documentation root                        DATAROOTDIR/doc/APPNAME</span>
+<span class="sd">HTMLDIR        html documentation                        DOCDIR</span>
+<span class="sd">DVIDIR         dvi documentation                         DOCDIR</span>
+<span class="sd">PDFDIR         pdf documentation                         DOCDIR</span>
+<span class="sd">PSDIR          ps documentation                          DOCDIR</span>
+<span class="sd">============== ========================================= =======================</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Context</span>
+
+<span class="n">_options</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;, &#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">bindir, user executables, ${EXEC_PREFIX}/bin</span>
+<span class="s">sbindir, system admin executables, ${EXEC_PREFIX}/sbin</span>
+<span class="s">libexecdir, program executables, ${EXEC_PREFIX}/libexec</span>
+<span class="s">sysconfdir, read-only single-machine data, ${PREFIX}/etc</span>
+<span class="s">sharedstatedir, modifiable architecture-independent data, ${PREFIX}/com</span>
+<span class="s">localstatedir, modifiable single-machine data, ${PREFIX}/var</span>
+<span class="s">libdir, object code libraries, ${EXEC_PREFIX}/lib</span>
+<span class="s">includedir, C header files, ${PREFIX}/include</span>
+<span class="s">oldincludedir, C header files for non-gcc, /usr/include</span>
+<span class="s">datarootdir, read-only arch.-independent data root, ${PREFIX}/share</span>
+<span class="s">datadir, read-only architecture-independent data, ${DATAROOTDIR}</span>
+<span class="s">infodir, info documentation, ${DATAROOTDIR}/info</span>
+<span class="s">localedir, locale-dependent data, ${DATAROOTDIR}/locale</span>
+<span class="s">mandir, man documentation, ${DATAROOTDIR}/man</span>
+<span class="s">docdir, documentation root, ${DATAROOTDIR}/doc/${PACKAGE}</span>
+<span class="s">htmldir, html documentation, ${DOCDIR}</span>
+<span class="s">dvidir, dvi documentation, ${DOCDIR}</span>
+<span class="s">pdfdir, pdf documentation, ${DOCDIR}</span>
+<span class="s">psdir, ps documentation, ${DOCDIR}</span>
+<span class="s">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="p">]</span>
+
+<div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/gnu_dirs.html#waflib.Tools.gnu_dirs.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Read the command-line options to set lots of variables in *conf.env*. The variables</span>
+<span class="sd">	BINDIR and LIBDIR will be overwritten.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">get_param</span><span class="p">(</span><span class="n">varname</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
+		<span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">default</span>
+
+	<span class="n">env</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
+	<span class="n">env</span><span class="o">.</span><span class="n">LIBDIR</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">BINDIR</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">env</span><span class="o">.</span><span class="n">EXEC_PREFIX</span> <span class="o">=</span> <span class="n">get_param</span><span class="p">(</span><span class="s">&#39;EXEC_PREFIX&#39;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">PREFIX</span><span class="p">)</span>
+	<span class="n">corner_case</span> <span class="o">=</span> <span class="bp">False</span>
+	<span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">PREFIX</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;/usr&#39;</span><span class="p">:</span> <span class="c"># Issue 722, corner case</span>
+		<span class="n">corner_case</span> <span class="o">=</span> <span class="bp">True</span>
+		<span class="n">env</span><span class="o">.</span><span class="n">PREFIX</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="n">env</span><span class="o">.</span><span class="n">PACKAGE</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="p">,</span> <span class="s">&#39;APPNAME&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">env</span><span class="o">.</span><span class="n">PACKAGE</span>
+
+	<span class="n">complete</span> <span class="o">=</span> <span class="bp">False</span>
+	<span class="nb">iter</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="k">while</span> <span class="ow">not</span> <span class="n">complete</span> <span class="ow">and</span> <span class="nb">iter</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">_options</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+		<span class="nb">iter</span> <span class="o">+=</span> <span class="mi">1</span>
+		<span class="n">complete</span> <span class="o">=</span> <span class="bp">True</span>
+		<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">help</span><span class="p">,</span> <span class="n">default</span> <span class="ow">in</span> <span class="n">_options</span><span class="p">:</span>
+			<span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="n">env</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subst_vars</span><span class="p">(</span><span class="n">get_param</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">),</span> <span class="n">env</span><span class="p">)</span>
+				<span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+					<span class="n">complete</span> <span class="o">=</span> <span class="bp">False</span>
+
+	<span class="k">if</span> <span class="n">corner_case</span><span class="p">:</span>
+		<span class="n">env</span><span class="o">.</span><span class="n">PREFIX</span> <span class="o">=</span> <span class="s">&#39;/usr&#39;</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">complete</span><span class="p">:</span>
+		<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_options</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">()]]</span>
+		<span class="k">raise</span> <span class="n">conf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">(</span><span class="s">&#39;Variable substitution failure </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">lst</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="options"><a class="viewcode-back" href="../../../tools/gnu_dirs.html#waflib.Tools.gnu_dirs.options">[docs]</a><span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="n">opt</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Add lots of command-line options, for example::</span>
+
+<span class="sd">		--exec-prefix: EXEC_PREFIX</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">inst_dir</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">add_option_group</span><span class="p">(</span><span class="s">&#39;Installation directories&#39;</span><span class="p">,</span>
+<span class="s">&#39;By default, &quot;waf install&quot; will put the files in</span><span class="se">\</span>
+<span class="s"> &quot;/usr/local/bin&quot;, &quot;/usr/local/lib&quot; etc. An installation prefix other</span><span class="se">\</span>
+<span class="s"> than &quot;/usr/local&quot; can be given using &quot;--prefix&quot;, for example &quot;--prefix=$HOME&quot;&#39;</span><span class="p">)</span>
+
+	<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;--prefix&#39;</span><span class="p">,</span> <span class="s">&#39;--destdir&#39;</span><span class="p">):</span>
+		<span class="n">option</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">option</span><span class="p">:</span>
+			<span class="n">opt</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">remove_option</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+			<span class="n">inst_dir</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+
+	<span class="n">inst_dir</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--exec-prefix&#39;</span><span class="p">,</span>
+		<span class="n">help</span> <span class="o">=</span> <span class="s">&#39;installation prefix [Default: ${PREFIX}]&#39;</span><span class="p">,</span>
+		<span class="n">default</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+		<span class="n">dest</span> <span class="o">=</span> <span class="s">&#39;EXEC_PREFIX&#39;</span><span class="p">)</span>
+
+	<span class="n">dirs_options</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">add_option_group</span><span class="p">(</span><span class="s">&#39;Pre-defined installation directories&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+
+	<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">help</span><span class="p">,</span> <span class="n">default</span> <span class="ow">in</span> <span class="n">_options</span><span class="p">:</span>
+		<span class="n">option_name</span> <span class="o">=</span> <span class="s">&#39;--&#39;</span> <span class="o">+</span> <span class="n">name</span>
+		<span class="n">str_default</span> <span class="o">=</span> <span class="n">default</span>
+		<span class="n">str_help</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> [Default: </span><span class="si">%s</span><span class="s">]&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">help</span><span class="p">,</span> <span class="n">str_default</span><span class="p">)</span>
+		<span class="n">dirs_options</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="n">option_name</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="n">str_help</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/waf-64x64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="../../../copyright.html">Copyright</a> 2010, Thomas Nagy.
+    </div>
+
+  </body>
+</html>
