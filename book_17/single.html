@@ -4800,7 +4800,7 @@ http://www.gnu.org/software/src-highlite -->
 <span style="font-weight: bold"><span style="color: #008080">from</span></span><span style="color: #000000"> waflib </span><span style="font-weight: bold"><span style="color: #008080">import</span></span><span style="color: #000000"> TaskGen</span>
 <span style="color: #000000">TaskGen</span><span style="color: #000000">.</span><span style="color: #000000">declare_chain</span><span style="color: #000000">(</span>
 <span style="color: #000000">        name      </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'a'</span><span style="color: #000000">,</span>
-<span style="color: #000000">        action    </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'cp ${SRC} ${TGT}'</span><span style="color: #000000">,</span>
+<span style="color: #000000">        rule      </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'cp ${SRC} ${TGT}'</span><span style="color: #000000">,</span>
 <span style="color: #000000">        ext_in    </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'.in'</span><span style="color: #000000">,</span>
 <span style="color: #000000">        ext_out   </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #000000">[</span><span style="color: #009900">'.a1'</span><span style="color: #000000">,</span><span style="color: #000000"> </span><span style="color: #009900">'.a2'</span><span style="color: #000000">],</span>
 <span style="color: #000000">        reentrant </span><span style="color: #000000">=</span><span style="color: #000000"> True</span><span style="color: #000000">,</span>
@@ -4808,7 +4808,7 @@ http://www.gnu.org/software/src-highlite -->
 
 <span style="color: #000000">TaskGen</span><span style="color: #000000">.</span><span style="color: #000000">declare_chain</span><span style="color: #000000">(</span>
 <span style="color: #000000">        name      </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'b'</span><span style="color: #000000">,</span>
-<span style="color: #000000">        action    </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'cp ${SRC} ${TGT}'</span><span style="color: #000000">,</span>
+<span style="color: #000000">        rule      </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'cp ${SRC} ${TGT}'</span><span style="color: #000000">,</span>
 <span style="color: #000000">        ext_in    </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'.a1'</span><span style="color: #000000">,</span>
 <span style="color: #000000">        ext_out   </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'.b'</span><span style="color: #000000">,</span>
 <span style="color: #000000">        reentrant </span><span style="color: #000000">=</span><span style="color: #000000"> False</span><span style="color: #000000">,</span>
