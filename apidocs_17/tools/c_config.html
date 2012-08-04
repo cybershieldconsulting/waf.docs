@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>c_config &mdash; Waf v1.7.0 documentation</title>
+    <title>c_config &mdash; Waf v1.7.1 documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.7.0',
+        VERSION:     '1.7.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="copyright" title="Copyright" href="../copyright.html" />
-    <link rel="top" title="Waf v1.7.0 documentation" href="../index.html" />
+    <link rel="top" title="Waf v1.7.1 documentation" href="../index.html" />
     <link rel="up" title="Waf Tools" href="../tools.html" />
     <link rel="next" title="c_osx" href="c_osx.html" />
     <link rel="prev" title="cxx" href="cxx.html" /> 
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="cxx.html" title="cxx"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Waf v1.7.1 documentation</a> &raquo;</li>
           <li><a href="../tools.html" accesskey="U">Waf Tools</a> &raquo;</li> 
       </ul>
     </div>  
@@ -434,11 +434,12 @@ build context object to return a particular value. See <a class="reference inter
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>configfile</strong> (<em>string</em>) &#8211; relative path to the file to create</li>
+<li><strong>guard</strong> (<em>string</em>) &#8211; include guard name to add, by default it is computed from the file name</li>
 <li><strong>top</strong> (<em>bool</em>) &#8211; write the configuration header from the build directory (default is from the current path)</li>
 <li><strong>defines</strong> (<em>bool</em>) &#8211; add the defines (yes by default)</li>
 <li><strong>headers</strong> (<em>bool</em>) &#8211; add #include in the file</li>
+<li><strong>remove</strong> (<em>bool</em>) &#8211; remove the defines after they are added (yes by default, works like in autoconf)</li>
 <li><strong>define_prefix</strong> (<em>string</em>) &#8211; prefix all the defines in the file with a particular prefix</li>
-<li><strong>remove</strong> (<em>bool</em>) &#8211; remove the defines after they are added (yes by default)</li>
 </ul>
 </td>
 </tr>
@@ -674,7 +675,7 @@ after the functions of given name(s):</p>
         <li class="right" >
           <a href="cxx.html" title="cxx"
              >previous</a> |</li>
-        <li><a href="../index.html">Waf v1.7.0 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Waf v1.7.1 documentation</a> &raquo;</li>
           <li><a href="../tools.html" >Waf Tools</a> &raquo;</li> 
       </ul>
     </div>
