@@ -53,6 +53,7 @@
 <span class="c"># Carlos Rafael Giani, 2006 (dv)</span>
 <span class="c"># Tamas Pal, 2007 (folti)</span>
 <span class="c"># Nicolas Mercier, 2009</span>
+<span class="c"># Matt Clarkson, 2012</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Microsoft Visual C++/Intel C++ compiler support</span>
@@ -83,9 +84,10 @@
 
 <span class="sd">Compilers supported:</span>
 
-<span class="sd">* msvc       =&gt; Visual Studio, versions 6.0 (VC 98, VC .NET 2002) to 10.0 (Visual Studio 2010)</span>
-<span class="sd">* wsdk       =&gt; Windows SDK, versions 6.0, 6.1, 7.0</span>
-<span class="sd">* icl        =&gt; Intel compiler, versions 9,10,11</span>
+<span class="sd">* msvc       =&gt; Visual Studio, versions 6.0 (VC 98, VC .NET 2002) to 11.0 (Visual Studio 2012)</span>
+<span class="sd">* wsdk       =&gt; Windows SDK, versions 6.0, 6.1, 7.0, 7.1, 8.0</span>
+<span class="sd">* icl        =&gt; Intel compiler, versions 9, 10, 11, 13</span>
+<span class="sd">* winphone   =&gt; Visual Studio to target Windows Phone 8 native (version 8.0 for now)</span>
 <span class="sd">* Smartphone =&gt; Compiler/SDK for Smartphone devices (armv4/v4i)</span>
 <span class="sd">* PocketPC   =&gt; Compiler/SDK for PocketPC devices (armv4/v4i)</span>
 
@@ -97,7 +99,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">tempfile</span>
-<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Options</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Utils</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Errors</span>
 <span class="kn">from</span> <span class="nn">waflib.Logs</span> <span class="kn">import</span> <span class="n">debug</span><span class="p">,</span> <span class="n">warn</span>
 <span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">after_method</span><span class="p">,</span> <span class="n">feature</span>
 
@@ -126,7 +128,7 @@
 <span class="s">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
 <span class="sd">&quot;&quot;&quot;importlibs provided by MSVC/Platform SDK. Do NOT search them&quot;&quot;&quot;</span>
 
-<span class="n">all_msvc_platforms</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="s">&#39;x64&#39;</span><span class="p">,</span> <span class="s">&#39;amd64&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;x86&#39;</span><span class="p">,</span> <span class="s">&#39;x86&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;ia64&#39;</span><span class="p">,</span> <span class="s">&#39;ia64&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;x86_amd64&#39;</span><span class="p">,</span> <span class="s">&#39;amd64&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;x86_ia64&#39;</span><span class="p">,</span> <span class="s">&#39;ia64&#39;</span><span class="p">)</span> <span class="p">]</span>
+<span class="n">all_msvc_platforms</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="s">&#39;x64&#39;</span><span class="p">,</span> <span class="s">&#39;amd64&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;x86&#39;</span><span class="p">,</span> <span class="s">&#39;x86&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;ia64&#39;</span><span class="p">,</span> <span class="s">&#39;ia64&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;x86_amd64&#39;</span><span class="p">,</span> <span class="s">&#39;amd64&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;x86_ia64&#39;</span><span class="p">,</span> <span class="s">&#39;ia64&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;x86_arm&#39;</span><span class="p">,</span> <span class="s">&#39;arm&#39;</span><span class="p">)</span> <span class="p">]</span>
 <span class="sd">&quot;&quot;&quot;List of msvc platforms&quot;&quot;&quot;</span>
 
 <span class="n">all_wince_platforms</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="s">&#39;armv4&#39;</span><span class="p">,</span> <span class="s">&#39;arm&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;armv4i&#39;</span><span class="p">,</span> <span class="s">&#39;arm&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;mipsii&#39;</span><span class="p">,</span> <span class="s">&#39;mips&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;mipsii_fp&#39;</span><span class="p">,</span> <span class="s">&#39;mips&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;mipsiv&#39;</span><span class="p">,</span> <span class="s">&#39;mips&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;mipsiv_fp&#39;</span><span class="p">,</span> <span class="s">&#39;mips&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;sh4&#39;</span><span class="p">,</span> <span class="s">&#39;sh&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;x86&#39;</span><span class="p">,</span> <span class="s">&#39;cex86&#39;</span><span class="p">)</span> <span class="p">]</span>
@@ -139,7 +141,7 @@
 	<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--msvc_version&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&#39;string&#39;</span><span class="p">,</span> <span class="n">help</span> <span class="o">=</span> <span class="s">&#39;msvc version, eg: &quot;msvc 10.0,msvc 9.0&quot;&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
 	<span class="n">opt</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&#39;--msvc_targets&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&#39;string&#39;</span><span class="p">,</span> <span class="n">help</span> <span class="o">=</span> <span class="s">&#39;msvc targets, eg: &quot;x64,arm&quot;&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">setup_msvc</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">versions</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">setup_msvc</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">versions</span><span class="p">,</span> <span class="n">arch</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span>
 	<span class="n">platforms</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Options</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="s">&#39;msvc_targets&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
 	<span class="k">if</span> <span class="n">platforms</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">]:</span>
 		<span class="n">platforms</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">to_list</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;MSVC_TARGETS&#39;</span><span class="p">])</span> <span class="ow">or</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span> <span class="ow">in</span> <span class="n">all_msvc_platforms</span><span class="o">+</span><span class="n">all_icl_platforms</span><span class="o">+</span><span class="n">all_wince_platforms</span><span class="p">]</span>
@@ -155,7 +157,10 @@
 				<span class="k">try</span><span class="p">:</span>
 					<span class="n">arch</span><span class="p">,(</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">,</span><span class="n">p3</span><span class="p">)</span> <span class="o">=</span> <span class="n">targets</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
 					<span class="n">compiler</span><span class="p">,</span><span class="n">revision</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-					<span class="k">return</span> <span class="n">compiler</span><span class="p">,</span><span class="n">revision</span><span class="p">,</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">,</span><span class="n">p3</span>
+					<span class="k">if</span> <span class="n">arch</span><span class="p">:</span>
+						<span class="k">return</span> <span class="n">compiler</span><span class="p">,</span><span class="n">revision</span><span class="p">,</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">,</span><span class="n">p3</span><span class="p">,</span><span class="n">arch</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="k">return</span> <span class="n">compiler</span><span class="p">,</span><span class="n">revision</span><span class="p">,</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">,</span><span class="n">p3</span>
 				<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span> <span class="k">continue</span>
 		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span> <span class="k">continue</span>
 	<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;msvc: Impossible to find a valid architecture for building (in setup_msvc)&#39;</span><span class="p">)</span>
@@ -180,25 +185,13 @@
 <span class="s">call &quot;</span><span class="si">%s</span><span class="s">&quot; </span><span class="si">%s</span><span class="s"></span>
 <span class="s">echo PATH=</span><span class="si">%%</span><span class="s">PATH</span><span class="si">%%</span><span class="s"></span>
 <span class="s">echo INCLUDE=</span><span class="si">%%</span><span class="s">INCLUDE</span><span class="si">%%</span><span class="s"></span>
-<span class="s">echo LIB=</span><span class="si">%%</span><span class="s">LIB</span><span class="si">%%</span><span class="s"></span>
+<span class="s">echo LIB=</span><span class="si">%%</span><span class="s">LIB</span><span class="si">%%</span><span class="s">;</span><span class="si">%%</span><span class="s">LIBPATH</span><span class="si">%%</span><span class="s"></span>
 <span class="s">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">vcvars</span><span class="p">,</span><span class="n">target</span><span class="p">))</span>
 	<span class="n">sout</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="s">&#39;cmd&#39;</span><span class="p">,</span> <span class="s">&#39;/E:on&#39;</span><span class="p">,</span> <span class="s">&#39;/V:on&#39;</span><span class="p">,</span> <span class="s">&#39;/C&#39;</span><span class="p">,</span> <span class="n">batfile</span><span class="o">.</span><span class="n">abspath</span><span class="p">()])</span>
 	<span class="n">lines</span> <span class="o">=</span> <span class="n">sout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
 
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
 		<span class="n">lines</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-
-	<span class="k">if</span> <span class="n">version</span> <span class="o">==</span> <span class="s">&#39;11.0&#39;</span><span class="p">:</span>
-		<span class="k">if</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;Error&#39;</span><span class="p">):</span>
-			<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;msvc: Could not find a valid architecture for building (get_msvc_version_1)&#39;</span><span class="p">)</span>
-	<span class="k">else</span><span class="p">:</span>
-		<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;Setting environment&#39;</span><span class="p">,</span> <span class="s">&#39;Setting SDK environment&#39;</span><span class="p">,</span> <span class="s">&#39;Intel(R) C++ Compiler&#39;</span><span class="p">,</span> <span class="s">&#39;Intel Parallel Studio&#39;</span><span class="p">):</span>
-			<span class="k">if</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-				<span class="n">lines</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-				<span class="k">break</span>
-		<span class="k">else</span><span class="p">:</span>
-			<span class="n">debug</span><span class="p">(</span><span class="s">&#39;msvc: get_msvc_version: </span><span class="si">%r</span><span class="s"> </span><span class="si">%r</span><span class="s"> </span><span class="si">%r</span><span class="s"> -&gt; not found&#39;</span><span class="p">,</span> <span class="n">compiler</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
-			<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;msvc: Could not find a valid architecture for building (get_msvc_version_2)&#39;</span><span class="p">)</span>
 
 	<span class="n">MSVC_PATH</span> <span class="o">=</span> <span class="n">MSVC_INCDIR</span> <span class="o">=</span> <span class="n">MSVC_LIBDIR</span> <span class="o">=</span> <span class="bp">None</span>
 	<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
@@ -209,7 +202,6 @@
 			<span class="n">MSVC_INCDIR</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">line</span><span class="p">[</span><span class="mi">8</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;;&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span><span class="p">]</span>
 		<span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;LIB=&#39;</span><span class="p">):</span>
 			<span class="n">MSVC_LIBDIR</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;;&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span><span class="p">]</span>
-
 	<span class="k">if</span> <span class="bp">None</span> <span class="ow">in</span> <span class="p">(</span><span class="n">MSVC_PATH</span><span class="p">,</span> <span class="n">MSVC_INCDIR</span><span class="p">,</span> <span class="n">MSVC_LIBDIR</span><span class="p">):</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&#39;msvc: Could not find a valid architecture for building (get_msvc_version_3)&#39;</span><span class="p">)</span>
 
@@ -378,7 +370,8 @@
 			<span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s">&#39;x86&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s">&#39;x86&#39;</span><span class="p">,</span> <span class="n">conf</span><span class="o">.</span><span class="n">get_msvc_version</span><span class="p">(</span><span class="s">&#39;msvc&#39;</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">vc_path</span><span class="p">,</span> <span class="s">&#39;Bin&#39;</span><span class="p">,</span> <span class="s">&#39;vcvars32.bat&#39;</span><span class="p">)))))</span>
 		<span class="k">except</span> <span class="n">conf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
 			<span class="k">pass</span>
-	<span class="n">versions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s">&#39;msvc &#39;</span><span class="o">+</span> <span class="n">version</span><span class="p">,</span> <span class="n">targets</span><span class="p">))</span>
+	<span class="k">if</span> <span class="n">targets</span><span class="p">:</span>
+		<span class="n">versions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s">&#39;msvc &#39;</span><span class="o">+</span> <span class="n">version</span><span class="p">,</span> <span class="n">targets</span><span class="p">))</span>
 </div>
 <span class="nd">@conf</span>
 <div class="viewcode-block" id="gather_wince_targets"><a class="viewcode-back" href="../../../tools/msvc.html#waflib.Tools.msvc.gather_wince_targets">[docs]</a><span class="k">def</span> <span class="nf">gather_wince_targets</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">versions</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">vc_path</span><span class="p">,</span> <span class="n">vsvars</span><span class="p">,</span> <span class="n">supported_platforms</span><span class="p">):</span>
@@ -402,6 +395,18 @@
 			<span class="n">versions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">device</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">version</span><span class="p">,</span> <span class="n">cetargets</span><span class="p">))</span>
 </div>
 <span class="nd">@conf</span>
+<div class="viewcode-block" id="gather_winphone_targets"><a class="viewcode-back" href="../../../tools/msvc.html#waflib.Tools.msvc.gather_winphone_targets">[docs]</a><span class="k">def</span> <span class="nf">gather_winphone_targets</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">versions</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">vc_path</span><span class="p">,</span> <span class="n">vsvars</span><span class="p">):</span>
+	<span class="c">#Looking for WinPhone compilers</span>
+	<span class="n">targets</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">for</span> <span class="n">target</span><span class="p">,</span><span class="n">realtarget</span> <span class="ow">in</span> <span class="n">all_msvc_platforms</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">target</span><span class="p">,</span> <span class="p">(</span><span class="n">realtarget</span><span class="p">,</span> <span class="n">conf</span><span class="o">.</span><span class="n">get_msvc_version</span><span class="p">(</span><span class="s">&#39;winphone&#39;</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">vsvars</span><span class="p">))))</span>
+		<span class="k">except</span> <span class="n">conf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+			<span class="k">pass</span>
+	<span class="k">if</span> <span class="n">targets</span><span class="p">:</span>
+		<span class="n">versions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s">&#39;winphone &#39;</span><span class="o">+</span> <span class="n">version</span><span class="p">,</span> <span class="n">targets</span><span class="p">))</span>
+</div>
+<span class="nd">@conf</span>
 <div class="viewcode-block" id="gather_msvc_versions"><a class="viewcode-back" href="../../../tools/msvc.html#waflib.Tools.msvc.gather_msvc_versions">[docs]</a><span class="k">def</span> <span class="nf">gather_msvc_versions</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">versions</span><span class="p">):</span>
 	<span class="n">vc_paths</span> <span class="o">=</span> <span class="p">[]</span>
 	<span class="k">for</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">version</span><span class="p">,</span><span class="n">reg</span><span class="p">)</span> <span class="ow">in</span> <span class="n">gather_msvc_detected_versions</span><span class="p">():</span>
@@ -422,6 +427,10 @@
 		<span class="n">vsvars</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">vs_path</span><span class="p">,</span> <span class="s">&#39;Common7&#39;</span><span class="p">,</span> <span class="s">&#39;Tools&#39;</span><span class="p">,</span> <span class="s">&#39;vsvars32.bat&#39;</span><span class="p">)</span>
 		<span class="k">if</span> <span class="n">wince_supported_platforms</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">vsvars</span><span class="p">):</span>
 			<span class="n">conf</span><span class="o">.</span><span class="n">gather_wince_targets</span><span class="p">(</span><span class="n">versions</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">vc_path</span><span class="p">,</span> <span class="n">vsvars</span><span class="p">,</span> <span class="n">wince_supported_platforms</span><span class="p">)</span>
+
+		<span class="n">vsvars</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">vs_path</span><span class="p">,</span> <span class="s">&#39;VC&#39;</span><span class="p">,</span> <span class="s">&#39;WPSDK&#39;</span><span class="p">,</span> <span class="s">&#39;WP80&#39;</span><span class="p">,</span> <span class="s">&#39;vcvarsphoneall.bat&#39;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">vsvars</span><span class="p">):</span>
+			<span class="n">conf</span><span class="o">.</span><span class="n">gather_winphone_targets</span><span class="p">(</span><span class="n">versions</span><span class="p">,</span> <span class="s">&#39;8.0&#39;</span><span class="p">,</span> <span class="n">vc_path</span><span class="p">,</span> <span class="n">vsvars</span><span class="p">)</span>
 
 	<span class="k">for</span> <span class="n">version</span><span class="p">,</span><span class="n">vc_path</span> <span class="ow">in</span> <span class="n">vc_paths</span><span class="p">:</span>
 		<span class="n">vs_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">vc_path</span><span class="p">)</span>
@@ -460,9 +469,10 @@
 				<span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">OpenKey</span><span class="p">(</span><span class="n">all_versions</span><span class="p">,</span><span class="n">version</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="o">+</span><span class="n">targetDir</span><span class="p">)</span>
 				<span class="n">icl_version</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">OpenKey</span><span class="p">(</span><span class="n">all_versions</span><span class="p">,</span><span class="n">version</span><span class="p">)</span>
 				<span class="n">path</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">QueryValueEx</span><span class="p">(</span><span class="n">icl_version</span><span class="p">,</span><span class="s">&#39;ProductDir&#39;</span><span class="p">)</span>
-				<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="s">&#39;bin&#39;</span><span class="p">,</span><span class="s">&#39;iclvars.bat&#39;</span><span class="p">)):</span>
+				<span class="n">batch_file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="s">&#39;bin&#39;</span><span class="p">,</span><span class="s">&#39;iclvars.bat&#39;</span><span class="p">)</span>
+				<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">batch_file</span><span class="p">):</span>
 					<span class="k">try</span><span class="p">:</span>
-						<span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">target</span><span class="p">,(</span><span class="n">arch</span><span class="p">,</span><span class="n">conf</span><span class="o">.</span><span class="n">get_msvc_version</span><span class="p">(</span><span class="s">&#39;intel&#39;</span><span class="p">,</span><span class="n">version</span><span class="p">,</span><span class="n">target</span><span class="p">,</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="s">&#39;bin&#39;</span><span class="p">,</span><span class="s">&#39;iclvars.bat&#39;</span><span class="p">)))))</span>
+						<span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">target</span><span class="p">,(</span><span class="n">arch</span><span class="p">,</span><span class="n">conf</span><span class="o">.</span><span class="n">get_msvc_version</span><span class="p">(</span><span class="s">&#39;intel&#39;</span><span class="p">,</span><span class="n">version</span><span class="p">,</span><span class="n">target</span><span class="p">,</span><span class="n">batch_file</span><span class="p">))))</span>
 					<span class="k">except</span> <span class="n">conf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
 						<span class="k">pass</span>
 			<span class="k">except</span> <span class="ne">WindowsError</span><span class="p">:</span>
@@ -471,13 +481,83 @@
 			<span class="k">try</span><span class="p">:</span>
 				<span class="n">icl_version</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">OpenKey</span><span class="p">(</span><span class="n">all_versions</span><span class="p">,</span> <span class="n">version</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="o">+</span><span class="n">target</span><span class="p">)</span>
 				<span class="n">path</span><span class="p">,</span><span class="nb">type</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">QueryValueEx</span><span class="p">(</span><span class="n">icl_version</span><span class="p">,</span><span class="s">&#39;ProductDir&#39;</span><span class="p">)</span>
-				<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;bin&#39;</span><span class="p">,</span> <span class="s">&#39;iclvars.bat&#39;</span><span class="p">)):</span>
+				<span class="n">batch_file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="s">&#39;bin&#39;</span><span class="p">,</span><span class="s">&#39;iclvars.bat&#39;</span><span class="p">)</span>
+				<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">batch_file</span><span class="p">):</span>
 					<span class="k">try</span><span class="p">:</span>
-						<span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">target</span><span class="p">,</span> <span class="p">(</span><span class="n">arch</span><span class="p">,</span> <span class="n">conf</span><span class="o">.</span><span class="n">get_msvc_version</span><span class="p">(</span><span class="s">&#39;intel&#39;</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;bin&#39;</span><span class="p">,</span> <span class="s">&#39;iclvars.bat&#39;</span><span class="p">)))))</span>
+						<span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">target</span><span class="p">,</span> <span class="p">(</span><span class="n">arch</span><span class="p">,</span> <span class="n">conf</span><span class="o">.</span><span class="n">get_msvc_version</span><span class="p">(</span><span class="s">&#39;intel&#39;</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">batch_file</span><span class="p">))))</span>
 					<span class="k">except</span> <span class="n">conf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span><span class="p">:</span>
 						<span class="k">pass</span>
 			<span class="k">except</span> <span class="ne">WindowsError</span><span class="p">:</span>
 				<span class="k">continue</span>
+		<span class="n">major</span> <span class="o">=</span> <span class="n">version</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+		<span class="n">versions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s">&#39;intel &#39;</span> <span class="o">+</span> <span class="n">major</span><span class="p">,</span> <span class="n">targets</span><span class="p">))</span>
+</div>
+<span class="nd">@conf</span>
+<div class="viewcode-block" id="gather_intel_composer_versions"><a class="viewcode-back" href="../../../tools/msvc.html#waflib.Tools.msvc.gather_intel_composer_versions">[docs]</a><span class="k">def</span> <span class="nf">gather_intel_composer_versions</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">versions</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Checks ICL compilers that are part of Intel Composer Suites</span>
+
+<span class="sd">	:param versions: list to modify</span>
+<span class="sd">	:type versions: list</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">version_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;^...?.?\...?.?.?&#39;</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">all_versions</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">OpenKey</span><span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">HKEY_LOCAL_MACHINE</span><span class="p">,</span> <span class="s">&#39;SOFTWARE</span><span class="se">\\</span><span class="s">Wow6432node</span><span class="se">\\</span><span class="s">Intel</span><span class="se">\\</span><span class="s">Suites&#39;</span><span class="p">)</span>
+	<span class="k">except</span> <span class="ne">WindowsError</span><span class="p">:</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">all_versions</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">OpenKey</span><span class="p">(</span><span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">HKEY_LOCAL_MACHINE</span><span class="p">,</span> <span class="s">&#39;SOFTWARE</span><span class="se">\\</span><span class="s">Intel</span><span class="se">\\</span><span class="s">Suites&#39;</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">WindowsError</span><span class="p">:</span>
+			<span class="k">return</span>
+	<span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">version</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">EnumKey</span><span class="p">(</span><span class="n">all_versions</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">WindowsError</span><span class="p">:</span>
+			<span class="k">break</span>
+		<span class="n">index</span> <span class="o">=</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">version_pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">version</span><span class="p">):</span>
+			<span class="k">continue</span>
+		<span class="n">targets</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">target</span><span class="p">,</span><span class="n">arch</span> <span class="ow">in</span> <span class="n">all_icl_platforms</span><span class="p">:</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">target</span><span class="o">==</span><span class="s">&#39;intel64&#39;</span><span class="p">:</span> <span class="n">targetDir</span><span class="o">=</span><span class="s">&#39;EM64T_NATIVE&#39;</span>
+				<span class="k">else</span><span class="p">:</span> <span class="n">targetDir</span><span class="o">=</span><span class="n">target</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="n">defaults</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">OpenKey</span><span class="p">(</span><span class="n">all_versions</span><span class="p">,</span><span class="n">version</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">Defaults</span><span class="se">\\</span><span class="s">C++</span><span class="se">\\</span><span class="s">&#39;</span><span class="o">+</span><span class="n">targetDir</span><span class="p">)</span>
+				<span class="k">except</span> <span class="ne">WindowsError</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">targetDir</span><span class="o">==</span><span class="s">&#39;EM64T_NATIVE&#39;</span><span class="p">:</span>
+						<span class="n">defaults</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">OpenKey</span><span class="p">(</span><span class="n">all_versions</span><span class="p">,</span><span class="n">version</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">Defaults</span><span class="se">\\</span><span class="s">C++</span><span class="se">\\</span><span class="s">EM64T&#39;</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="k">raise</span> <span class="ne">WindowsError</span>
+				<span class="n">uid</span><span class="p">,</span><span class="nb">type</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">QueryValueEx</span><span class="p">(</span><span class="n">defaults</span><span class="p">,</span> <span class="s">&#39;SubKey&#39;</span><span class="p">)</span>
+				<span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">OpenKey</span><span class="p">(</span><span class="n">all_versions</span><span class="p">,</span><span class="n">version</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="o">+</span><span class="n">uid</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">C++</span><span class="se">\\</span><span class="s">&#39;</span><span class="o">+</span><span class="n">targetDir</span><span class="p">)</span>
+				<span class="n">icl_version</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">OpenKey</span><span class="p">(</span><span class="n">all_versions</span><span class="p">,</span><span class="n">version</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="o">+</span><span class="n">uid</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">C++&#39;</span><span class="p">)</span>
+				<span class="n">path</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="n">Utils</span><span class="o">.</span><span class="n">winreg</span><span class="o">.</span><span class="n">QueryValueEx</span><span class="p">(</span><span class="n">icl_version</span><span class="p">,</span><span class="s">&#39;ProductDir&#39;</span><span class="p">)</span>
+				<span class="n">batch_file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="s">&#39;bin&#39;</span><span class="p">,</span><span class="s">&#39;iclvars.bat&#39;</span><span class="p">)</span>
+				<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">batch_file</span><span class="p">):</span>
+					<span class="k">try</span><span class="p">:</span>
+						<span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">target</span><span class="p">,(</span><span class="n">arch</span><span class="p">,</span><span class="n">conf</span><span class="o">.</span><span class="n">get_msvc_version</span><span class="p">(</span><span class="s">&#39;intel&#39;</span><span class="p">,</span><span class="n">version</span><span class="p">,</span><span class="n">target</span><span class="p">,</span><span class="n">batch_file</span><span class="p">))))</span>
+					<span class="k">except</span> <span class="n">conf</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">ConfigurationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+						<span class="k">pass</span>
+				<span class="c"># The intel compilervar_arch.bat is broken when used with Visual Studio Express 2012</span>
+				<span class="c"># http://software.intel.com/en-us/forums/topic/328487</span>
+				<span class="n">compilervars_warning_attr</span> <span class="o">=</span> <span class="s">&#39;_compilervars_warning_key&#39;</span>
+				<span class="k">if</span> <span class="n">version</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;13&#39;</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">compilervars_warning_attr</span><span class="p">,</span> <span class="bp">True</span><span class="p">):</span>
+					<span class="nb">setattr</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">compilervars_warning_attr</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+					<span class="n">patch_url</span> <span class="o">=</span> <span class="s">&#39;http://software.intel.com/en-us/forums/topic/328487&#39;</span>
+					<span class="n">compilervars_arch</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;bin&#39;</span><span class="p">,</span> <span class="s">&#39;compilervars_arch.bat&#39;</span><span class="p">)</span>
+					<span class="k">for</span> <span class="n">vscomntools</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;VS110COMNTOOLS&#39;</span><span class="p">,</span> <span class="s">&#39;VS100COMNTOOLS&#39;</span><span class="p">]:</span>
+						<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">has_key</span> <span class="p">(</span><span class="n">vscomntools</span><span class="p">):</span>
+							<span class="n">vs_express_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="n">vscomntools</span><span class="p">]</span> <span class="o">+</span> <span class="s">r&#39;..\IDE\VSWinExpress.exe&#39;</span>
+							<span class="n">dev_env_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="n">vscomntools</span><span class="p">]</span> <span class="o">+</span> <span class="s">r&#39;..\IDE\devenv.exe&#39;</span>
+							<span class="k">if</span> <span class="p">(</span><span class="s">r&#39;if exist &quot;%VS110COMNTOOLS%..\IDE\VSWinExpress.exe&quot;&#39;</span> <span class="ow">in</span> <span class="n">Utils</span><span class="o">.</span><span class="n">readf</span><span class="p">(</span><span class="n">compilervars_arch</span><span class="p">)</span> <span class="ow">and</span>
+								<span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">vs_express_path</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dev_env_path</span><span class="p">)):</span>
+								<span class="n">Logs</span><span class="o">.</span><span class="n">warn</span><span class="p">((</span><span class="s">&#39;The Intel compilervar_arch.bat only checks for one Visual Studio SKU &#39;</span>
+								           <span class="s">&#39;(VSWinExpress.exe) but it does not seem to be installed at </span><span class="si">%r</span><span class="s">. &#39;</span>
+								           <span class="s">&#39;The intel command line set up will fail to configure unless the file </span><span class="si">%r</span><span class="s">&#39;</span>
+								           <span class="s">&#39;is patched. See: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">vs_express_path</span><span class="p">,</span> <span class="n">compilervars_arch</span><span class="p">,</span> <span class="n">patch_url</span><span class="p">))</span>
+			<span class="k">except</span> <span class="ne">WindowsError</span><span class="p">:</span>
+				<span class="k">pass</span>
 		<span class="n">major</span> <span class="o">=</span> <span class="n">version</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
 		<span class="n">versions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s">&#39;intel &#39;</span> <span class="o">+</span> <span class="n">major</span><span class="p">,</span> <span class="n">targets</span><span class="p">))</span>
 </div>
@@ -490,6 +570,7 @@
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;MSVC_INSTALLED_VERSIONS&#39;</span><span class="p">]:</span>
 		<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">gather_icl_versions</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">gather_intel_composer_versions</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">gather_wsdk_versions</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">gather_msvc_versions</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;MSVC_INSTALLED_VERSIONS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lst</span>
@@ -506,9 +587,9 @@
 			<span class="n">Logs</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="o">+</span><span class="n">target</span><span class="p">)</span>
 </div>
 <span class="nd">@conf</span>
-<div class="viewcode-block" id="detect_msvc"><a class="viewcode-back" href="../../../tools/msvc.html#waflib.Tools.msvc.detect_msvc">[docs]</a><span class="k">def</span> <span class="nf">detect_msvc</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+<div class="viewcode-block" id="detect_msvc"><a class="viewcode-back" href="../../../tools/msvc.html#waflib.Tools.msvc.detect_msvc">[docs]</a><span class="k">def</span> <span class="nf">detect_msvc</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">arch</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span>
 	<span class="n">versions</span> <span class="o">=</span> <span class="n">get_msvc_versions</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
-	<span class="k">return</span> <span class="n">setup_msvc</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">versions</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">setup_msvc</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">versions</span><span class="p">,</span> <span class="n">arch</span><span class="p">)</span>
 </div>
 <span class="nd">@conf</span>
 <div class="viewcode-block" id="find_lt_names_msvc"><a class="viewcode-back" href="../../../tools/msvc.html#waflib.Tools.msvc.find_lt_names_msvc">[docs]</a><span class="k">def</span> <span class="nf">find_lt_names_msvc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">libname</span><span class="p">,</span> <span class="n">is_static</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
@@ -629,7 +710,7 @@
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Configuration methods to call for detecting msvc</span>
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="n">conf</span><span class="o">.</span><span class="n">autodetect</span><span class="p">()</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">autodetect</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
 	<span class="n">conf</span><span class="o">.</span><span class="n">find_msvc</span><span class="p">()</span>
 	<span class="n">conf</span><span class="o">.</span><span class="n">msvc_common_flags</span><span class="p">()</span>
 	<span class="n">conf</span><span class="o">.</span><span class="n">cc_load_tools</span><span class="p">()</span>
@@ -645,11 +726,16 @@
 	<span class="n">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
 </div>
 <span class="nd">@conf</span>
-<div class="viewcode-block" id="autodetect"><a class="viewcode-back" href="../../../tools/msvc.html#waflib.Tools.msvc.autodetect">[docs]</a><span class="k">def</span> <span class="nf">autodetect</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+<div class="viewcode-block" id="autodetect"><a class="viewcode-back" href="../../../tools/msvc.html#waflib.Tools.msvc.autodetect">[docs]</a><span class="k">def</span> <span class="nf">autodetect</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">arch</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span>
 	<span class="n">v</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
 	<span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">NO_MSVC_DETECT</span><span class="p">:</span>
 		<span class="k">return</span>
-	<span class="n">compiler</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">includes</span><span class="p">,</span> <span class="n">libdirs</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">detect_msvc</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">arch</span><span class="p">:</span>
+		<span class="n">compiler</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">includes</span><span class="p">,</span> <span class="n">libdirs</span><span class="p">,</span> <span class="n">arch</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">detect_msvc</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+		<span class="n">v</span><span class="p">[</span><span class="s">&#39;DEST_CPU&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arch</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">compiler</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">includes</span><span class="p">,</span> <span class="n">libdirs</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">detect_msvc</span><span class="p">()</span>
+
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;PATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">path</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;INCLUDES&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">includes</span>
 	<span class="n">v</span><span class="p">[</span><span class="s">&#39;LIBPATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">libdirs</span>
@@ -724,9 +810,9 @@
 		<span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;MT&#39;</span><span class="p">,</span> <span class="n">path_list</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;MT&#39;</span><span class="p">)</span>
 		<span class="n">v</span><span class="p">[</span><span class="s">&#39;MTFLAGS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;/NOLOGO&#39;</span><span class="p">]</span>
 
-	<span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;winres&#39;</span><span class="p">)</span>
-
-	<span class="k">if</span> <span class="ow">not</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;WINRC&#39;</span><span class="p">]:</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">conf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;winres&#39;</span><span class="p">)</span>
+	<span class="k">except</span> <span class="n">Errors</span><span class="o">.</span><span class="n">WafError</span><span class="p">:</span>
 		<span class="n">warn</span><span class="p">(</span><span class="s">&#39;Resource compiler not found. Compiling resource file is disabled&#39;</span><span class="p">)</span>
 </div>
 <span class="nd">@conf</span>
@@ -939,22 +1025,21 @@
 <span class="sd">	Change the command-line execution for msvc programs.</span>
 <span class="sd">	Instead of quoting all the paths and keep using the shell, we can just join the options msvc is interested in</span>
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;CC_NAME&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;msvc&#39;</span><span class="p">:</span>
-		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
-			<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
-			<span class="n">carry</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
-			<span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-				<span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="s">&#39;/Fo&#39;</span> <span class="ow">or</span> <span class="n">a</span> <span class="o">==</span> <span class="s">&#39;/doc&#39;</span> <span class="ow">or</span> <span class="n">a</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;:&#39;</span><span class="p">:</span>
-					<span class="n">carry</span> <span class="o">=</span> <span class="n">a</span>
-				<span class="k">else</span><span class="p">:</span>
-					<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">carry</span> <span class="o">+</span> <span class="n">a</span><span class="p">)</span>
-					<span class="n">carry</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
-			<span class="n">k</span> <span class="o">=</span> <span class="p">[</span><span class="n">lst</span><span class="p">]</span>
+	<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+		<span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">carry</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+		<span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+			<span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="s">&#39;/Fo&#39;</span> <span class="ow">or</span> <span class="n">a</span> <span class="o">==</span> <span class="s">&#39;/doc&#39;</span> <span class="ow">or</span> <span class="n">a</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;:&#39;</span><span class="p">:</span>
+				<span class="n">carry</span> <span class="o">=</span> <span class="n">a</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">carry</span> <span class="o">+</span> <span class="n">a</span><span class="p">)</span>
+				<span class="n">carry</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+		<span class="n">k</span> <span class="o">=</span> <span class="p">[</span><span class="n">lst</span><span class="p">]</span>
 
-		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PATH&#39;</span><span class="p">]:</span>
-			<span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span> <span class="ow">or</span> <span class="nb">dict</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">)</span>
-			<span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">PATH</span> <span class="o">=</span> <span class="s">&#39;;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PATH&#39;</span><span class="p">]))</span>
-			<span class="n">kw</span><span class="p">[</span><span class="s">&#39;env&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">env</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PATH&#39;</span><span class="p">]:</span>
+		<span class="n">env</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">env</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">)</span>
+		<span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">PATH</span> <span class="o">=</span> <span class="s">&#39;;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;PATH&#39;</span><span class="p">]))</span>
+		<span class="n">kw</span><span class="p">[</span><span class="s">&#39;env&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">env</span>
 
 	<span class="n">bld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">bld</span>
 	<span class="k">try</span><span class="p">:</span>
@@ -968,13 +1053,61 @@
 		<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exec_mf</span><span class="p">()</span>
 	<span class="k">return</span> <span class="n">ret</span>
 </div>
+<div class="viewcode-block" id="wrap_class"><a class="viewcode-back" href="../../../tools/msvc.html#waflib.Tools.msvc.wrap_class">[docs]</a><span class="k">def</span> <span class="nf">wrap_class</span><span class="p">(</span><span class="n">class_name</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Manifest file processing and @response file workaround for command-line length limits on Windows systems</span>
+<span class="sd">	The indicated task class is replaced by a subclass to prevent conflicts in case the class is wrapped more than once</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">cls</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">classes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">cls</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">None</span>
+
+	<span class="n">derived_class</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="p">(</span><span class="n">cls</span><span class="p">,),</span> <span class="p">{})</span>
+
+	<span class="k">def</span> <span class="nf">exec_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;CC_NAME&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;msvc&#39;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exec_command_msvc</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">derived_class</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+	<span class="c"># Chain-up monkeypatch needed since exec_command() is in base class API</span>
+	<span class="n">derived_class</span><span class="o">.</span><span class="n">exec_command</span> <span class="o">=</span> <span class="n">exec_command</span>
+
+	<span class="c"># No chain-up behavior needed since the following methods aren&#39;t in</span>
+	<span class="c"># base class API</span>
+	<span class="n">derived_class</span><span class="o">.</span><span class="n">exec_response_command</span> <span class="o">=</span> <span class="n">exec_response_command</span>
+	<span class="n">derived_class</span><span class="o">.</span><span class="n">quote_response_command</span> <span class="o">=</span> <span class="n">quote_response_command</span>
+	<span class="n">derived_class</span><span class="o">.</span><span class="n">exec_command_msvc</span> <span class="o">=</span> <span class="n">exec_command_msvc</span>
+	<span class="n">derived_class</span><span class="o">.</span><span class="n">exec_mf</span> <span class="o">=</span> <span class="n">exec_mf</span>
+
+	<span class="k">return</span> <span class="n">derived_class</span>
+</div>
 <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="s">&#39;c cxx cprogram cxxprogram cshlib cxxshlib cstlib cxxstlib&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
-	<span class="n">cls</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">classes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">cls</span><span class="p">:</span>
-		<span class="n">cls</span><span class="o">.</span><span class="n">exec_command</span> <span class="o">=</span> <span class="n">exec_command_msvc</span>
-		<span class="n">cls</span><span class="o">.</span><span class="n">exec_response_command</span> <span class="o">=</span> <span class="n">exec_response_command</span>
-		<span class="n">cls</span><span class="o">.</span><span class="n">quote_response_command</span> <span class="o">=</span> <span class="n">quote_response_command</span>
-		<span class="n">cls</span><span class="o">.</span><span class="n">exec_mf</span> <span class="o">=</span> <span class="n">exec_mf</span>
+	<span class="n">wrap_class</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">make_winapp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">family</span><span class="p">):</span>
+	<span class="n">append</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_unique</span>
+	<span class="n">append</span><span class="p">(</span><span class="s">&#39;DEFINES&#39;</span><span class="p">,</span> <span class="s">&#39;WINAPI_FAMILY=</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">family</span><span class="p">)</span>
+	<span class="n">append</span><span class="p">(</span><span class="s">&#39;CXXFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;/ZW&#39;</span><span class="p">)</span>
+	<span class="n">append</span><span class="p">(</span><span class="s">&#39;CXXFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;/TP&#39;</span><span class="p">)</span>
+	<span class="k">for</span> <span class="n">lib_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">LIBPATH</span><span class="p">:</span>
+		<span class="n">append</span><span class="p">(</span><span class="s">&#39;CXXFLAGS&#39;</span><span class="p">,</span><span class="s">&#39;/AI</span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="n">lib_path</span><span class="p">)</span>
+
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;winphoneapp&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;process_use&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="make_winphone_app"><a class="viewcode-back" href="../../../tools/msvc.html#waflib.Tools.msvc.make_winphone_app">[docs]</a><span class="k">def</span> <span class="nf">make_winphone_app</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="n">make_winapp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;WINAPI_FAMILY_PHONE_APP&#39;</span><span class="p">)</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;/NODEFAULTLIB:ole32.lib&#39;</span><span class="p">)</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">append_unique</span><span class="p">(</span><span class="s">&#39;LINKFLAGS&#39;</span><span class="p">,</span> <span class="s">&#39;PhoneAppModelHost.lib&#39;</span><span class="p">)</span>
+
+</div>
+<span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;winapp&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;process_use&#39;</span><span class="p">)</span>
+<span class="nd">@after_method</span><span class="p">(</span><span class="s">&#39;propagate_uselib_vars&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="make_windows_app"><a class="viewcode-back" href="../../../tools/msvc.html#waflib.Tools.msvc.make_windows_app">[docs]</a><span class="k">def</span> <span class="nf">make_windows_app</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="n">make_winapp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;WINAPI_FAMILY_DESKTOP_APP&#39;</span><span class="p">)</span></div>
 </pre></div>
 
           </div>

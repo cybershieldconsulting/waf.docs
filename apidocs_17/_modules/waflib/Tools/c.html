@@ -65,7 +65,7 @@
 </div>
 <div class="viewcode-block" id="c"><a class="viewcode-back" href="../../../tools/c.html#waflib.Tools.c.c">[docs]</a><span class="k">class</span> <span class="nc">c</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
 	<span class="s">&quot;Compile C files into object files&quot;</span>
-	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${CC} ${ARCH_ST:ARCH} ${CFLAGS} ${CPPFLAGS} ${FRAMEWORKPATH_ST:FRAMEWORKPATH} ${FRAMEWORK_ST:FRAMEWORK} ${CPPPATH_ST:INCPATHS} ${DEFINES_ST:DEFINES} ${CC_SRC_F}${SRC} ${CC_TGT_F}${TGT}&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${CC} ${ARCH_ST:ARCH} ${CFLAGS} ${CPPFLAGS} ${FRAMEWORKPATH_ST:FRAMEWORKPATH} ${CPPPATH_ST:INCPATHS} ${DEFINES_ST:DEFINES} ${CC_SRC_F}${SRC} ${CC_TGT_F}${TGT}&#39;</span>
 	<span class="nb">vars</span>    <span class="o">=</span> <span class="p">[</span><span class="s">&#39;CCDEPS&#39;</span><span class="p">]</span> <span class="c"># unused variable to depend on, just in case</span>
 	<span class="n">ext_in</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.h&#39;</span><span class="p">]</span> <span class="c"># set the build order easily by using ext_out=[&#39;.h&#39;]</span>
 	<span class="n">scan</span>    <span class="o">=</span> <span class="n">c_preproc</span><span class="o">.</span><span class="n">scan</span>

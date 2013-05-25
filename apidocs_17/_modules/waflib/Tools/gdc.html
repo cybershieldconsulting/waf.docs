@@ -64,7 +64,7 @@
 	<span class="n">conf</span><span class="o">.</span><span class="n">find_program</span><span class="p">(</span><span class="s">&#39;gdc&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s">&#39;D&#39;</span><span class="p">)</span>
 
 	<span class="n">out</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">cmd_and_log</span><span class="p">([</span><span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;--version&#39;</span><span class="p">])</span>
-	<span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;gdc (GCC)&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;gdc &quot;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
 		<span class="n">conf</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&quot;detected compiler is not gdc&quot;</span><span class="p">)</span>
 </div>
 <span class="nd">@conf</span>

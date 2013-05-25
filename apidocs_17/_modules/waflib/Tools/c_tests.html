@@ -77,7 +77,10 @@
 <span class="s">#define testEXPORT</span>
 <span class="s">#endif</span>
 <span class="s">testEXPORT int lib_func(void);</span>
-<span class="s">int main(void) {return !(lib_func() == 9);}</span>
+<span class="s">int main(int argc, char **argv) {</span>
+<span class="s">	(void)argc; (void)argv;</span>
+<span class="s">	return !(lib_func() == 9);</span>
+<span class="s">}</span>
 <span class="s">&#39;&#39;&#39;</span>
 
 <span class="nd">@feature</span><span class="p">(</span><span class="s">&#39;link_lib_test&#39;</span><span class="p">)</span>
@@ -173,7 +176,12 @@
 
 <span class="c">########################################################################################</span>
 </div>
-<span class="n">LARGE_FRAGMENT</span> <span class="o">=</span> <span class="s">&#39;#include &lt;unistd.h&gt;</span><span class="se">\n</span><span class="s">int main() { return !(sizeof(off_t) &gt;= 8); }</span><span class="se">\n</span><span class="s">&#39;</span>
+<span class="n">LARGE_FRAGMENT</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;#include &lt;unistd.h&gt;</span>
+<span class="s">int main(int argc, char **argv) {</span>
+<span class="s">	(void)argc; (void)argv;</span>
+<span class="s">	return !(sizeof(off_t) &gt;= 8);</span>
+<span class="s">}</span>
+<span class="s">&#39;&#39;&#39;</span>
 
 <span class="nd">@conf</span>
 <div class="viewcode-block" id="check_large_file"><a class="viewcode-back" href="../../../tools/c_tests.html#waflib.Tools.c_tests.check_large_file">[docs]</a><span class="k">def</span> <span class="nf">check_large_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>

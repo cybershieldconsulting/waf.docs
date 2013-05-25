@@ -210,6 +210,29 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="waflib.Build.BuildContext.rule">
+<tt class="descname">rule</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.rule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.rule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for creating a task generator using the decorator notation. The following code:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@bld.rule</span><span class="p">(</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="s">&quot;foo&quot;</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">_</span><span class="p">(</span><span class="n">tsk</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;bar&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>is equivalent to:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">bar</span><span class="p">(</span><span class="n">tsk</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;bar&quot;</span><span class="p">)</span>
+
+<span class="n">bld</span><span class="p">(</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="s">&quot;foo&quot;</span><span class="p">,</span>
+        <span class="n">rule</span> <span class="o">=</span> <span class="n">bar</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="waflib.Build.BuildContext.__copy__">
 <tt class="descname">__copy__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#BuildContext.__copy__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.BuildContext.__copy__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implemented to prevents copies of build contexts (raises an exception)</p>
@@ -587,10 +610,8 @@ The value <tt class="xref py py-attr docutils literal"><span class="pre">waflib.
 <dt id="waflib.Build.inst">
 <em class="property">class </em><tt class="descclassname">waflib.Build.</tt><tt class="descname">inst</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#inst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.inst" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
-<dl class="docutils">
-<dt>Special task used for installing files and symlinks, it behaves both like a task</dt>
-<dd>and like a task generator</dd>
-</dl>
+<p>Special task used for installing files and symlinks, it behaves both like a task
+and like a task generator</p>
 <dl class="method">
 <dt id="waflib.Build.inst.post">
 <tt class="descname">post</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#inst.post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.inst.post" title="Permalink to this definition">¶</a></dt>
@@ -746,7 +767,7 @@ after the installation task is created. Its role is to force the immediate execu
 
 <dl class="method">
 <dt id="waflib.Build.InstallContext.symlink_as">
-<tt class="descname">symlink_as</tt><big>(</big><em>dest</em>, <em>src</em>, <em>env=None</em>, <em>cwd=None</em>, <em>add=True</em>, <em>postpone=True</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#InstallContext.symlink_as"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.InstallContext.symlink_as" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">symlink_as</tt><big>(</big><em>dest</em>, <em>src</em>, <em>env=None</em>, <em>cwd=None</em>, <em>add=True</em>, <em>postpone=True</em>, <em>relative_trick=False</em><big>)</big><a class="reference internal" href="_modules/waflib/Build.html#InstallContext.symlink_as"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Build.InstallContext.symlink_as" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a task to install a symlink:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
         <span class="n">bld</span><span class="o">.</span><span class="n">symlink_as</span><span class="p">(</span><span class="s">&#39;${PREFIX}/lib/libfoo.so&#39;</span><span class="p">,</span> <span class="s">&#39;libfoo.so.1.2.3&#39;</span><span class="p">)</span>
@@ -762,6 +783,7 @@ after the installation task is created. Its role is to force the immediate execu
 <li><strong>env</strong> (<em>Configuration set</em>) &#8211; configuration set for performing substitutions in dest</li>
 <li><strong>add</strong> (<em>bool</em>) &#8211; add the task created to a build group - set <tt class="xref docutils literal"><span class="pre">False</span></tt> only if the installation task is created after the build has started</li>
 <li><strong>postpone</strong> (<em>bool</em>) &#8211; execute the task immediately to perform the installation</li>
+<li><strong>relative_trick</strong> (<em>bool</em>) &#8211; make the symlink relative (default: <tt class="xref docutils literal"><span class="pre">False</span></tt>)</li>
 </ul>
 </td>
 </tr>

@@ -82,9 +82,10 @@ the first good configuration will be used.
 Supported platforms: ia64, x64, x86, x86_amd64, x86_ia64</p>
 <p>Compilers supported:</p>
 <ul class="simple">
-<li>msvc       =&gt; Visual Studio, versions 6.0 (VC 98, VC .NET 2002) to 10.0 (Visual Studio 2010)</li>
-<li>wsdk       =&gt; Windows SDK, versions 6.0, 6.1, 7.0</li>
-<li>icl        =&gt; Intel compiler, versions 9,10,11</li>
+<li>msvc       =&gt; Visual Studio, versions 6.0 (VC 98, VC .NET 2002) to 11.0 (Visual Studio 2012)</li>
+<li>wsdk       =&gt; Windows SDK, versions 6.0, 6.1, 7.0, 7.1, 8.0</li>
+<li>icl        =&gt; Intel compiler, versions 9, 10, 11, 13</li>
+<li>winphone   =&gt; Visual Studio to target Windows Phone 8 native (version 8.0 for now)</li>
 <li>Smartphone =&gt; Compiler/SDK for Smartphone devices (armv4/v4i)</li>
 <li>PocketPC   =&gt; Compiler/SDK for PocketPC devices (armv4/v4i)</li>
 </ul>
@@ -192,6 +193,12 @@ Setting PYTHONUNBUFFERED gives the unbuffered output.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="waflib.Tools.msvc.gather_winphone_targets">
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">gather_winphone_targets</tt><big>(</big><em>conf</em>, <em>versions</em>, <em>version</em>, <em>vc_path</em>, <em>vsvars</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#gather_winphone_targets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.gather_winphone_targets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
 <dt id="waflib.Tools.msvc.gather_msvc_versions">
 <tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">gather_msvc_versions</tt><big>(</big><em>conf</em>, <em>versions</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#gather_msvc_versions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.gather_msvc_versions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
@@ -202,6 +209,21 @@ Setting PYTHONUNBUFFERED gives the unbuffered output.</p>
 <tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">gather_icl_versions</tt><big>(</big><em>conf</em>, <em>versions</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#gather_icl_versions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.gather_icl_versions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
 <p>Checks ICL compilers</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>versions</strong> (<em>list</em>) &#8211; list to modify</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.msvc.gather_intel_composer_versions">
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">gather_intel_composer_versions</tt><big>(</big><em>conf</em>, <em>versions</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#gather_intel_composer_versions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.gather_intel_composer_versions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
+<p>Checks ICL compilers that are part of Intel Composer Suites</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -237,7 +259,7 @@ Setting PYTHONUNBUFFERED gives the unbuffered output.</p>
 
 <dl class="function">
 <dt id="waflib.Tools.msvc.detect_msvc">
-<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">detect_msvc</tt><big>(</big><em>conf</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#detect_msvc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.detect_msvc" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">detect_msvc</tt><big>(</big><em>conf</em>, <em>arch=False</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#detect_msvc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.detect_msvc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
 </dd></dl>
 
@@ -284,7 +306,7 @@ This is ok since msvc doesn&#8217;t have any special linker flag to select stati
 
 <dl class="function">
 <dt id="waflib.Tools.msvc.autodetect">
-<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">autodetect</tt><big>(</big><em>conf</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#autodetect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.autodetect" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">autodetect</tt><big>(</big><em>conf</em>, <em>arch=False</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#autodetect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.autodetect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
 </dd></dl>
 
@@ -350,6 +372,13 @@ See: <a class="reference external" href="http://msdn2.microsoft.com/en-us/librar
 <dt id="waflib.Tools.msvc.exec_mf">
 <tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">exec_mf</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#exec_mf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.exec_mf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the manifest file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.msvc.exec_command_msvc">
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">exec_command_msvc</tt><big>(</big><em>self</em>, <em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#exec_command_msvc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.exec_command_msvc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the command-line execution for msvc programs.
+Instead of quoting all the paths and keep using the shell, we can just join the options msvc is interested in</p>
 </dd></dl>
 
 <dl class="function">
@@ -435,16 +464,36 @@ after the functions of given name(s):</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="waflib.Tools.msvc.exec_command_msvc">
-<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">exec_command_msvc</tt><big>(</big><em>self</em>, <em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#exec_command_msvc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.exec_command_msvc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Change the command-line execution for msvc programs.
-Instead of quoting all the paths and keep using the shell, we can just join the options msvc is interested in</p>
+<dt id="waflib.Tools.msvc.wrap_class">
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">wrap_class</tt><big>(</big><em>class_name</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#wrap_class"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.wrap_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>Manifest file processing and &#64;response file workaround for command-line length limits on Windows systems
+The indicated task class is replaced by a subclass to prevent conflicts in case the class is wrapped more than once</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="waflib.Tools.msvc.cls">
-<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">cls</tt><a class="headerlink" href="#waflib.Tools.msvc.cls" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <tt class="xref py py-class docutils literal"><span class="pre">cxxstlib</span></tt></p>
+<dl class="function">
+<dt id="waflib.Tools.msvc.make_winphone_app">
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">make_winphone_app</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#make_winphone_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.make_winphone_app" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Feature :</th><td class="field-body"><a class="reference external" href="../featuremap.html#feature-winphoneapp">winphoneapp</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.msvc.make_windows_app">
+<tt class="descclassname">waflib.Tools.msvc.</tt><tt class="descname">make_windows_app</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/msvc.html#make_windows_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.msvc.make_windows_app" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Feature :</th><td class="field-body"><a class="reference external" href="../featuremap.html#feature-winapp">winapp</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <p>Features defined in this module:</p>
@@ -455,6 +504,8 @@ Instead of quoting all the paths and keep using the shell, we can just join the 
 <li><a class="reference external" href="../featuremap.html#feature-cxx">cxx</a></li>
 <li><a class="reference external" href="../featuremap.html#feature-cxxprogram">cxxprogram</a></li>
 <li><a class="reference external" href="../featuremap.html#feature-cxxshlib">cxxshlib</a></li>
+<li><a class="reference external" href="../featuremap.html#feature-winapp">winapp</a></li>
+<li><a class="reference external" href="../featuremap.html#feature-winphoneapp">winphoneapp</a></li>
 </ul>
 </div>
 

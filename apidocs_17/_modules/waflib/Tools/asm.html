@@ -95,7 +95,7 @@
 <span class="sd">	Compile asm files by gas/nasm/yasm/...</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">color</span> <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
-	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${AS} ${ASFLAGS} ${CPPPATH_ST:INCPATHS} ${AS_SRC_F}${SRC} ${AS_TGT_F}${TGT}&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${AS} ${ASFLAGS} ${ASMPATH_ST:INCPATHS} ${AS_SRC_F}${SRC} ${AS_TGT_F}${TGT}&#39;</span>
 </div>
 <span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.s&#39;</span><span class="p">,</span> <span class="s">&#39;.S&#39;</span><span class="p">,</span> <span class="s">&#39;.asm&#39;</span><span class="p">,</span> <span class="s">&#39;.ASM&#39;</span><span class="p">,</span> <span class="s">&#39;.spp&#39;</span><span class="p">,</span> <span class="s">&#39;.SPP&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="asm_hook"><a class="viewcode-back" href="../../../tools/asm.html#waflib.Tools.asm.asm_hook">[docs]</a><span class="k">def</span> <span class="nf">asm_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
@@ -120,7 +120,10 @@
 <div class="viewcode-block" id="asmstlib"><a class="viewcode-back" href="../../../tools/asm.html#waflib.Tools.asm.asmstlib">[docs]</a><span class="k">class</span> <span class="nc">asmstlib</span><span class="p">(</span><span class="n">stlink_task</span><span class="p">):</span>
 	<span class="s">&quot;Link object files into a c static library&quot;</span>
 	<span class="k">pass</span> <span class="c"># do not remove</span>
-</pre></div></div>
+</div>
+<span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
+	<span class="n">conf</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s">&#39;ASMPATH_ST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;-I</span><span class="si">%s</span><span class="s">&#39;</span>
+</pre></div>
 
           </div>
         </div>

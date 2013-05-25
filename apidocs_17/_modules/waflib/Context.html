@@ -61,19 +61,19 @@
 <span class="kn">import</span> <span class="nn">waflib.Node</span>
 
 <span class="c"># the following 3 constants are updated on each new release (do not touch)</span>
-<span class="n">HEXVERSION</span><span class="o">=</span><span class="mh">0x1070000</span>
+<span class="n">HEXVERSION</span><span class="o">=</span><span class="mh">0x1070b00</span>
 <span class="sd">&quot;&quot;&quot;Constant updated on new releases&quot;&quot;&quot;</span>
 
-<span class="n">WAFVERSION</span><span class="o">=</span><span class="s">&quot;1.7.0&quot;</span>
+<span class="n">WAFVERSION</span><span class="o">=</span><span class="s">&quot;1.7.11&quot;</span>
 <span class="sd">&quot;&quot;&quot;Constant updated on new releases&quot;&quot;&quot;</span>
 
-<span class="n">WAFREVISION</span><span class="o">=</span><span class="s">&quot;a7e69d6b81b04729804754c4d5214da063779a65&quot;</span>
+<span class="n">WAFREVISION</span><span class="o">=</span><span class="s">&quot;50f631bc5e00bdda966c68094229b99be9a21084&quot;</span>
 <span class="sd">&quot;&quot;&quot;Constant updated on new releases&quot;&quot;&quot;</span>
 
 <span class="n">ABI</span> <span class="o">=</span> <span class="mi">98</span>
 <span class="sd">&quot;&quot;&quot;Version of the build data cache file format (used in :py:const:`waflib.Context.DBFILE`)&quot;&quot;&quot;</span>
 
-<span class="n">DBFILE</span> <span class="o">=</span> <span class="s">&#39;.wafpickle-</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">ABI</span>
+<span class="n">DBFILE</span> <span class="o">=</span> <span class="s">&#39;.wafpickle-</span><span class="si">%s</span><span class="s">-</span><span class="si">%d</span><span class="s">-</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">hexversion</span><span class="p">,</span> <span class="n">ABI</span><span class="p">)</span>
 <span class="sd">&quot;&quot;&quot;Name of the pickle file for storing the build data&quot;&quot;&quot;</span>
 
 <span class="n">APPNAME</span> <span class="o">=</span> <span class="s">&#39;APPNAME&#39;</span>

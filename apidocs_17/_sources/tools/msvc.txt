@@ -16,3 +16,7 @@ Features defined in this module:
 * `cxxprogram <../featuremap.html#feature-cxxprogram>`_
 
 * `cxxshlib <../featuremap.html#feature-cxxshlib>`_
+
+* `winapp <../featuremap.html#feature-winapp>`_
+
+* `winphoneapp <../featuremap.html#feature-winphoneapp>`_

@@ -1040,8 +1040,10 @@
 				<span class="n">b</span> <span class="o">=</span> <span class="n">i</span>
 			<span class="k">else</span><span class="p">:</span>
 				<span class="k">continue</span>
+
+			<span class="n">aval</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">cstr_groups</span><span class="p">[</span><span class="n">keys</span><span class="p">[</span><span class="n">a</span><span class="p">]])</span>
 			<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cstr_groups</span><span class="p">[</span><span class="n">keys</span><span class="p">[</span><span class="n">b</span><span class="p">]]:</span>
-				<span class="n">x</span><span class="o">.</span><span class="n">run_after</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cstr_groups</span><span class="p">[</span><span class="n">keys</span><span class="p">[</span><span class="n">a</span><span class="p">]])</span>
+				<span class="n">x</span><span class="o">.</span><span class="n">run_after</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">aval</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="funex"><a class="viewcode-back" href="../../Task.html#waflib.Task.funex">[docs]</a><span class="k">def</span> <span class="nf">funex</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>

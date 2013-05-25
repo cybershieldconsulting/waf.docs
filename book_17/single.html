@@ -629,10 +629,10 @@ The current Waf version requires an interpreter for the Python programming langu
 by Lorenzo Bettini
 http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
-<pre><tt><span style="font-weight: bold"><span style="color: #993399">$ wget http://waf.googlecode.com/files/waf-1.7.3</span></span>
-<span style="font-weight: bold"><span style="color: #993399">$ mv waf-1.7.3 waf</span></span>
+<pre><tt><span style="font-weight: bold"><span style="color: #993399">$ wget http://waf.googlecode.com/files/waf-1.7.11</span></span>
+<span style="font-weight: bold"><span style="color: #993399">$ mv waf-1.7.11 waf</span></span>
 <span style="font-weight: bold"><span style="color: #993399">$ python waf --version</span></span>
-<span style="color: #000000">waf 1.7.3 (54dc13ba5f51bfe2ae277451ec5ac1d0a91c7aaf)</span></tt></pre></div></div>
+<span style="color: #000000">waf 1.7.11 (54dc13ba5f51bfe2ae277451ec5ac1d0a91c7aaf)</span></tt></pre></div></div>
 <div class="paragraph"><p>The <tt>waf</tt> file has its own library compressed in a binary stream in the same file. Upon execution, the library is uncompressed in a hidden folder in the current directory. The folder will be re-created if removed. This scheme enables different Waf versions to be executed from the same folders:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
@@ -640,7 +640,7 @@ by Lorenzo Bettini
 http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="font-weight: bold"><span style="color: #993399">$ ls -ld .waf*</span></span>
-<span style="color: #000000">.waf-1.7.3-2c924e3f453eb715218b9cc852291170</span></tt></pre></div></div>
+<span style="color: #000000">.waf-1.7.11-2c924e3f453eb715218b9cc852291170</span></tt></pre></div></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -656,18 +656,18 @@ http://www.gnu.org/software/src-highlite -->
 by Lorenzo Bettini
 http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
-<pre><tt><span style="font-weight: bold"><span style="color: #993399">$ wget http://waf.googlecode.com/files/waf-1.7.3.tar.bz2</span></span>
-<span style="font-weight: bold"><span style="color: #993399">$ tar xjvf waf-1.7.3.tar.bz2</span></span>
-<span style="font-weight: bold"><span style="color: #993399">$ cd waf-1.7.3</span></span>
+<pre><tt><span style="font-weight: bold"><span style="color: #993399">$ wget http://waf.googlecode.com/files/waf-1.7.11.tar.bz2</span></span>
+<span style="font-weight: bold"><span style="color: #993399">$ tar xjvf waf-1.7.11.tar.bz2</span></span>
+<span style="font-weight: bold"><span style="color: #993399">$ cd waf-1.7.11</span></span>
 <span style="font-weight: bold"><span style="color: #993399">$ python waf-light</span></span>
 <span style="color: #000000">Configuring the project</span>
 <span style="color: #000000">'build' finished successfully (0.001s)</span>
 <span style="color: #000000">Checking for program python              : /usr/bin/python</span>
 <span style="color: #000000">Checking for python version              : (2, 6, 5, 'final', 0)</span>
 <span style="color: #000000">'configure' finished successfully (0.176s)</span>
-<span style="color: #000000">Waf: Entering directory `/waf-1.7.3/build'</span>
+<span style="color: #000000">Waf: Entering directory `/waf-1.7.11/build'</span>
 <span style="color: #000000">[1/1] create_waf:  -&gt; waf</span>
-<span style="color: #000000">Waf: Leaving directory `/waf-1.7.3/build'</span>
+<span style="color: #000000">Waf: Leaving directory `/waf-1.7.11/build'</span>
 <span style="color: #000000">'build' finished successfully (2.050s)</span></tt></pre></div></div>
 <div class="paragraph"><p>For older interpreters, it is possible to build the <tt>waf</tt> file with gzip compression instead of bzip2:</p></div>
 <div class="listingblock">
@@ -709,7 +709,7 @@ http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="font-weight: bold"><span style="color: #993399">$ python waf-light --make-waf --tools=compat15,$PWD/aba.py</span></span>
 <span style="color: #000000">   --prelude=$'\tfrom waflib.extras import aba\n\taba.foo()'</span>
 <span style="font-weight: bold"><span style="color: #993399">$ ./waf --help</span></span>
-<span style="color: #000000">This is Waf 1.7.3</span>
+<span style="color: #000000">This is Waf 1.7.11</span>
 <span style="color: #000000">[...]</span></tt></pre></div></div>
 <div class="paragraph"><p>Foreign files to add into the folder <em>extras</em> must be given by absolute paths in the <em>--tools</em> switch.
 Such files do not have to be Python files, yet, a typical scenario is to add an initializer to modify existing
@@ -732,7 +732,7 @@ http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="font-weight: bold"><span style="color: #993399">$ chmod 755 waf</span></span>
 <span style="font-weight: bold"><span style="color: #993399">$ ./waf --version</span></span>
-<span style="color: #000000">waf 1.7.3 (54dc13ba5f51bfe2ae277451ec5ac1d0a91c7aaf)</span></tt></pre></div></div>
+<span style="color: #000000">waf 1.7.11 (54dc13ba5f51bfe2ae277451ec5ac1d0a91c7aaf)</span></tt></pre></div></div>
 <div class="paragraph"><p>If the command-line interpreter supports aliases, it is recommended to set the alias once:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
@@ -741,7 +741,7 @@ http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="font-weight: bold"><span style="color: #993399">$ alias waf=$PWD/waf</span></span>
 <span style="font-weight: bold"><span style="color: #993399">$ waf --version</span></span>
-<span style="color: #000000">waf 1.7.3 (54dc13ba5f51bfe2ae277451ec5ac1d0a91c7aaf)</span></tt></pre></div></div>
+<span style="color: #000000">waf 1.7.11 (54dc13ba5f51bfe2ae277451ec5ac1d0a91c7aaf)</span></tt></pre></div></div>
 <div class="paragraph"><p>Or, the execution path may be modified to point at the location of the waf binary:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
@@ -750,7 +750,7 @@ http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="font-weight: bold"><span style="color: #993399">$ export PATH=$PWD:$PATH</span></span>
 <span style="font-weight: bold"><span style="color: #993399">$ waf --version</span></span>
-<span style="color: #000000">waf 1.7.3 (54dc13ba5f51bfe2ae277451ec5ac1d0a91c7aaf)</span></tt></pre></div></div>
+<span style="color: #000000">waf 1.7.11 (54dc13ba5f51bfe2ae277451ec5ac1d0a91c7aaf)</span></tt></pre></div></div>
 <div class="paragraph"><p>In the next sections of the book, we assume that either an alias or the execution path have been set in a way that <tt>waf</tt> may be called directly.</p></div>
 <h4 id="_local_waflib_folders">1.2.2. Local waflib folders</h4>
 <div class="paragraph"><p>Although the waf library is unpacked automatically from the waf binary file, it is sometimes necessary to keep the files in a visible folder, which may even be kept in a source control tool (subversion, git, etc). For example, the <tt>waf-light</tt> script does not contain the waf library, yet it is used to create the <tt>waf</tt> script by using the directory <tt>waflib</tt>.</p></div>
@@ -1660,7 +1660,7 @@ http://www.gnu.org/software/src-highlite -->
 
 <span style="color: #000080">def</span><span style="color: #000000"> </span><span style="color: #000000">configure</span><span style="color: #000000">(</span><span style="color: #000000">ctx</span><span style="color: #000000">):</span>
 <span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">find_program</span><span style="color: #000000">(</span><span style="color: #009900">'touch'</span><span style="color: #000000">,</span><span style="color: #000000"> var</span><span style="color: #000000">=</span><span style="color: #009900">'TOUCH'</span><span style="color: #000000">)</span>
-<span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">check_waf_version</span><span style="color: #000000">(</span><span style="color: #000000">mini</span><span style="color: #000000">=</span><span style="color: #009900">'1.7.3'</span><span style="color: #000000">)</span>
+<span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">check_waf_version</span><span style="color: #000000">(</span><span style="color: #000000">mini</span><span style="color: #000000">=</span><span style="color: #009900">'1.7.11'</span><span style="color: #000000">)</span>
 <span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">find_file</span><span style="color: #000000">(</span><span style="color: #009900">'fstab'</span><span style="color: #000000">,</span><span style="color: #000000"> </span><span style="color: #000000">[</span><span style="color: #009900">'/opt'</span><span style="color: #000000">,</span><span style="color: #000000"> </span><span style="color: #009900">'/etc'</span><span style="color: #000000">])</span></tt></pre></div></div>
 <div class="paragraph"><p>Although these methods are provided by the context class <em>waflib.Configure.ConfigurationContext</em>, they will not appear on it in <a href="http://docs.waf.googlecode.com/git/apidocs_17/index.html">API documentation</a>. For modularity reasons, they are defined as simple functions and then bound dynamically:</p></div>
 <div class="listingblock">
@@ -1914,7 +1914,7 @@ http://www.gnu.org/software/src-highlite -->
 
 <span style="font-weight: bold"><span style="color: #993399">$ cat build/config.log <img src="./callouts/2.png" alt="2" /></span></span>
 <span style="font-weight: bold"><span style="color: #993399"># project  configured on Tue Jul 13 19:15:04 2010 by</span></span>
-<span style="font-weight: bold"><span style="color: #993399"># waf 1.7.3 (abi 98, python 20605f0 on linux2)</span></span>
+<span style="font-weight: bold"><span style="color: #993399"># waf 1.7.11 (abi 98, python 20605f0 on linux2)</span></span>
 <span style="font-weight: bold"><span style="color: #993399"># using /home/waf/bin/waf configure</span></span>
 <span style="font-weight: bold"><span style="color: #993399">#</span></span>
 <span style="color: #000000">Checking for program some_app</span>
@@ -1973,7 +1973,7 @@ by Lorenzo Bettini
 http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="color: #000080">def</span><span style="color: #000000"> </span><span style="color: #000000">configure</span><span style="color: #000000">(</span><span style="color: #000000">ctx</span><span style="color: #000000">):</span>
-<span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">env</span><span style="color: #000000">.</span><span style="color: #000000">CFLAGS </span><span style="color: #000000">+=</span><span style="color: #000000"> </span><span style="color: #000000">[</span><span style="color: #009900">'-O2'</span><span style="color: #000000">]</span></tt></pre></div></div>
+<span style="color: #000000">        ctx</span><span style="color: #000000">.</span><span style="color: #000000">env</span><span style="color: #000000">.</span><span style="color: #000000">CFLAGS</span><span style="color: #000000">.</span><span style="color: #000000">append</span><span style="color: #000000">(</span><span style="color: #009900">'-O2'</span><span style="color: #000000">)</span></tt></pre></div></div>
 <div class="paragraph"><p>The methods should always be used instead:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
@@ -4050,9 +4050,14 @@ http://www.gnu.org/software/src-highlite -->
 <span style="color: #000000">        rule   </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'echo hello'</span><span style="color: #000000">,</span>
 <span style="color: #000000">        always </span><span style="color: #000000">=</span><span style="color: #000000"> True</span>
 <span style="color: #000000">    </span><span style="color: #000000">)</span></tt></pre></div></div>
-<h5 id="_file_hashes">File hashes</h5>
-<div class="paragraph"><p>To detect if the outputs have really been produced by a task, the task signature is used as the signature of the task nodes outputs. As a consequence, files created in the source directory are going to be rebuilt each time. To avoid this, the node signature should match the actual file contents. This is enforced by using the function <em>waflib.Task.update_outputs</em> on task classes. It replaces the methods <em>post_run</em> and <em>runnable_status</em> of a task class to set the hash file contents to the output nodes.</p></div>
-<div class="paragraph"><p>For convenience, rule-based task generators can declare the <strong>update_outputs</strong> attribute to achieve the same results:</p></div>
+<h5 id="_file_hashes_and_dependencies">File hashes and dependencies</h5>
+<div class="paragraph"><p>Nodes created by tasks during the build inherit the signature of the task that created them.
+Tasks consuming such nodes as inputs will be executed whenever the first tasks are executed.
+This is usually a desirable behaviour, as the tasks will propagate the dependencies in a transitive manner.</p></div>
+<div class="paragraph"><p>In a few contexts though, there can be an excess of downstream rebuilds even if the output files content have not changed.
+This will also cause build files in the source directory to be rebuild whenever a new build is initiated (files in the source directory are hashed).
+The function <em>waflib.Task.update_outputs</em> is used to enable file hashes in task classes, it is used in the same way as <em>waflib.Task.always_run</em>.</p></div>
+<div class="paragraph"><p>For convenience, rule-based task generators can provide the <strong>update_outputs</strong> attribute to simplify the declaration:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
 by Lorenzo Bettini
@@ -4060,11 +4065,19 @@ http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="color: #000080">def</span><span style="color: #000000"> </span><span style="color: #000000">build</span><span style="color: #000000">(</span><span style="color: #000000">ctx</span><span style="color: #000000">):</span>
 <span style="color: #000000">    </span><span style="color: #000000">ctx</span><span style="color: #000000">(</span>
-<span style="color: #000000">        rule           </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'cp ${SRC} ${TGT}'</span><span style="color: #000000">,</span>
-<span style="color: #000000">        source         </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'wcript'</span><span style="color: #000000">,</span>
+<span style="color: #000000">        rule           </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'touch ${TGT}'</span><span style="color: #000000">,</span>
+<span style="color: #000000">        source         </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'wscript'</span><span style="color: #000000">,</span>
 <span style="color: #000000">        target         </span><span style="color: #000000">=</span><span style="color: #000000"> ctx</span><span style="color: #000000">.</span><span style="color: #000000">path</span><span style="color: #000000">.</span><span style="color: #000000">make_node</span><span style="color: #000000">(</span><span style="color: #009900">'wscript2'</span><span style="color: #000000">),</span>
 <span style="color: #000000">        update_outputs </span><span style="color: #000000">=</span><span style="color: #000000"> True</span>
+<span style="color: #000000">    </span><span style="color: #000000">)</span>
+<span style="color: #000000">    </span><span style="color: #000000">ctx</span><span style="color: #000000">(</span>
+<span style="color: #000000">        rule           </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'cp ${SRC} ${TGT}'</span><span style="color: #000000">,</span>
+<span style="color: #000000">        source         </span><span style="color: #000000">=</span><span style="color: #000000"> ctx</span><span style="color: #000000">.</span><span style="color: #000000">path</span><span style="color: #000000">.</span><span style="color: #000000">make_node</span><span style="color: #000000">(</span><span style="color: #009900">'wscript2'</span><span style="color: #000000">),</span>
+<span style="color: #000000">        target         </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'wscript3'</span>
 <span style="color: #000000">    </span><span style="color: #000000">)</span></tt></pre></div></div>
+<div class="paragraph"><p>In this example, the file <strong>wscript2</strong> is created in the source directory.
+The <strong>update_outputs</strong> keyword is therefore necessary to prevent unnecessary rebuilds.
+Additionally, <strong>wscript3</strong> is rebuilt only when the contents of <strong>wscript2</strong> change.</p></div>
 </div>
 <h2 id="_task_generators">8. Task generators</h2>
 <div class="sectionbody">
@@ -6369,7 +6382,7 @@ by Lorenzo Bettini
 http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
 <pre><tt><span style="font-weight: bold"><span style="color: #993399"># project  configured on Tue Aug 31 17:30:21 2010 by</span></span>
-<span style="font-weight: bold"><span style="color: #993399"># waf 1.7.3 (abi 98, python 20605f0 on linux2)</span></span>
+<span style="font-weight: bold"><span style="color: #993399"># waf 1.7.11 (abi 98, python 20605f0 on linux2)</span></span>
 <span style="font-weight: bold"><span style="color: #993399"># using /home/waf/bin/waf configure</span></span>
 <span style="font-weight: bold"><span style="color: #993399">#</span></span>
 <span style="color: #000000">---</span>
@@ -8192,7 +8205,7 @@ Variant
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-09-23 09:52:46 CEST
+Last updated 2013-05-25 21:54:25 CEST
 </div>
 </div>
 </body>

@@ -1,6 +1,6 @@
-# project wafdocs (0.0.1) configured on Fri Mar 30 23:57:38 2012 by
-# waf 1.7.0 (abi 98, python 20702f0 on linux2)
-# using /home/waf/bin/waf configure build
+# project wafdocs (0.0.1) configured on Sat May 25 21:57:57 2013 by
+# waf 1.7.11 (abi 98, python 20702f0 on linux2)
+# using /home/waf/bin/waf configure
 #
 ----------------------------------------
 Setting top to
@@ -11,20 +11,24 @@ Setting out to
 ----------------------------------------
 Checking for program a2x
 /home/waf/bin/a2x
-find program=['a2x'] paths=['/home/waf/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/bin/X11', '/usr/X11R6/bin', '/usr/games', '/opt/kde3/bin', '/usr/lib/mit/bin', '/usr/lib/mit/sbin'] var='A2X' -> '/home/waf/bin/a2x'
+find program=['a2x'] paths=['/usr/lib64/mpi/gcc/openmpi/bin', '/home/waf/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/bin/X11', '/usr/X11R6/bin', '/usr/games', '/opt/kde3/bin', '/usr/lib/mit/bin', '/usr/lib/mit/sbin'] var='A2X' -> '/home/waf/bin/a2x'
 ----------------------------------------
 Checking for program asciidoc
 /home/waf/bin/asciidoc
-find program=['asciidoc'] paths=['/home/waf/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/bin/X11', '/usr/X11R6/bin', '/usr/games', '/opt/kde3/bin', '/usr/lib/mit/bin', '/usr/lib/mit/sbin'] var='ADOC' -> '/home/waf/bin/asciidoc'
+find program=['asciidoc'] paths=['/usr/lib64/mpi/gcc/openmpi/bin', '/home/waf/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/bin/X11', '/usr/X11R6/bin', '/usr/games', '/opt/kde3/bin', '/usr/lib/mit/bin', '/usr/lib/mit/sbin'] var='ADOC' -> '/home/waf/bin/asciidoc'
 ----------------------------------------
 Checking for program dia
 /usr/bin/dia
-find program=['dia'] paths=['/home/waf/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/bin/X11', '/usr/X11R6/bin', '/usr/games', '/opt/kde3/bin', '/usr/lib/mit/bin', '/usr/lib/mit/sbin'] var='DIA' -> '/usr/bin/dia'
+find program=['dia'] paths=['/usr/lib64/mpi/gcc/openmpi/bin', '/home/waf/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/bin/X11', '/usr/X11R6/bin', '/usr/games', '/opt/kde3/bin', '/usr/lib/mit/bin', '/usr/lib/mit/sbin'] var='DIA' -> '/usr/bin/dia'
 ----------------------------------------
 Checking for program convert
 /usr/bin/convert
-find program=['convert'] paths=['/home/waf/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/bin/X11', '/usr/X11R6/bin', '/usr/games', '/opt/kde3/bin', '/usr/lib/mit/bin', '/usr/lib/mit/sbin'] var='CONVERT' -> '/usr/bin/convert'
+find program=['convert'] paths=['/usr/lib64/mpi/gcc/openmpi/bin', '/home/waf/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/bin/X11', '/usr/X11R6/bin', '/usr/games', '/opt/kde3/bin', '/usr/lib/mit/bin', '/usr/lib/mit/sbin'] var='CONVERT' -> '/usr/bin/convert'
 ----------------------------------------
 Checking for program source-highlight
 /usr/bin/source-highlight
-find program=['source-highlight'] paths=['/home/waf/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/bin/X11', '/usr/X11R6/bin', '/usr/games', '/opt/kde3/bin', '/usr/lib/mit/bin', '/usr/lib/mit/sbin'] var='SOURCE_HIGHLIGHT' -> '/usr/bin/source-highlight'
+find program=['source-highlight'] paths=['/usr/lib64/mpi/gcc/openmpi/bin', '/home/waf/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/bin/X11', '/usr/X11R6/bin', '/usr/games', '/opt/kde3/bin', '/usr/lib/mit/bin', '/usr/lib/mit/sbin'] var='SOURCE_HIGHLIGHT' -> '/usr/bin/source-highlight'
+----------------------------------------
+Checking for program dot
+/usr/bin/dot
+find program=['dot'] paths=['/usr/lib64/mpi/gcc/openmpi/bin', '/home/waf/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/bin/X11', '/usr/X11R6/bin', '/usr/games', '/opt/kde3/bin', '/usr/lib/mit/bin', '/usr/lib/mit/sbin'] var='DOT' -> '/usr/bin/dot'

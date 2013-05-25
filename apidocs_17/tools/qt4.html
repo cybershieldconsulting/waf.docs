@@ -106,7 +106,7 @@ It also implies that the include paths have beenset properly.</p>
 </li>
 </ul>
 <p>Note: another tool provides Qt processing that does not require
-.moc includes, see <a href="#id1"><span class="problematic" id="id2">``</span></a>playground/slow_qt/<a href="#id3"><span class="problematic" id="id4">``</span></a>self.</p>
+.moc includes, see &#8216;playground/slow_qt/&#8217;.</p>
 <p>A few options (&#8211;qt{dir,bin,...}) and environment variables
 (QT4_{ROOT,DIR,MOC,UIC,XCOMPILE}) allow finer tuning of the tool,
 tool path selection, etc; please read the source for more info.</p>
@@ -312,7 +312,7 @@ not guaranteed.</p>
 <dl class="class">
 <dt id="waflib.Tools.qt4.qxx">
 <em class="property">class </em><tt class="descclassname">waflib.Tools.qt4.</tt><tt class="descname">qxx</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/qt4.html#qxx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.qt4.qxx" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="cxx.html#waflib.Tools.cxx.cxx" title="waflib.Tools.cxx.cxx"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.cxx.cxx</span></tt></a></p>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.msvc.cxx</span></tt></p>
 <p>Each C++ file can have zero or several .moc files to create.
 They are known only when the files are scanned (preprocessor)
 To avoid scanning the c++ files each time (parsing C/C++), the results
@@ -321,7 +321,8 @@ The moc tasks are also created <em>dynamically</em> during the build.</p>
 <dl class="method">
 <dt id="waflib.Tools.qt4.qxx.scan">
 <tt class="descname">scan</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/qt4.html#qxx.scan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.qt4.qxx.scan" title="Permalink to this definition">¶</a></dt>
-<dd><p>Re-use the C/C++ scanner, but remove the moc files from the dependencies</p>
+<dd><p>Re-use the C/C++ scanner, but remove the moc files from the dependencies
+since the .cpp file already depends on all the headers</p>
 </dd></dl>
 
 <dl class="method">
@@ -330,6 +331,16 @@ The moc tasks are also created <em>dynamically</em> during the build.</p>
 <dd><p>Compute the task signature to make sure the scanner was executed. Create the
 moc tasks by using <a class="reference internal" href="#waflib.Tools.qt4.qxx.add_moc_tasks" title="waflib.Tools.qt4.qxx.add_moc_tasks"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Tools.qt4.qxx.add_moc_tasks()</span></tt></a> (if necessary),
 then postpone the task execution (there is no need to recompute the task signature).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.qt4.qxx.create_moc_task">
+<tt class="descname">create_moc_task</tt><big>(</big><em>h_node</em>, <em>m_node</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/qt4.html#qxx.create_moc_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.qt4.qxx.create_moc_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>If several libraries use the same classes, it is possible that moc will run several times (Issue 1318)
+It is not possible to change the file names, but we can assume that the moc transformation will be identical,
+and the moc tasks can be shared in a global cache.</p>
+<p>The defines passed to moc will then depend on task generator order. If this is not acceptable, then
+use the tool slow_qt4 instead (and enjoy the slow builds... :-( )</p>
 </dd></dl>
 
 <dl class="method">
@@ -462,6 +473,18 @@ to give the location of the qt4 libraries (absolute path).</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="waflib.Tools.qt4.find_qt4_libraries">
+<tt class="descclassname">waflib.Tools.qt4.</tt><tt class="descname">find_qt4_libraries</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/qt4.html#find_qt4_libraries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.qt4.find_qt4_libraries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.qt4.simplify_qt4_libs">
+<tt class="descclassname">waflib.Tools.qt4.</tt><tt class="descname">simplify_qt4_libs</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/qt4.html#simplify_qt4_libs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.qt4.simplify_qt4_libs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
 <dt id="waflib.Tools.qt4.conf">
 <tt class="descclassname">waflib.Tools.qt4.</tt><tt class="descname">conf</tt><big>(</big><em>f</em><big>)</big><a class="headerlink" href="#waflib.Tools.qt4.conf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decorator: attach new configuration functions to <a class="reference internal" href="../Build.html#waflib.Build.BuildContext" title="waflib.Build.BuildContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Build.BuildContext</span></tt></a> and
@@ -479,12 +502,6 @@ named &#8216;mandatory&#8217; to disable the configuration errors:</p>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="function">
-<dt id="waflib.Tools.qt4.find_qt4_libraries">
-<tt class="descclassname">waflib.Tools.qt4.</tt><tt class="descname">find_qt4_libraries</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/qt4.html#find_qt4_libraries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.qt4.find_qt4_libraries" title="Permalink to this definition">¶</a></dt>
-<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
 </dd></dl>
 
 <dl class="function">
@@ -565,12 +582,6 @@ the processing of source files for the extension given:</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="waflib.Tools.qt4.simplify_qt4_libs">
-<tt class="descclassname">waflib.Tools.qt4.</tt><tt class="descname">simplify_qt4_libs</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/qt4.html#simplify_qt4_libs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.qt4.simplify_qt4_libs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
-</dd></dl>
-
-<dl class="function">
 <dt id="waflib.Tools.qt4.add_qt4_rpath">
 <tt class="descclassname">waflib.Tools.qt4.</tt><tt class="descname">add_qt4_rpath</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/qt4.html#add_qt4_rpath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.qt4.add_qt4_rpath" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
@@ -579,6 +590,12 @@ the processing of source files for the extension given:</p>
 <dl class="function">
 <dt id="waflib.Tools.qt4.set_qt4_libs_to_check">
 <tt class="descclassname">waflib.Tools.qt4.</tt><tt class="descname">set_qt4_libs_to_check</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/qt4.html#set_qt4_libs_to_check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.qt4.set_qt4_libs_to_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="waflib.Tools.qt4.set_qt4_defines">
+<tt class="descclassname">waflib.Tools.qt4.</tt><tt class="descname">set_qt4_defines</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/qt4.html#set_qt4_defines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.qt4.set_qt4_defines" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configuration Method bound to <a class="reference internal" href="../Configure.html#waflib.Configure.ConfigurationContext" title="waflib.Configure.ConfigurationContext"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Configure.ConfigurationContext</span></tt></a></p>
 </dd></dl>
 

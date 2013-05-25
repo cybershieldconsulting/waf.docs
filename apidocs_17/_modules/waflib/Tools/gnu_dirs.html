@@ -128,10 +128,6 @@
 	<span class="n">env</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">env</span>
 	<span class="n">env</span><span class="o">.</span><span class="n">LIBDIR</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">BINDIR</span> <span class="o">=</span> <span class="p">[]</span>
 	<span class="n">env</span><span class="o">.</span><span class="n">EXEC_PREFIX</span> <span class="o">=</span> <span class="n">get_param</span><span class="p">(</span><span class="s">&#39;EXEC_PREFIX&#39;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">PREFIX</span><span class="p">)</span>
-	<span class="n">corner_case</span> <span class="o">=</span> <span class="bp">False</span>
-	<span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">PREFIX</span><span class="p">)</span> <span class="o">==</span> <span class="s">&#39;/usr&#39;</span><span class="p">:</span> <span class="c"># Issue 722, corner case</span>
-		<span class="n">corner_case</span> <span class="o">=</span> <span class="bp">True</span>
-		<span class="n">env</span><span class="o">.</span><span class="n">PREFIX</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
 	<span class="n">env</span><span class="o">.</span><span class="n">PACKAGE</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">g_module</span><span class="p">,</span> <span class="s">&#39;APPNAME&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">env</span><span class="o">.</span><span class="n">PACKAGE</span>
 
 	<span class="n">complete</span> <span class="o">=</span> <span class="bp">False</span>
@@ -146,9 +142,6 @@
 					<span class="n">env</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">subst_vars</span><span class="p">(</span><span class="n">get_param</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">),</span> <span class="n">env</span><span class="p">)</span>
 				<span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
 					<span class="n">complete</span> <span class="o">=</span> <span class="bp">False</span>
-
-	<span class="k">if</span> <span class="n">corner_case</span><span class="p">:</span>
-		<span class="n">env</span><span class="o">.</span><span class="n">PREFIX</span> <span class="o">=</span> <span class="s">&#39;/usr&#39;</span>
 
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">complete</span><span class="p">:</span>
 		<span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_options</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">()]]</span>

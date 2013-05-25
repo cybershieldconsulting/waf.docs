@@ -290,7 +290,7 @@ An exception will be raised only when the folder cannot possibly exist there</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="n">bld</span><span class="p">):</span>
         <span class="n">n1</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="s">&#39;foo/bar/xyz.txt&#39;</span><span class="p">)</span>
         <span class="n">n2</span> <span class="o">=</span> <span class="n">bld</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">find_node</span><span class="p">(</span><span class="s">&#39;foo/stuff/&#39;</span><span class="p">)</span>
-        <span class="n">n1</span><span class="o">.</span><span class="n">path_from</span><span class="p">(</span><span class="n">n2</span><span class="p">)</span> <span class="c"># &#39;./bar/xyz.txt&#39;</span>
+        <span class="n">n1</span><span class="o">.</span><span class="n">path_from</span><span class="p">(</span><span class="n">n2</span><span class="p">)</span> <span class="c"># &#39;../bar/xyz.txt&#39;</span>
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">

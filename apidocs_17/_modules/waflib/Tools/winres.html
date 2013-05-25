@@ -54,8 +54,10 @@
 
 <span class="s">&quot;Process *.rc* files for C/C++: X{.rc -&gt; [.res|.rc.o]}&quot;</span>
 
-<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span>
+<span class="kn">import</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">waflib</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Logs</span><span class="p">,</span> <span class="n">Utils</span>
 <span class="kn">from</span> <span class="nn">waflib.TaskGen</span> <span class="kn">import</span> <span class="n">extension</span>
+<span class="kn">from</span> <span class="nn">waflib.Tools</span> <span class="kn">import</span> <span class="n">c_preproc</span>
 
 <span class="nd">@extension</span><span class="p">(</span><span class="s">&#39;.rc&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="rc_file"><a class="viewcode-back" href="../../../tools/winres.html#waflib.Tools.winres.rc_file">[docs]</a><span class="k">def</span> <span class="nf">rc_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
@@ -71,12 +73,73 @@
 	<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">compiled_tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">rctask</span><span class="p">]</span>
 </div>
+<span class="n">re_lines</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+	<span class="s">&#39;(?:^[ </span><span class="se">\t</span><span class="s">]*(#|%:)[ </span><span class="se">\t</span><span class="s">]*(ifdef|ifndef|if|else|elif|endif|include|import|define|undef|pragma)[ </span><span class="se">\t</span><span class="s">]*(.*?)\s*$)|&#39;</span>\
+	<span class="s">&#39;(?:^\w+[ </span><span class="se">\t</span><span class="s">]*(ICON|BITMAP|CURSOR|HTML|FONT|MESSAGETABLE|TYPELIB|REGISTRY|D3DFX)[ </span><span class="se">\t</span><span class="s">]*(.*?)\s*$)&#39;</span><span class="p">,</span>
+	<span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">rc_parser</span><span class="p">(</span><span class="n">c_preproc</span><span class="o">.</span><span class="n">c_parser</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">filter_comments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+		<span class="n">code</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">readf</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">c_preproc</span><span class="o">.</span><span class="n">use_trigraphs</span><span class="p">:</span>
+			<span class="k">for</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="ow">in</span> <span class="n">c_preproc</span><span class="o">.</span><span class="n">trig_def</span><span class="p">:</span> <span class="n">code</span> <span class="o">=</span> <span class="n">code</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+		<span class="n">code</span> <span class="o">=</span> <span class="n">c_preproc</span><span class="o">.</span><span class="n">re_nl</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">code</span><span class="p">)</span>
+		<span class="n">code</span> <span class="o">=</span> <span class="n">c_preproc</span><span class="o">.</span><span class="n">re_cpp</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">c_preproc</span><span class="o">.</span><span class="n">repl</span><span class="p">,</span> <span class="n">code</span><span class="p">)</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">re_lines</span><span class="p">,</span> <span class="n">code</span><span class="p">):</span>
+			<span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+				<span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)))</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s">&#39;include&#39;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">5</span><span class="p">)))</span>
+		<span class="k">return</span> <span class="n">ret</span>
+
+	<span class="k">def</span> <span class="nf">addlines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">currentnode_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+		<span class="n">filepath</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">abspath</span><span class="p">()</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">count_files</span> <span class="o">+=</span> <span class="mi">1</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_files</span> <span class="o">&gt;</span> <span class="n">c_preproc</span><span class="o">.</span><span class="n">recursion_limit</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">c_preproc</span><span class="o">.</span><span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;recursion limit exceeded&quot;</span><span class="p">)</span>
+		<span class="n">pc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_cache</span>
+		<span class="n">Logs</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;preproc: reading file </span><span class="si">%r</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">lns</span> <span class="o">=</span> <span class="n">pc</span><span class="p">[</span><span class="n">filepath</span><span class="p">]</span>
+		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">lns</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_comments</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+			<span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">c_preproc</span><span class="o">.</span><span class="n">POPFILE</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">))</span>
+			<span class="n">lines</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+			<span class="n">pc</span><span class="p">[</span><span class="n">filepath</span><span class="p">]</span> <span class="o">=</span> <span class="n">lines</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="n">c_preproc</span><span class="o">.</span><span class="n">PreprocError</span><span class="p">(</span><span class="s">&quot;could not read the file </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">filepath</span><span class="p">)</span>
+		<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">Logs</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+				<span class="n">Logs</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;parsing </span><span class="si">%s</span><span class="s"> failed&quot;</span> <span class="o">%</span> <span class="n">filepath</span><span class="p">)</span>
+				<span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+
 <div class="viewcode-block" id="winrc"><a class="viewcode-back" href="../../../tools/winres.html#waflib.Tools.winres.winrc">[docs]</a><span class="k">class</span> <span class="nc">winrc</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Task for compiling resource files</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${WINRC} ${WINRCFLAGS} ${CPPPATH_ST:INCPATHS} ${DEFINES_ST:DEFINES} ${WINRC_TGT_F} ${TGT} ${WINRC_SRC_F} ${SRC}&#39;</span>
 	<span class="n">color</span>   <span class="o">=</span> <span class="s">&#39;BLUE&#39;</span>
+
+	<span class="k">def</span> <span class="nf">scan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">tmp</span> <span class="o">=</span> <span class="n">rc_parser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">includes_nodes</span><span class="p">)</span>
+		<span class="n">tmp</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+		<span class="n">nodes</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">nodes</span>
+		<span class="n">names</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">names</span>
+
+		<span class="k">if</span> <span class="n">Logs</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+			<span class="n">Logs</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;deps: deps for </span><span class="si">%s</span><span class="s">: </span><span class="si">%r</span><span class="s">; unresolved </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">names</span><span class="p">))</span>
+
+		<span class="k">return</span> <span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../../tools/winres.html#waflib.Tools.winres.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>

@@ -79,19 +79,6 @@
 <p>This function is bound as a task method on <a class="reference internal" href="#waflib.Tools.c.c" title="waflib.Tools.c.c"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.c.c</span></tt></a> and <a class="reference internal" href="cxx.html#waflib.Tools.cxx.cxx" title="waflib.Tools.cxx.cxx"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.cxx.cxx</span></tt></a> for example</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="waflib.Tools.c.c.exec_command">
-<tt class="descname">exec_command</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.c.c.exec_command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Change the command-line execution for msvc programs.
-Instead of quoting all the paths and keep using the shell, we can just join the options msvc is interested in</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="waflib.Tools.c.c.exec_mf">
-<tt class="descname">exec_mf</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Tools.c.c.exec_mf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create the manifest file</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="class">
@@ -99,19 +86,6 @@ Instead of quoting all the paths and keep using the shell, we can just join the 
 <em class="property">class </em><tt class="descclassname">waflib.Tools.c.</tt><tt class="descname">cprogram</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c.html#cprogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c.cprogram" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="ccroot.html#waflib.Tools.ccroot.link_task" title="waflib.Tools.ccroot.link_task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.ccroot.link_task</span></tt></a></p>
 <p>Link object files into a c program</p>
-<dl class="method">
-<dt id="waflib.Tools.c.cprogram.exec_command">
-<tt class="descname">exec_command</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.c.cprogram.exec_command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Change the command-line execution for msvc programs.
-Instead of quoting all the paths and keep using the shell, we can just join the options msvc is interested in</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="waflib.Tools.c.cprogram.exec_mf">
-<tt class="descname">exec_mf</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Tools.c.cprogram.exec_mf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create the manifest file</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="class">
@@ -119,19 +93,6 @@ Instead of quoting all the paths and keep using the shell, we can just join the 
 <em class="property">class </em><tt class="descclassname">waflib.Tools.c.</tt><tt class="descname">cshlib</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c.html#cshlib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c.cshlib" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#waflib.Tools.c.cprogram" title="waflib.Tools.c.cprogram"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.c.cprogram</span></tt></a></p>
 <p>Link object files into a c shared library</p>
-<dl class="method">
-<dt id="waflib.Tools.c.cshlib.exec_command">
-<tt class="descname">exec_command</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.c.cshlib.exec_command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Change the command-line execution for msvc programs.
-Instead of quoting all the paths and keep using the shell, we can just join the options msvc is interested in</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="waflib.Tools.c.cshlib.exec_mf">
-<tt class="descname">exec_mf</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Tools.c.cshlib.exec_mf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create the manifest file</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="class">
@@ -139,19 +100,6 @@ Instead of quoting all the paths and keep using the shell, we can just join the 
 <em class="property">class </em><tt class="descclassname">waflib.Tools.c.</tt><tt class="descname">cstlib</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/c.html#cstlib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.c.cstlib" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="ccroot.html#waflib.Tools.ccroot.stlink_task" title="waflib.Tools.ccroot.stlink_task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Tools.ccroot.stlink_task</span></tt></a></p>
 <p>Link object files into a c static library</p>
-<dl class="method">
-<dt id="waflib.Tools.c.cstlib.exec_command">
-<tt class="descname">exec_command</tt><big>(</big><em>*k</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#waflib.Tools.c.cstlib.exec_command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Change the command-line execution for msvc programs.
-Instead of quoting all the paths and keep using the shell, we can just join the options msvc is interested in</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="waflib.Tools.c.cstlib.exec_mf">
-<tt class="descname">exec_mf</tt><big>(</big><big>)</big><a class="headerlink" href="#waflib.Tools.c.cstlib.exec_mf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create the manifest file</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="class">
@@ -168,26 +116,26 @@ The target is always removed before being written.</p>
 <dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
 <p>Base class for all link tasks. A task generator is supposed to have at most one link task bound in the attribute <em>link_task</em>. See <a class="reference internal" href="ccroot.html#waflib.Tools.ccroot.apply_link" title="waflib.Tools.ccroot.apply_link"><tt class="xref py py-func docutils literal"><span class="pre">waflib.Tools.ccroot.apply_link()</span></tt></a>.</p>
 <p class="graphviz">
-<img src="../_images/inheritance-f30218b76fd1c48769cbf1f7b095c65ed7c4bb48.png" alt="Inheritance diagram of waflib.Tools.ccroot.stlink_task, waflib.Tools.c.cprogram, waflib.Tools.c.cshlib, waflib.Tools.cxx.cxxstlib, waflib.Tools.cxx.cxxprogram, waflib.Tools.cxx.cxxshlib, waflib.Tools.d.dprogram, waflib.Tools.d.dshlib, waflib.Tools.d.dstlib, waflib.Tools.ccroot.fake_shlib, waflib.Tools.ccroot.fake_stlib, waflib.Tools.asm.asmprogram, waflib.Tools.asm.asmshlib, waflib.Tools.asm.asmstlib" usemap="#inheritance733d6de23e" class="inheritance"/>
+<img src="../_images/inheritance-ef604754f7c36bc4e8b1bf523746b7883bf701b9.png" alt="Inheritance diagram of waflib.Tools.ccroot.stlink_task, waflib.Tools.c.cprogram, waflib.Tools.c.cshlib, waflib.Tools.cxx.cxxstlib, waflib.Tools.cxx.cxxprogram, waflib.Tools.cxx.cxxshlib, waflib.Tools.d.dprogram, waflib.Tools.d.dshlib, waflib.Tools.d.dstlib, waflib.Tools.ccroot.fake_shlib, waflib.Tools.ccroot.fake_stlib, waflib.Tools.asm.asmprogram, waflib.Tools.asm.asmshlib, waflib.Tools.asm.asmstlib" usemap="#inheritance733d6de23e" class="inheritance"/>
 <map id="inheritance733d6de23e" name="inheritance733d6de23e">
-<area shape="rect" id="node1" href="cxx.html#waflib.Tools.cxx.cxxstlib" title="waflib.Tools.cxx.cxxstlib" alt="" coords="651,3,755,19"/>
-<area shape="rect" id="node2" href="ccroot.html#waflib.Tools.ccroot.stlink_task" title="waflib.Tools.ccroot.stlink_task" alt="" coords="482,64,610,80"/>
-<area shape="rect" id="node16" href="d.html#waflib.Tools.d.dstlib" title="waflib.Tools.d.dstlib" alt="" coords="659,33,747,49"/>
-<area shape="rect" id="node18" href="asm.html#waflib.Tools.asm.asmstlib" title="waflib.Tools.asm.asmstlib" alt="" coords="646,64,759,80"/>
-<area shape="rect" id="node34" href="ccroot.html#waflib.Tools.ccroot.fake_stlib" title="waflib.Tools.ccroot.fake_stlib" alt="" coords="641,94,765,110"/>
-<area shape="rect" id="node4" href="#waflib.Tools.c.cshlib" title="waflib.Tools.c.cshlib" alt="" coords="659,125,747,140"/>
-<area shape="rect" id="node5" href="#waflib.Tools.c.cprogram" title="waflib.Tools.c.cprogram" alt="" coords="494,125,599,140"/>
-<area shape="rect" id="node7" href="ccroot.html#waflib.Tools.ccroot.link_task" title="waflib.Tools.ccroot.link_task" alt="" coords="331,171,452,187"/>
-<area shape="rect" id="node10" href="asm.html#waflib.Tools.asm.asmprogram" title="waflib.Tools.asm.asmprogram" alt="" coords="481,155,611,171"/>
-<area shape="rect" id="node12" href="cxx.html#waflib.Tools.cxx.cxxprogram" title="waflib.Tools.cxx.cxxprogram" alt="" coords="485,186,607,201"/>
-<area shape="rect" id="node14" href="d.html#waflib.Tools.d.dprogram" title="waflib.Tools.d.dprogram" alt="" coords="494,216,599,232"/>
-<area shape="rect" id="node30" href="ccroot.html#waflib.Tools.ccroot.fake_shlib" title="waflib.Tools.ccroot.fake_shlib" alt="" coords="484,247,609,262"/>
-<area shape="rect" id="node9" href="asm.html#waflib.Tools.asm.asmshlib" title="waflib.Tools.asm.asmshlib" alt="" coords="646,155,760,171"/>
-<area shape="rect" id="node21" href="cxx.html#waflib.Tools.cxx.cxxshlib" title="waflib.Tools.cxx.cxxshlib" alt="" coords="650,186,756,201"/>
-<area shape="rect" id="node32" href="d.html#waflib.Tools.d.dshlib" title="waflib.Tools.d.dshlib" alt="" coords="658,216,748,232"/>
-<area shape="rect" id="node24" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task" alt="" coords="228,171,301,187"/>
-<area shape="rect" id="node25" href="../Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase" alt="" coords="104,171,197,187"/>
-<area shape="rect" id="node27" href="../Task.html#waflib.Task.evil" title="waflib.Task.evil" alt="" coords="4,171,74,187"/>
+<area shape="rect" id="node1" href="cxx.html#waflib.Tools.cxx.cxxprogram" title="waflib.Tools.cxx.cxxprogram" alt="" coords="485,33,607,49"/>
+<area shape="rect" id="node28" href="cxx.html#waflib.Tools.cxx.cxxshlib" title="waflib.Tools.cxx.cxxshlib" alt="" coords="650,3,756,19"/>
+<area shape="rect" id="node2" href="ccroot.html#waflib.Tools.ccroot.link_task" title="waflib.Tools.ccroot.link_task" alt="" coords="331,140,452,156"/>
+<area shape="rect" id="node5" href="ccroot.html#waflib.Tools.ccroot.stlink_task" title="waflib.Tools.ccroot.stlink_task" alt="" coords="482,94,610,110"/>
+<area shape="rect" id="node7" href="ccroot.html#waflib.Tools.ccroot.fake_shlib" title="waflib.Tools.ccroot.fake_shlib" alt="" coords="484,125,609,140"/>
+<area shape="rect" id="node9" href="asm.html#waflib.Tools.asm.asmprogram" title="waflib.Tools.asm.asmprogram" alt="" coords="481,155,611,171"/>
+<area shape="rect" id="node14" href="#waflib.Tools.c.cprogram" title="waflib.Tools.c.cprogram" alt="" coords="494,186,599,201"/>
+<area shape="rect" id="node22" href="d.html#waflib.Tools.d.dprogram" title="waflib.Tools.d.dprogram" alt="" coords="494,216,599,232"/>
+<area shape="rect" id="node4" href="ccroot.html#waflib.Tools.ccroot.fake_stlib" title="waflib.Tools.ccroot.fake_stlib" alt="" coords="641,33,765,49"/>
+<area shape="rect" id="node11" href="asm.html#waflib.Tools.asm.asmstlib" title="waflib.Tools.asm.asmstlib" alt="" coords="646,64,759,80"/>
+<area shape="rect" id="node16" href="cxx.html#waflib.Tools.cxx.cxxstlib" title="waflib.Tools.cxx.cxxstlib" alt="" coords="651,94,755,110"/>
+<area shape="rect" id="node24" href="d.html#waflib.Tools.d.dstlib" title="waflib.Tools.d.dstlib" alt="" coords="659,125,747,140"/>
+<area shape="rect" id="node32" href="asm.html#waflib.Tools.asm.asmshlib" title="waflib.Tools.asm.asmshlib" alt="" coords="646,155,760,171"/>
+<area shape="rect" id="node18" href="#waflib.Tools.c.cshlib" title="waflib.Tools.c.cshlib" alt="" coords="659,186,747,201"/>
+<area shape="rect" id="node20" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task" alt="" coords="228,140,301,156"/>
+<area shape="rect" id="node26" href="d.html#waflib.Tools.d.dshlib" title="waflib.Tools.d.dshlib" alt="" coords="658,216,748,232"/>
+<area shape="rect" id="node30" href="../Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase" alt="" coords="104,140,197,156"/>
+<area shape="rect" id="node34" href="../Task.html#waflib.Task.evil" title="waflib.Task.evil" alt="" coords="4,140,74,156"/>
 </map>
 </p>
 <dl class="method">

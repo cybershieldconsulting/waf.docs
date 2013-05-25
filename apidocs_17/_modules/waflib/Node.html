@@ -102,6 +102,7 @@
 <span class="s">**/{arch}</span>
 <span class="s">**/_darcs</span>
 <span class="s">**/_darcs/**</span>
+<span class="s">**/.intlcache</span>
 <span class="s">**/.DS_Store&#39;&#39;&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Ant patterns for files and folders to exclude while doing the</span>
@@ -149,7 +150,7 @@
 <span class="sd">	The Node objects are not thread safe in any way.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 
-	<span class="n">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;sig&#39;</span><span class="p">,</span> <span class="s">&#39;children&#39;</span><span class="p">,</span> <span class="s">&#39;parent&#39;</span><span class="p">,</span> <span class="s">&#39;cache_abspath&#39;</span><span class="p">,</span> <span class="s">&#39;cache_isdir&#39;</span><span class="p">)</span>
+	<span class="n">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;sig&#39;</span><span class="p">,</span> <span class="s">&#39;children&#39;</span><span class="p">,</span> <span class="s">&#39;parent&#39;</span><span class="p">,</span> <span class="s">&#39;cache_abspath&#39;</span><span class="p">,</span> <span class="s">&#39;cache_isdir&#39;</span><span class="p">,</span> <span class="s">&#39;cache_sig&#39;</span><span class="p">)</span>
 	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
@@ -234,10 +235,10 @@
 <div class="viewcode-block" id="Node.delete"><a class="viewcode-back" href="../../Node.html#waflib.Node.Node.delete">[docs]</a>	<span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;Delete the file/folders, and remove this node from the tree. It becomes invalid after that&quot;&quot;&quot;</span>
 		<span class="k">try</span><span class="p">:</span>
-			<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;children&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;children&#39;</span><span class="p">):</span>
 				<span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
 			<span class="k">else</span><span class="p">:</span>
-				<span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
+				<span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
 		<span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
 			<span class="k">pass</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">evict</span><span class="p">()</span>
@@ -401,7 +402,7 @@
 <span class="sd">			def build(bld):</span>
 <span class="sd">				n1 = bld.path.find_node(&#39;foo/bar/xyz.txt&#39;)</span>
 <span class="sd">				n2 = bld.path.find_node(&#39;foo/stuff/&#39;)</span>
-<span class="sd">				n1.path_from(n2) # &#39;./bar/xyz.txt&#39;</span>
+<span class="sd">				n1.path_from(n2) # &#39;../bar/xyz.txt&#39;</span>
 
 <span class="sd">		:param node: path to use as a reference</span>
 <span class="sd">		:type node: :py:class:`waflib.Node.Node`</span>
@@ -838,18 +839,15 @@
 <span class="sd">		Node signature, assuming the file is in the build directory</span>
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">try</span><span class="p">:</span>
-			<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">hash_cache</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)]</span>
-		<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-			<span class="k">pass</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_sig</span>
 		<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-			<span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">hash_cache</span> <span class="o">=</span> <span class="p">{}</span>
-		<span class="k">else</span><span class="p">:</span>
-			<span class="k">return</span> <span class="n">ret</span>
+			<span class="k">pass</span>
 
 		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bld</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">bldnode</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">srcnode</span><span class="p">:</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">sig</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="n">h_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abspath</span><span class="p">())</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">hash_cache</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)]</span> <span class="o">=</span> <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">cache_sig</span> <span class="o">=</span> <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig</span>
 		<span class="k">return</span> <span class="n">ret</span>
+
 
 	<span class="c"># TODO Waf 1.8</span></div>
 	<span class="n">search</span> <span class="o">=</span> <span class="n">search_node</span>

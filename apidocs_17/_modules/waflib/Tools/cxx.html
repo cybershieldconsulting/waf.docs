@@ -68,7 +68,7 @@
 
 <div class="viewcode-block" id="cxx"><a class="viewcode-back" href="../../../tools/cxx.html#waflib.Tools.cxx.cxx">[docs]</a><span class="k">class</span> <span class="nc">cxx</span><span class="p">(</span><span class="n">Task</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
 	<span class="s">&quot;Compile C++ files into object files&quot;</span>
-	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${CXX} ${ARCH_ST:ARCH} ${CXXFLAGS} ${CPPFLAGS} ${FRAMEWORKPATH_ST:FRAMEWORKPATH} ${FRAMEWORK_ST:FRAMEWORK} ${CPPPATH_ST:INCPATHS} ${DEFINES_ST:DEFINES} ${CXX_SRC_F}${SRC} ${CXX_TGT_F}${TGT}&#39;</span>
+	<span class="n">run_str</span> <span class="o">=</span> <span class="s">&#39;${CXX} ${ARCH_ST:ARCH} ${CXXFLAGS} ${CPPFLAGS} ${FRAMEWORKPATH_ST:FRAMEWORKPATH} ${CPPPATH_ST:INCPATHS} ${DEFINES_ST:DEFINES} ${CXX_SRC_F}${SRC} ${CXX_TGT_F}${TGT}&#39;</span>
 	<span class="nb">vars</span>    <span class="o">=</span> <span class="p">[</span><span class="s">&#39;CXXDEPS&#39;</span><span class="p">]</span> <span class="c"># unused variable to depend on, just in case</span>
 	<span class="n">ext_in</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.h&#39;</span><span class="p">]</span> <span class="c"># set the build order easily by using ext_out=[&#39;.h&#39;]</span>
 	<span class="n">scan</span>    <span class="o">=</span> <span class="n">c_preproc</span><span class="o">.</span><span class="n">scan</span>

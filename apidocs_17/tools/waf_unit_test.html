@@ -110,7 +110,8 @@ the predefined callback:</p>
 <dl class="method">
 <dt id="waflib.Tools.waf_unit_test.utest.runnable_status">
 <tt class="descname">runnable_status</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/waf_unit_test.html#utest.runnable_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.waf_unit_test.utest.runnable_status" title="Permalink to this definition">¶</a></dt>
-<dd><p>Always execute the task if <cite>waf &#8211;alltests</cite> was used</p>
+<dd><p>Always execute the task if <cite>waf &#8211;alltests</cite> was used or no
+tests if <tt class="docutils literal"><span class="pre">waf</span> <span class="pre">--notests</span></tt> was used</p>
 </dd></dl>
 
 </dd></dl>
@@ -128,9 +129,26 @@ the predefined callback:</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="waflib.Tools.waf_unit_test.set_exit_code">
+<tt class="descclassname">waflib.Tools.waf_unit_test.</tt><tt class="descname">set_exit_code</tt><big>(</big><em>bld</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/waf_unit_test.html#set_exit_code"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.waf_unit_test.set_exit_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>If any of the tests fail waf will exit with that exit code.
+This is useful if you have an automated build system which need
+to report on errors from the tests.
+You may use it like this:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>def build(bld):</dt>
+<dd>bld(features=&#8217;cxx cxxprogram test&#8217;, source=&#8217;main.c&#8217;, target=&#8217;app&#8217;)
+from waflib.Tools import waf_unit_test
+bld.add_post_fun(waf_unit_test.set_exit_code)</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
 <dt id="waflib.Tools.waf_unit_test.options">
 <tt class="descclassname">waflib.Tools.waf_unit_test.</tt><tt class="descname">options</tt><big>(</big><em>opt</em><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/waf_unit_test.html#options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.waf_unit_test.options" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provide the <tt class="docutils literal"><span class="pre">--alltests</span></tt> command-line option.</p>
+<dd><p>Provide the <tt class="docutils literal"><span class="pre">--alltests</span></tt>, <tt class="docutils literal"><span class="pre">--notests</span></tt> and <tt class="docutils literal"><span class="pre">--testcmd</span></tt> command-line options.</p>
 </dd></dl>
 
 <dl class="function">

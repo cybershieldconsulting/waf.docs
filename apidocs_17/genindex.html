@@ -231,6 +231,7 @@
   </dl></dd>
     <dt><a href="tools/tex.html#waflib.Tools.tex.tex.bibfile">bibfile() (waflib.Tools.tex.tex method)</a></dt>
     <dt><a href="tools/tex.html#waflib.Tools.tex.tex.bibtex_fun">bibtex_fun() (waflib.Tools.tex.tex method)</a></dt>
+    <dt><a href="tools/tex.html#waflib.Tools.tex.tex.bibtopic">bibtopic() (waflib.Tools.tex.tex method)</a></dt>
     <dt><a href="tools/tex.html#waflib.Tools.tex.tex.bibunits">bibunits() (waflib.Tools.tex.tex method)</a></dt>
     <dt><a href="tools/tex.html#waflib.Tools.tex.bibunitscan">bibunitscan() (in module waflib.Tools.tex)</a></dt>
     <dt><a href="tools/bison.html#waflib.Tools.bison.big_bison">big_bison() (in module waflib.Tools.bison)</a></dt>
@@ -319,7 +320,6 @@
     <dt><a href="Build.html#waflib.Build.CleanContext.clean">clean() (waflib.Build.CleanContext method)</a></dt>
     <dt><a href="Build.html#waflib.Build.CleanContext">CleanContext (class in waflib.Build)</a></dt>
     <dt><a href="TaskGen.html#waflib.TaskGen.task_gen.clone">clone() (waflib.TaskGen.task_gen method)</a></dt>
-    <dt><a href="tools/msvc.html#waflib.Tools.msvc.cls">cls (in module waflib.Tools.msvc)</a></dt>
     <dt><a href="Context.html#waflib.Context.Context.cmd_and_log">cmd_and_log() (waflib.Context.Context method)</a></dt>
     <dt><a href="Configure.html#waflib.Configure.cmd_to_list">cmd_to_list() (in module waflib.Configure)</a></dt>
     <dt><a href="Options.html#waflib.Options.cmds">cmds (in module waflib.Options)</a></dt>
@@ -417,6 +417,7 @@
     <dt><a href="tools/ccroot.html#waflib.Tools.ccroot.create_compiled_task">create_compiled_task() (in module waflib.Tools.ccroot)</a></dt>
     <dt><a href="Context.html#waflib.Context.create_context">create_context() (in module waflib.Context)</a></dt>
     <dt><a href="tools/javaw.html#waflib.Tools.javaw.create_javadoc">create_javadoc() (in module waflib.Tools.javaw)</a></dt>
+    <dt><a href="tools/qt4.html#waflib.Tools.qt4.qxx.create_moc_task">create_moc_task() (waflib.Tools.qt4.qxx method)</a></dt>
     <dt><a href="tools/qt4.html#waflib.Tools.qt4.create_rcc_task">create_rcc_task() (in module waflib.Tools.qt4)</a></dt>
     <dt><a href="TaskGen.html#waflib.TaskGen.task_gen.create_task">create_task() (waflib.TaskGen.task_gen method)</a></dt>
     <dt><a href="tools/c_osx.html#waflib.Tools.c_osx.create_task_macapp">create_task_macapp() (in module waflib.Tools.c_osx)</a></dt>
@@ -540,14 +541,6 @@
     <dt><a href="Context.html#waflib.Context.Context.exec_command">exec_command() (waflib.Context.Context method)</a></dt>
     <dd><dl>
       <dt><a href="Task.html#waflib.Task.TaskBase.exec_command">(waflib.Task.TaskBase method)</a></dt>
-      <dt><a href="tools/c.html#waflib.Tools.c.c.exec_command">(waflib.Tools.c.c method)</a></dt>
-      <dt><a href="tools/c.html#waflib.Tools.c.cprogram.exec_command">(waflib.Tools.c.cprogram method)</a></dt>
-      <dt><a href="tools/c.html#waflib.Tools.c.cshlib.exec_command">(waflib.Tools.c.cshlib method)</a></dt>
-      <dt><a href="tools/c.html#waflib.Tools.c.cstlib.exec_command">(waflib.Tools.c.cstlib method)</a></dt>
-      <dt><a href="tools/cxx.html#waflib.Tools.cxx.cxx.exec_command">(waflib.Tools.cxx.cxx method)</a></dt>
-      <dt><a href="tools/cxx.html#waflib.Tools.cxx.cxxprogram.exec_command">(waflib.Tools.cxx.cxxprogram method)</a></dt>
-      <dt><a href="tools/cxx.html#waflib.Tools.cxx.cxxshlib.exec_command">(waflib.Tools.cxx.cxxshlib method)</a></dt>
-      <dt><a href="tools/cxx.html#waflib.Tools.cxx.cxxstlib.exec_command">(waflib.Tools.cxx.cxxstlib method)</a></dt>
       <dt><a href="tools/fc.html#waflib.Tools.fc.fcprogram_test.exec_command">(waflib.Tools.fc.fcprogram_test method)</a></dt>
       <dt><a href="tools/tex.html#waflib.Tools.tex.tex.exec_command">(waflib.Tools.tex.tex method)</a></dt>
   </dl></dd>
@@ -555,16 +548,6 @@
     <dt><a href="Build.html#waflib.Build.inst.exec_install_as">exec_install_as() (waflib.Build.inst method)</a></dt>
     <dt><a href="Build.html#waflib.Build.inst.exec_install_files">exec_install_files() (waflib.Build.inst method)</a></dt>
     <dt><a href="tools/msvc.html#waflib.Tools.msvc.exec_mf">exec_mf() (in module waflib.Tools.msvc)</a></dt>
-    <dd><dl>
-      <dt><a href="tools/c.html#waflib.Tools.c.c.exec_mf">(waflib.Tools.c.c method)</a></dt>
-      <dt><a href="tools/c.html#waflib.Tools.c.cprogram.exec_mf">(waflib.Tools.c.cprogram method)</a></dt>
-      <dt><a href="tools/c.html#waflib.Tools.c.cshlib.exec_mf">(waflib.Tools.c.cshlib method)</a></dt>
-      <dt><a href="tools/c.html#waflib.Tools.c.cstlib.exec_mf">(waflib.Tools.c.cstlib method)</a></dt>
-      <dt><a href="tools/cxx.html#waflib.Tools.cxx.cxx.exec_mf">(waflib.Tools.cxx.cxx method)</a></dt>
-      <dt><a href="tools/cxx.html#waflib.Tools.cxx.cxxprogram.exec_mf">(waflib.Tools.cxx.cxxprogram method)</a></dt>
-      <dt><a href="tools/cxx.html#waflib.Tools.cxx.cxxshlib.exec_mf">(waflib.Tools.cxx.cxxshlib method)</a></dt>
-      <dt><a href="tools/cxx.html#waflib.Tools.cxx.cxxstlib.exec_mf">(waflib.Tools.cxx.cxxstlib method)</a></dt>
-  </dl></dd>
     <dt><a href="Build.html#waflib.Build.inst.exec_symlink_as">exec_symlink_as() (waflib.Build.inst method)</a></dt>
     <dt><a href="Build.html#waflib.Build.BuildContext.execute">execute() (waflib.Build.BuildContext method)</a></dt>
     <dd><dl>
@@ -716,10 +699,12 @@
     <dt><a href="tools/c_preproc.html#waflib.Tools.c_preproc.g_optrans">g_optrans (in module waflib.Tools.c_preproc)</a></dt>
     <dt><a href="Runner.html#waflib.Runner.GAP">GAP (in module waflib.Runner)</a></dt>
     <dt><a href="tools/msvc.html#waflib.Tools.msvc.gather_icl_versions">gather_icl_versions() (in module waflib.Tools.msvc)</a></dt>
+    <dt><a href="tools/msvc.html#waflib.Tools.msvc.gather_intel_composer_versions">gather_intel_composer_versions() (in module waflib.Tools.msvc)</a></dt>
     <dt><a href="tools/msvc.html#waflib.Tools.msvc.gather_msvc_targets">gather_msvc_targets() (in module waflib.Tools.msvc)</a></dt>
     <dt><a href="tools/msvc.html#waflib.Tools.msvc.gather_msvc_versions">gather_msvc_versions() (in module waflib.Tools.msvc)</a></dt>
     <dt><a href="tools/msvc.html#waflib.Tools.msvc.gather_wince_supported_platforms">gather_wince_supported_platforms() (in module waflib.Tools.msvc)</a></dt>
     <dt><a href="tools/msvc.html#waflib.Tools.msvc.gather_wince_targets">gather_wince_targets() (in module waflib.Tools.msvc)</a></dt>
+    <dt><a href="tools/msvc.html#waflib.Tools.msvc.gather_winphone_targets">gather_winphone_targets() (in module waflib.Tools.msvc)</a></dt>
     <dt><a href="tools/msvc.html#waflib.Tools.msvc.gather_wsdk_versions">gather_wsdk_versions() (in module waflib.Tools.msvc)</a></dt>
     <dt><a href="tools/gcc.html#waflib.Tools.gcc.gcc_common_flags">gcc_common_flags() (in module waflib.Tools.gcc)</a></dt>
     <dt><a href="tools/gcc.html#waflib.Tools.gcc.gcc_modifier_aix">gcc_modifier_aix() (in module waflib.Tools.gcc)</a></dt>
@@ -751,9 +736,9 @@
     <dt><a href="tools/gfortran.html#waflib.Tools.gfortran.get_gfortran_version">get_gfortran_version() (in module waflib.Tools.gfortran)</a></dt>
     <dt><a href="Build.html#waflib.Build.BuildContext.get_group">get_group() (waflib.Build.BuildContext method)</a></dt>
     <dt><a href="Build.html#waflib.Build.BuildContext.get_group_idx">get_group_idx() (waflib.Build.BuildContext method)</a></dt>
-    <dt><a href="Build.html#waflib.Build.BuildContext.get_group_name">get_group_name() (waflib.Build.BuildContext method)</a></dt>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
+    <dt><a href="Build.html#waflib.Build.BuildContext.get_group_name">get_group_name() (waflib.Build.BuildContext method)</a></dt>
     <dt><a href="TaskGen.html#waflib.TaskGen.task_gen.get_hook">get_hook() (waflib.TaskGen.task_gen method)</a></dt>
     <dt><a href="tools/ifort.html#waflib.Tools.ifort.get_ifort_version">get_ifort_version() (in module waflib.Tools.ifort)</a></dt>
     <dt><a href="Build.html#waflib.Build.inst.get_install_path">get_install_path() (waflib.Build.inst method)</a></dt>
@@ -938,13 +923,15 @@
     <dt><a href="Node.html#waflib.Node.Node.make_node">make_node() (waflib.Node.Node method)</a></dt>
     <dt><a href="tools/qt4.html#waflib.Tools.qt4.make_parser">make_parser() (in module waflib.Tools.qt4)</a></dt>
     <dt><a href="tools/waf_unit_test.html#waflib.Tools.waf_unit_test.make_test">make_test() (in module waflib.Tools.waf_unit_test)</a></dt>
+    <dt><a href="tools/msvc.html#waflib.Tools.msvc.make_windows_app">make_windows_app() (in module waflib.Tools.msvc)</a></dt>
+    <dt><a href="tools/msvc.html#waflib.Tools.msvc.make_winphone_app">make_winphone_app() (in module waflib.Tools.msvc)</a></dt>
     <dt><a href="tools/tex.html#waflib.Tools.tex.tex.makeindex">makeindex() (waflib.Tools.tex.tex method)</a></dt>
     <dt><a href="tools/tex.html#waflib.Tools.tex.tex.makeindex_fun">makeindex_fun() (waflib.Tools.tex.tex method)</a></dt>
     <dt><a href="tools/fc_config.html#waflib.Tools.fc_config.mangle_name">mangle_name() (in module waflib.Tools.fc_config)</a></dt>
     <dt><a href="tools/fc_config.html#waflib.Tools.fc_config.mangling_schemes">mangling_schemes() (in module waflib.Tools.fc_config)</a></dt>
-    <dt><a href="TaskGen.html#waflib.TaskGen.task_gen.mappings">mappings (waflib.TaskGen.task_gen attribute)</a></dt>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
+    <dt><a href="TaskGen.html#waflib.TaskGen.task_gen.mappings">mappings (waflib.TaskGen.task_gen attribute)</a></dt>
     <dt><a href="tools/cs.html#waflib.Tools.cs.mcs">mcs (class in waflib.Tools.cs)</a></dt>
     <dt><a href="TaskGen.html#waflib.TaskGen.task_gen.meths">meths (waflib.TaskGen.task_gen attribute)</a></dt>
     <dt><a href="Task.html#waflib.Task.MISSING">MISSING (in module waflib.Task)</a></dt>
@@ -1156,6 +1143,7 @@
     <dt><a href="ConfigSet.html#waflib.ConfigSet.ConfigSet.revert">revert() (waflib.ConfigSet.ConfigSet method)</a></dt>
     <dt><a href="Utils.html#waflib.Utils.rot_chr">rot_chr (in module waflib.Utils)</a></dt>
     <dt><a href="Utils.html#waflib.Utils.rot_idx">rot_idx (in module waflib.Utils)</a></dt>
+    <dt><a href="Build.html#waflib.Build.BuildContext.rule">rule() (waflib.Build.BuildContext method)</a></dt>
     <dt><a href="Runner.html#waflib.Runner.TaskConsumer.run">run() (waflib.Runner.TaskConsumer method)</a></dt>
     <dd><dl>
       <dt><a href="Task.html#waflib.Task.Task.run">(waflib.Task.Task method)</a></dt>
@@ -1213,6 +1201,7 @@
     <dd><dl>
       <dt><a href="Configure.html#waflib.Configure.ConfigurationContext.set_env">(waflib.Configure.ConfigurationContext method)</a></dt>
   </dl></dd>
+    <dt><a href="tools/waf_unit_test.html#waflib.Tools.waf_unit_test.set_exit_code">set_exit_code() (in module waflib.Tools.waf_unit_test)</a></dt>
     <dt><a href="Task.html#waflib.Task.set_file_constraints">set_file_constraints() (in module waflib.Task)</a></dt>
     <dt><a href="Build.html#waflib.Build.BuildContext.set_group">set_group() (waflib.Build.BuildContext method)</a></dt>
     <dt><a href="Task.html#waflib.Task.Task.set_inputs">set_inputs() (waflib.Task.Task method)</a></dt>
@@ -1221,6 +1210,7 @@
     <dt><a href="Scripting.html#waflib.Scripting.set_main_module">set_main_module() (in module waflib.Scripting)</a></dt>
     <dt><a href="Task.html#waflib.Task.Task.set_outputs">set_outputs() (waflib.Task.Task method)</a></dt>
     <dt><a href="Task.html#waflib.Task.set_precedence_constraints">set_precedence_constraints() (in module waflib.Task)</a></dt>
+    <dt><a href="tools/qt4.html#waflib.Tools.qt4.set_qt4_defines">set_qt4_defines() (in module waflib.Tools.qt4)</a></dt>
     <dt><a href="tools/qt4.html#waflib.Tools.qt4.set_qt4_libs_to_check">set_qt4_libs_to_check() (in module waflib.Tools.qt4)</a></dt>
     <dt><a href="Task.html#waflib.Task.Task.set_run_after">set_run_after() (waflib.Task.Task method)</a></dt>
     <dt><a href="tools/qt4.html#waflib.Tools.qt4.ContentHandler.setDocumentLocator">setDocumentLocator() (waflib.Tools.qt4.ContentHandler method)</a></dt>
@@ -1237,9 +1227,9 @@
   </dl></dd>
     <dt><a href="Task.html#waflib.Task.Task.signature">signature() (waflib.Task.Task method)</a></dt>
     <dt><a href="tools/qt4.html#waflib.Tools.qt4.simplify_qt4_libs">simplify_qt4_libs() (in module waflib.Tools.qt4)</a></dt>
-    <dt><a href="Task.html#waflib.Task.SKIP_ME">SKIP_ME (in module waflib.Task)</a></dt>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
+    <dt><a href="Task.html#waflib.Task.SKIP_ME">SKIP_ME (in module waflib.Task)</a></dt>
     <dt><a href="Task.html#waflib.Task.SKIPPED">SKIPPED (in module waflib.Task)</a></dt>
     <dt><a href="tools/c_preproc.html#waflib.Tools.c_preproc.skipped">skipped (in module waflib.Tools.c_preproc)</a></dt>
     <dt><a href="tools/qt4.html#waflib.Tools.qt4.ContentHandler.skippedEntity">skippedEntity() (waflib.Tools.qt4.ContentHandler method)</a></dt>
@@ -1485,6 +1475,7 @@
       <dt><a href="tools/msvc.html#waflib.Tools.msvc.warn">(in module waflib.Tools.msvc)</a></dt>
   </dl></dd>
     <dt><a href="tools/winres.html#waflib.Tools.winres.winrc">winrc (class in waflib.Tools.winres)</a></dt>
+    <dt><a href="tools/msvc.html#waflib.Tools.msvc.wrap_class">wrap_class() (in module waflib.Tools.msvc)</a></dt>
     <dt><a href="Node.html#waflib.Node.Node.write">write() (waflib.Node.Node method)</a></dt>
     <dt><a href="tools/c_config.html#waflib.Tools.c_config.write_config_header">write_config_header() (in module waflib.Tools.c_config)</a></dt>
     <dt><a href="Utils.html#waflib.Utils.writef">writef() (in module waflib.Utils)</a></dt>

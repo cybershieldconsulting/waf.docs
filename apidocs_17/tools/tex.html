@@ -124,12 +124,12 @@
 <dd><p>Bases: <a class="reference internal" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task"><tt class="xref py py-class docutils literal"><span class="pre">waflib.Task.Task</span></tt></a></p>
 <p>Compile a tex/latex file.</p>
 <p class="graphviz">
-<img src="../_images/inheritance-aaf77ab7ad0525be92bd45311f0192cace7bd7f6.png" alt="Inheritance diagram of waflib.Tools.tex.latex, waflib.Tools.tex.xelatex, waflib.Tools.tex.pdflatex" usemap="#inheritance590ebef8dd" class="inheritance"/>
+<img src="../_images/inheritance-23446a5ef784a493d8e3e5db45dbf0b8b70b2f7a.png" alt="Inheritance diagram of waflib.Tools.tex.latex, waflib.Tools.tex.xelatex, waflib.Tools.tex.pdflatex" usemap="#inheritance590ebef8dd" class="inheritance"/>
 <map id="inheritance590ebef8dd" name="inheritance590ebef8dd">
 <area shape="rect" id="node2" href="#waflib.Tools.tex.tex" title="waflib.Tools.tex.tex" alt="" coords="457,46,577,68"/>
-<area shape="rect" id="node6" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task" alt="" coords="314,46,415,68"/>
-<area shape="rect" id="node8" href="../Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase" alt="" coords="144,46,272,68"/>
-<area shape="rect" id="node10" href="../Task.html#waflib.Task.evil" title="waflib.Task.evil" alt="" coords="5,46,102,68"/>
+<area shape="rect" id="node4" href="../Task.html#waflib.Task.Task" title="waflib.Task.Task" alt="" coords="314,46,415,68"/>
+<area shape="rect" id="node5" href="../Task.html#waflib.Task.TaskBase" title="waflib.Task.TaskBase" alt="" coords="144,46,272,68"/>
+<area shape="rect" id="node7" href="../Task.html#waflib.Task.evil" title="waflib.Task.evil" alt="" coords="5,46,102,68"/>
 </map>
 </p>
 <dl class="method">
@@ -196,7 +196,7 @@
 <dl class="method">
 <dt id="waflib.Tools.tex.tex.bibfile">
 <tt class="descname">bibfile</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/tex.html#tex.bibfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.tex.tex.bibfile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parse the <em>.aux</em> files to find a bibfile to process.
+<dd><p>Parse the <em>.aux</em> files to find bibfiles to process.
 If yes, execute <a class="reference internal" href="#waflib.Tools.tex.tex.bibtex_fun" title="waflib.Tools.tex.tex.bibtex_fun"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Tools.tex.tex.bibtex_fun()</span></tt></a></p>
 </dd></dl>
 
@@ -212,6 +212,12 @@ execute <a class="reference internal" href="#waflib.Tools.tex.tex.bibtex_fun" ti
 <tt class="descname">makeindex</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/tex.html#tex.makeindex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.tex.tex.makeindex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Look on the filesystem if there is a <em>.idx</em> file to process. If yes, execute
 <a class="reference internal" href="#waflib.Tools.tex.tex.makeindex_fun" title="waflib.Tools.tex.tex.makeindex_fun"><tt class="xref py py-meth docutils literal"><span class="pre">waflib.Tools.tex.tex.makeindex_fun()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="waflib.Tools.tex.tex.bibtopic">
+<tt class="descname">bibtopic</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/waflib/Tools/tex.html#tex.bibtopic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#waflib.Tools.tex.tex.bibtopic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Additional .aux files from the bibtopic package</p>
 </dd></dl>
 
 <dl class="method">
