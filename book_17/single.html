@@ -4490,7 +4490,7 @@ http://www.gnu.org/software/src-highlite -->
 <span style="color: #000000">Waf: Leaving directory `/tmp/rule/out'</span>
 <span style="color: #000000">'build' finished successfully (0.016s)</span></tt></pre></div></div>
 <div class="paragraph"><p>Although r2 <strong>depends</strong> on <em>r1.txt</em>, r2 was not executed in the second build. As a matter of fact, the signature of the task r1 has not changed, and r1 was only set to be executed each time, regardless of its signature. Since the signature of the <em>r1.txt</em> does not change, the signature of r2 will not change either, and <em>r2.txt</em> is considered up-to-date.</p></div>
-<div class="paragraph"><p>We will now illustrate how to make certain that the outputs reflect the file contents and trigger the rebuild for dependent tasks by enabling the attribute <em>on_results</em>:</p></div>
+<div class="paragraph"><p>We will now illustrate how to make certain that the outputs reflect the file contents and trigger the rebuild for dependent tasks by enabling the attribute <em>update_outputs</em>:</p></div>
 <div class="listingblock">
 <div class="content"><!-- Generator: GNU source-highlight 3.1.4
 by Lorenzo Bettini
@@ -4508,7 +4508,7 @@ http://www.gnu.org/software/src-highlite -->
 <span style="color: #000000">                target </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'r1.txt'</span><span style="color: #000000">,</span>
 <span style="color: #000000">                rule   </span><span style="color: #000000">=</span><span style="color: #000000"> </span><span style="color: #009900">'(date &gt; ${TGT}) &amp;&amp; cat ${TGT}'</span><span style="color: #000000">,</span>
 <span style="color: #000000">                always </span><span style="color: #000000">=</span><span style="color: #000000"> True</span><span style="color: #000000">,</span>
-<span style="color: #000000">                on_results </span><span style="color: #000000">=</span><span style="color: #000000"> True</span><span style="color: #000000">,</span>
+<span style="color: #000000">                update_outputs </span><span style="color: #000000">=</span><span style="color: #000000"> True</span><span style="color: #000000">,</span>
 <span style="color: #000000">        </span><span style="color: #000000">)</span>
 
 <span style="color: #000000">        </span><span style="color: #000000">bld</span><span style="color: #000000">(</span>
