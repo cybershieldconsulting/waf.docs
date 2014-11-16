@@ -2242,13 +2242,13 @@ http://www.gnu.org/software/src-highlite -->
 <div class="paragraph"><p>Each of the three lines represents a command to execute. While the <em>cp</em> commands may be executed in any order or even in parallel, the <em>cat</em> command may only be executed after all the others are done. The constraints on <strong>the build order</strong> are represented on the following <a href="http://en.wikipedia.org/wiki/Directed_acyclic_graph">Directed acyclic graph</a>:</p></div>
 <div class="imageblock" style="text-align:center;">
 <div class="content">
-<img src="dag_tasks.svg" alt="Task representation of the same build" />
+<img src="dag_tasks.png" alt="Task representation of the same build" />
 </div>
 </div>
 <div class="paragraph"><p>When the <code>wscript</code> input file changes, the <code>foo.txt</code> output file has to be created once again. The file <code>foo.txt</code> is said to depend on the <code>wscript</code> file. The <strong>file dependencies</strong> can be represented by a Direct acyclic graph too:</p></div>
 <div class="imageblock" style="text-align:center;">
 <div class="content">
-<img src="dag_nodes.svg" alt="File dependencies on a simple build" />
+<img src="dag_nodes.png" alt="File dependencies on a simple build" />
 </div>
 </div>
 <div class="paragraph"><p>Building a project consists in executing the commands according to a schedule which will respect these constraints. Faster build will be obtained when commands are executed in parallel (by using the build order), and when commands can be skipped (by using the dependencies).</p></div>
@@ -3706,7 +3706,7 @@ http://www.gnu.org/software/src-highlite -->
 <div class="paragraph"><p>Each green task must be executed after one yellow task and each pink task must be executed after one blue task. Because there is only one group by default, the parallel execution will be similar to the following:</p></div>
 <div class="imageblock" style="text-align:center;">
 <div class="content">
-<img src="tasks_nogroup.svg" alt="One build group" />
+<img src="tasks_nogroup.png" alt="One build group" />
 </div>
 </div>
 <div class="paragraph"><p>We will now modify the example to add one more build group.</p></div>
@@ -3730,7 +3730,7 @@ http://www.gnu.org/software/src-highlite -->
 <div class="paragraph"><p>Now a separator will appear between the group of yellow and green tasks and the group of blue and violet taks:</p></div>
 <div class="imageblock" style="text-align:center;">
 <div class="content">
-<img src="tasks_twogroups.svg" alt="Two build groups" />
+<img src="tasks_twogroups.png" alt="Two build groups" />
 </div>
 </div>
 <div class="paragraph"><p>The tasks and tasks generator are added implicitely to the current group. By giving a name to the groups, it is easy to control what goes where:</p></div>
@@ -3957,7 +3957,7 @@ http://www.gnu.org/software/src-highlite -->
 <span style="color: #000000">    </span><span style="color: #000000">ctx</span><span style="color: #000000">(</span><span style="color: #000000">rule</span><span style="color: #000000">=</span><span style="color: #009900">'sleep 5'</span><span style="color: #000000">,</span><span style="color: #000000"> color</span><span style="color: #000000">=</span><span style="color: #009900">'RED'</span><span style="color: #000000">,</span><span style="color: #000000"> name</span><span style="color: #000000">=</span><span style="color: #009900">'long task'</span><span style="color: #000000">)</span></tt></pre></div></div>
 <div class="imageblock" style="text-align:center;">
 <div class="content">
-<img src="tasks_nosort.svg" alt="No particular order" />
+<img src="tasks_nosort.png" alt="No particular order" />
 </div>
 </div>
 <div class="paragraph"><p>A function is used to reorder the tasks from a group before they are passed to the producer. We will replace it to reorder the long task in first position:</p></div>
@@ -3986,7 +3986,7 @@ Replace the method
 <div class="paragraph"><p>Here is a representation of the effect:</p></div>
 <div class="imageblock" style="text-align:center;">
 <div class="content">
-<img src="tasks_sort.svg" alt="Slowest task first" />
+<img src="tasks_sort.png" alt="Slowest task first" />
 </div>
 </div>
 </div>
@@ -7899,10 +7899,10 @@ http://www.gnu.org/software/src-highlite -->
 
 <span style="color: #000080">def</span><span style="color: #000000"> </span><span style="color: #000000">build</span><span style="color: #000000">(</span><span style="color: #000000">ctx</span><span style="color: #000000">):</span>
 <span style="color: #000000">        </span><span style="color: #000000">bld</span><span style="color: #000000">(</span><span style="color: #000000">rule</span><span style="color: #000000">=</span><span style="color: #009900">'touch ${TGT}'</span><span style="color: #000000">,</span><span style="color: #000000"> target</span><span style="color: #000000">=</span><span style="color: #009900">'foo'</span><span style="color: #000000">)</span></tt></pre></div></div>
-<div class="paragraph"><p>The execution will generate a diagram of the tasks executed during the build in the file <code>pdebug.svg</code>:</p></div>
+<div class="paragraph"><p>The execution will generate a diagram of the tasks executed during the build in the file <code>pdebug.png</code>:</p></div>
 <div class="imageblock" style="text-align:center;">
 <div class="content">
-<img src="pdebug.svg" alt="Parallel execution diagram" />
+<img src="pdebug.png" alt="Parallel execution diagram" />
 </div>
 </div>
 <div class="paragraph"><p>The details will be generated in the file <code>pdebug.dat</code> as space-separated values. The file can be processed by other applications such as Gnuplot to obtain other diagrams:</p></div>
@@ -7923,7 +7923,7 @@ http://www.gnu.org/software/src-highlite -->
 <span style="color: #000000">plot 'pdebug.dat' using 3:7 with lines title "" lt 2</span></tt></pre></div></div>
 <div class="imageblock" style="text-align:center;">
 <div class="content">
-<img src="dev.svg" alt="Thread activity during the build" />
+<img src="dev.png" alt="Thread activity during the build" />
 </div>
 </div>
 <div class="paragraph"><p>The data file columns are the following:</p></div>
@@ -8227,7 +8227,7 @@ cellspacing="0" cellpadding="4">
 <div class="paragraph"><p>Not all core modules are required for using Waf as a library. The dependencies between the modules are represented on the following diagram. For example, the module <em>Node</em> requires both modules <em>Utils</em> and <em>Errors</em>. Conversely, if the module <em>Build</em> is used alone, then the modules <em>Scripting</em> and <em>Configure</em> can be removed safely.</p></div>
 <div class="imageblock" style="text-align:center;">
 <div class="content">
-<img src="core.svg" alt="Module dependencies" />
+<img src="core.png" alt="Module dependencies" />
 </div>
 </div>
 </div>
