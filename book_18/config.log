@@ -1,0 +1,38 @@
+# project wafdocs (0.0.1) configured on Sun Nov 16 22:44:35 2014 by
+# waf 1.8.4 (abi 98, python 20708f0 on linux2)
+# using /home/user/waf/waf configure
+#
+----------------------------------------
+Setting top to
+/home/user/waf/docs/book
+----------------------------------------
+Setting out to
+/home/user/waf/docs/book/build
+----------------------------------------
+Checking for program 'a2x'
+/usr/bin/a2x
+find program=['a2x'] paths=['/usr/local/cuda-6.0/bin', '/home/user/waf/', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games'] var='A2X' -> ['/usr/bin/a2x']
+----------------------------------------
+Checking for program 'asciidoc'
+/usr/bin/asciidoc
+find program=['asciidoc'] paths=['/usr/local/cuda-6.0/bin', '/home/user/waf/', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games'] var='ADOC' -> ['/usr/bin/asciidoc']
+----------------------------------------
+Checking for program 'dia'
+/usr/bin/dia
+find program=['dia'] paths=['/usr/local/cuda-6.0/bin', '/home/user/waf/', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games'] var='DIA' -> ['/usr/bin/dia']
+----------------------------------------
+Checking for program 'convert'
+/usr/bin/convert
+find program=['convert'] paths=['/usr/local/cuda-6.0/bin', '/home/user/waf/', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games'] var='CONVERT' -> ['/usr/bin/convert']
+----------------------------------------
+Checking for program 'source-highlight'
+/usr/bin/source-highlight
+find program=['source-highlight'] paths=['/usr/local/cuda-6.0/bin', '/home/user/waf/', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games'] var='SOURCE_HIGHLIGHT' -> ['/usr/bin/source-highlight']
+----------------------------------------
+Checking for program 'dot'
+/usr/bin/dot
+find program=['dot'] paths=['/usr/local/cuda-6.0/bin', '/home/user/waf/', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games'] var='DOT' -> ['/usr/bin/dot']
+----------------------------------------
+Checking for program 'semantik-d'
+/usr/bin/semantik-d
+find program=['semantik-d'] paths=['/usr/local/cuda-6.0/bin', '/home/user/waf/', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games'] var='SEMANTIK_D' -> ['/usr/bin/semantik-d']
