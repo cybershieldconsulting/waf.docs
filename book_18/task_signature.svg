@@ -455,17 +455,17 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 </g>
 
 <g fill="url(#gradient5)" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,121,75)"
-font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
 >
 <path vector-effect="none" fill-rule="evenodd" d="M2,7.6 C2,4.50721 11.6706,2 23.6,2 L196.4,2 C208.329,2 218,4.50721 218,7.6 L218,52.4 C218,55.4928 208.329,58 196.4,58 L23.6,58 C11.6706,58 2,55.4928 2,52.4 L2,7.6"/>
 </g>
 
 <g fill="url(#gradient6)" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,124,86)"
-font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="43" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="43" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >Compute the task</text>
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="7" y="31" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="7" y="31" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >identifier (method &quot;uid&quot;)</text>
 </g>
 
@@ -480,17 +480,17 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 </g>
 
 <g fill="url(#gradient7)" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,121,165)"
-font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
 >
 <path vector-effect="none" fill-rule="evenodd" d="M2,7.6 C2,4.50721 11.6706,2 23.6,2 L196.4,2 C208.329,2 218,4.50721 218,7.6 L218,52.4 C218,55.4928 208.329,58 196.4,58 L23.6,58 C11.6706,58 2,55.4928 2,52.4 L2,7.6"/>
 </g>
 
 <g fill="url(#gradient8)" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,124,176)"
-font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="23" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="23" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >Compute the task hash</text>
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="27" y="31" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="27" y="31" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >(method &quot;signature&quot;)</text>
 </g>
 
@@ -505,15 +505,15 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 </g>
 
 <g fill="url(#gradient9)" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,341,275)"
-font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
 >
 <path vector-effect="none" fill-rule="evenodd" d="M2,7.6 C2,4.50721 11.6706,2 23.6,2 L196.4,2 C208.329,2 218,4.50721 218,7.6 L218,52.4 C218,55.4928 208.329,58 196.4,58 L23.6,58 C11.6706,58 2,55.4928 2,52.4 L2,7.6"/>
 </g>
 
 <g fill="url(#gradient10)" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,344,293.5)"
-font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="43" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="43" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >Execute the task</text>
 </g>
 
@@ -528,17 +528,17 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 </g>
 
 <g fill="url(#gradient11)" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,341,505)"
-font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
 >
 <path vector-effect="none" fill-rule="evenodd" d="M2,7.6 C2,4.50721 11.6706,2 23.6,2 L196.4,2 C208.329,2 218,4.50721 218,7.6 L218,52.4 C218,55.4928 208.329,58 196.4,58 L23.6,58 C11.6706,58 2,55.4928 2,52.4 L2,7.6"/>
 </g>
 
 <g fill="url(#gradient12)" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,344,516)"
-font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="7" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="7" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >Associate the hash to the</text>
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="75" y="31" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="75" y="31" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >task uid</text>
 </g>
 
@@ -553,17 +553,17 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 </g>
 
 <g fill="url(#gradient13)" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,341,595)"
-font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
 >
 <path vector-effect="none" fill-rule="evenodd" d="M2,7.6 C2,4.50721 11.6706,2 23.6,2 L196.4,2 C208.329,2 218,4.50721 218,7.6 L218,52.4 C218,55.4928 208.329,58 196.4,58 L23.6,58 C11.6706,58 2,55.4928 2,52.4 L2,7.6"/>
 </g>
 
 <g fill="url(#gradient14)" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,344,606)"
-font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="27" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="27" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >Associate the output</text>
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="11" y="31" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="11" y="31" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >nodes with the task hash</text>
 </g>
 
@@ -580,13 +580,13 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 <g fill="none" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,18,267)"
 font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="20" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="20" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >Is a previous</text>
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="36" y="31" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="36" y="31" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >signature</text>
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="12" y="46" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="12" y="46" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >associated with</text>
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="40" y="61" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="40" y="61" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >the uid?</text>
 </g>
 
@@ -608,11 +608,11 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 <g fill="none" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,26,356)"
 font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="11" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="11" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >Do the current</text>
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="19" y="31" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="19" y="31" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >and previous</text>
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="15" y="46" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="15" y="46" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >hashes match?</text>
 </g>
 
@@ -634,13 +634,13 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 <g fill="none" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,26,430)"
 font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="11" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="11" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >Are the output</text>
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="47" y="31" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="47" y="31" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >nodes</text>
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="7" y="46" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="7" y="46" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >associated with</text>
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="11" y="61" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="11" y="61" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >the same hash?</text>
 </g>
 
@@ -662,7 +662,7 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 <g fill="none" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,563,507)"
 font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="15" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="15" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >Yes</text>
 </g>
 
@@ -684,7 +684,7 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 <g fill="none" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,188,485)"
 font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="15" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="15" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >Yes</text>
 </g>
 
@@ -706,7 +706,7 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 <g fill="none" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,188,401)"
 font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="15" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="15" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >Yes</text>
 </g>
 
@@ -728,7 +728,7 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 <g fill="none" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,186,320)"
 font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="15" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="15" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >Yes</text>
 </g>
 
@@ -750,7 +750,7 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 <g fill="none" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,262,282)"
 font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="19" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="19" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >No</text>
 </g>
 
@@ -772,7 +772,7 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 <g fill="none" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,262,361)"
 font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="19" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="19" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >No</text>
 </g>
 
@@ -794,7 +794,7 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 <g fill="none" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,263,442)"
 font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="19" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="19" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >No</text>
 </g>
 
@@ -816,11 +816,11 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 <g fill="none" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,640,492)"
 font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="9" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="9" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >Has the task been</text>
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="29" y="31" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="29" y="31" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >successfully</text>
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="41" y="46" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="41" y="46" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >executed?</text>
 </g>
 
@@ -842,7 +842,7 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 <g fill="none" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,628,589)"
 font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="19" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="19" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >No</text>
 </g>
 
@@ -864,7 +864,7 @@ font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal"
 <g fill="none" stroke="#000000" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,169,671)"
 font-family="Ubuntu" font-size="11.5" font-weight="400" font-style="normal" 
 >
-<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="15" y="16" font-family="DejaVu Sans Mono" font-size="12.7778" font-weight="400" font-style="normal" 
+<text fill="#000000" fill-opacity="1" stroke="none" xml:space="preserve" x="15" y="16" font-family="DejaVu Sans Mono,Monospace" font-size="12.7778" font-weight="400" font-style="normal" 
  >End</text>
 </g>
 
